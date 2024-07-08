@@ -1,4 +1,7 @@
 
+image:
+  file: docker/Dockerfile
+
 vscode:
   extensions:
-    - lrstanley.excalidraw-editor
+    - pomdtr.excalidraw-editor
