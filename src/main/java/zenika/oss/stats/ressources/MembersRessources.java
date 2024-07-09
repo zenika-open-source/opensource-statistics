@@ -13,6 +13,10 @@ import java.util.List;
 @Path("/v1/members/")
 public class MembersRessources {
 
+    @Inject
+    @RestClient
+    GitHubApiClient GitHubApiClient;
+
     @GET
     @Path("/all")
     public Response getAllMembers() {

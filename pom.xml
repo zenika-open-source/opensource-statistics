@@ -15,6 +15,7 @@
     <quarkus.platform.version>3.12.1</quarkus.platform.version>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
     <github-api.version>1.322.0</github-api.version>
+    <quarkus-github.version>1.322.0</quarkus-github.version>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -63,6 +64,16 @@
       <artifactId>quarkus-github-api</artifactId>
       <version>${github-api.version}</version>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-rest-client</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>io.quarkiverse.githubapi</groupId>
+    <artifactId>quarkus-github-api</artifactId>
+    <version>${quarkus-github.version}</version>
+  </dependency>
+
   </dependencies>
   <build>
     <plugins>
