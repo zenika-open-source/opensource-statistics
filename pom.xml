@@ -64,10 +64,6 @@
       <artifactId>quarkus-github-api</artifactId>
       <version>${github-api.version}</version>
     </dependency>
-    <dependency>
-      <groupId>io.quarkus</groupId>
-      <artifactId>quarkus-rest-client</artifactId>
-  </dependency>
   <dependency>
     <groupId>io.quarkiverse.githubapi</groupId>
     <artifactId>quarkus-github-api</artifactId>

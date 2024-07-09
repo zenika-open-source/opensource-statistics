@@ -1,21 +1,21 @@
 package zenika.oss.stats.ressources;
 
 import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.Response;
+import zenika.oss.stats.services.GitHubServices;
 
-import java.lang.reflect.Member;
-import java.util.List;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 @ApplicationScoped
 @Path("/v1/members/")
 public class MembersRessources {
 
     @Inject
-    @RestClient
-    GitHubApiClient GitHubApiClient;
+    GitHubServices gitHubServices;
 
     @GET
     @Path("/all")

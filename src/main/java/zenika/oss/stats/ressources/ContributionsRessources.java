@@ -24,7 +24,9 @@ public class ContributionsRessources {
          
     }
     
-    public Response getContributionsForAMonth() {
+    @GET
+    @Path("/contributions/month/{month}")
+    public Response getContributionsForAMonth(@PathParam("month") int month) {
         return Response.ok().build();
     }
 }
