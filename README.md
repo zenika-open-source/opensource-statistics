@@ -10,6 +10,10 @@ To do this, it could be pertinent to scan contributions of each member of Zenika
 
 Using Quarkus, [Cloud SQL](https://quarkus.io/guides/deploying-to-google-cloud#using-cloud-sql) to save data and GitHub actions as CICD.
 
+## 📝 Setup 
+
+- You need a GitHub token you can generate on [this page](https://github.com/settings/tokens).
+- Create a `.env` file based on the `.env-example` file and set the token previously created. 
 ## ✨Contribute 
 
 Anyone can contribute to this project. For the moment, please add your question or purpose something in [a new issue](https://github.com/zenika-open-source/opensource-statistics/issues).

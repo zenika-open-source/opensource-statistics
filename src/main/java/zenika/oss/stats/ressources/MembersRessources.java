@@ -8,8 +8,6 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.Response;
 import zenika.oss.stats.services.GitHubServices;
 
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-
 @ApplicationScoped
 @Path("/v1/members/")
 public class MembersRessources {
