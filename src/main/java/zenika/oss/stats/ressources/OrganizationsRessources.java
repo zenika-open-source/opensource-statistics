@@ -10,7 +10,7 @@ import zenika.oss.stats.services.GitHubServices;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
-@Path("/v1/organization/")
+@Path("/v1/github/organization/")
 public class OrganizationsRessources {
 
     @ConfigProperty(name = "organization.name")
@@ -22,8 +22,14 @@ public class OrganizationsRessources {
     @GET
     @Path("/infos")
     public Response getOrganizationInformation() {
-        
         return Response.ok(gitHubServices.getOrganizationInformation(organizationName)).build();
     }
 
+
+    @GET
+    @Path("/members")
+    public Response getOrganizationMembers() {
+        return Response.ok(gitHubServices.getOrganizationMembers(organizationName)).build();
+    }
+    
 }

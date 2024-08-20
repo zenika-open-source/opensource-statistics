@@ -4,7 +4,8 @@
 
 One objective of this project is to highlight Zenika members contributions. 
 
-To do this, it could be pertinent to scan contributions of each member of Zenika open source organization. 
+To do this, the zenika-open-source GitHub Organization is scanned and data could be saved in a Database.
+Datas could be used to find / list all projects maintained by Zenika Members, all projects which Zenika members contributed, etc.
 
 ## 🗄️ Tech 
 

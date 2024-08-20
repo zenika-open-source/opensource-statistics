@@ -1,30 +1,26 @@
 package zenika.oss.stats.config;
 
-import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import zenika.oss.stats.beans.GitHubOrganization;
+import zenika.oss.stats.beans.GitHubMember;
 
-import java.io.IOException;
+import java.util.List;
 
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.kohsuke.github.GitHub;
-import org.kohsuke.github.GitHubBuilder;
+import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
-@ApplicationScoped
-public class GitHubClient {
+@RegisterRestClient(configKey="github-api")
+@RegisterClientHeaders(GitHuClientHeaderFactory.class)
+@Path("/")
+public interface GitHubClient {
 
-    private final GitHub builder;
+    @GET
+    @Path("/orgs/{organizationName}")
+    GitHubOrganization getOrgnizationByName(@PathParam("organizationName") String organizationName);
     
-    public GitHubClient (@ConfigProperty(name = "github.token") String token) {
-
-        try {
-            this.builder = new GitHubBuilder().withOAuthToken(token).build();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public GitHub getBuilder() {
-
-        return builder;
-    }
-
+    @GET
+    @Path("/orgs/{organizationName}/members")
+    List<GitHubMember> getOrganizationMembers(@PathParam("organizationName") String organizationName);
 }
