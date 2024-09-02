@@ -5,6 +5,7 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import zenika.oss.stats.beans.GitHubOrganization;
 import zenika.oss.stats.beans.GitHubMember;
+import zenika.oss.stats.beans.GitHubProject;
 
 import java.util.List;
 
@@ -23,4 +24,12 @@ public interface GitHubClient {
     @GET
     @Path("/orgs/{organizationName}/members")
     List<GitHubMember> getOrganizationMembers(@PathParam("organizationName") String organizationName);
+
+    @GET
+    @Path("/user/{login}")
+    GitHubMember getUserInformation(@PathParam("login") String login);
+
+    @GET
+    @Path("/users/{login}/repos")
+    List<GitHubProject> getReposForAnUser(@PathParam("login") String login);
 }

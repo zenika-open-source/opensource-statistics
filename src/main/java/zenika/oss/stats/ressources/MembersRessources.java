@@ -18,12 +18,15 @@ public class MembersRessources {
     @GET
     @Path("/all")
     public Response getAllMembers() {
-        return Response.ok().build();
+
+        return Response.ok()
+                .build();
     }
 
     @GET
     @Path("/{memberId}")
     public Response getMember(@PathParam("memberId") String memberId) {
+
         return Response.ok()
                 .build();
     }
@@ -31,6 +34,7 @@ public class MembersRessources {
     @GET
     @Path("/inactives")
     public Response getInactivesMembers() {
+
         return Response.ok()
                 .build();
     }

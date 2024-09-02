@@ -9,12 +9,17 @@ Datas could be used to find / list all projects maintained by Zenika Members, al
 
 ## 🗄️ Tech 
 
-Using Quarkus, [Cloud SQL](https://quarkus.io/guides/deploying-to-google-cloud#using-cloud-sql) to save data and GitHub actions as CICD.
+Using :
+- [Quarkus](https://quarkus.io/)
+- [Cloud SQL](https://quarkus.io/guides/deploying-to-google-cloud#using-cloud-sql) to save data
+- [GitHub actions](https://github.com/features/actions) as CICD.
 
 ## 📝 Setup 
 
 - You need a GitHub token you can generate on [this page](https://github.com/settings/tokens).
 - Create a `.env` file based on the `.env-example` file and set the token previously created. 
+- Run the application with `quarkus dev` if you have the [Quarkus CLI](https://quarkus.io/guides/cli-tooling) installed on your environment, or `mvn quarkus:dev`command.
+
 ## ✨Contribute 
 
 Anyone can contribute to this project. For the moment, please add your question or purpose something in [a new issue](https://github.com/zenika-open-source/opensource-statistics/issues).
