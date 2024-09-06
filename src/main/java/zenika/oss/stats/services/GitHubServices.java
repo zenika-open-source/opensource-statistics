@@ -16,6 +16,8 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 @ApplicationScoped
 public class GitHubServices {
 
+    private static final int NB_MEMBERS_PAR_PAGE= 100;
+    
     @Inject
     @RestClient
     GitHubClient gitHubClient;
@@ -41,7 +43,7 @@ public class GitHubServices {
      */
     public List<GitHubMember> getOrganizationMembers(String organizationName) {
 
-        return gitHubClient.getOrganizationMembers(organizationName);
+        return gitHubClient.getOrganizationMembers(organizationName, NB_MEMBERS_PAR_PAGE);
     }
 
     /**

@@ -3,6 +3,7 @@ package zenika.oss.stats.config;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
 import zenika.oss.stats.beans.GitHubOrganization;
 import zenika.oss.stats.beans.GitHubMember;
 import zenika.oss.stats.beans.GitHubProject;
@@ -23,7 +24,7 @@ public interface GitHubClient {
     
     @GET
     @Path("/orgs/{organizationName}/members")
-    List<GitHubMember> getOrganizationMembers(@PathParam("organizationName") String organizationName);
+    List<GitHubMember> getOrganizationMembers(@PathParam("organizationName") String organizationName, @QueryParam("per_page") int page);
 
     @GET
     @Path("/user/{login}")
