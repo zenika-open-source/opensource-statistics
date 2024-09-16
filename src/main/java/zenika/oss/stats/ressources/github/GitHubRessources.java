@@ -54,4 +54,11 @@ public class GitHubRessources {
         return Response.ok(gitHubServices.getForkedProjectForAnUser(login))
                 .build();
     }
+    
+    @GET
+    @Path("user/{login}/contributions")
+    public Response getContributionsData(@PathParam("login") String login) {
+        return Response.ok(gitHubServices.getContributionsData(login)).build();
+    }
+
 }
