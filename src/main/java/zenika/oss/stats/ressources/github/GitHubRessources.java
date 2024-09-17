@@ -54,11 +54,20 @@ public class GitHubRessources {
         return Response.ok(gitHubServices.getForkedProjectForAnUser(login))
                 .build();
     }
-    
+
     @GET
     @Path("user/{login}/contributions")
     public Response getContributionsData(@PathParam("login") String login) {
         return Response.ok(gitHubServices.getContributionsData(login)).build();
     }
+
+
+    @GET
+    @Path("user/{login}/contributions-dynamic")
+    public Response getContributionsDataDynamic(@PathParam("login") String login) {
+        return Response.ok(gitHubServices.getContributionsDataDynamic(login)).build();
+    }
+
+
 
 }

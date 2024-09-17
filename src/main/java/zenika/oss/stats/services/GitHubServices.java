@@ -1,5 +1,7 @@
 package zenika.oss.stats.services;
 
+import io.smallrye.common.annotation.Blocking;
+import io.smallrye.graphql.client.GraphQLClient;
 import io.smallrye.graphql.client.Response;
 import io.smallrye.graphql.client.core.Document;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
@@ -13,11 +15,11 @@ import zenika.oss.stats.config.GitHubClient;
 import zenika.oss.stats.config.GitHubGraphQLClient;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import org.eclipse.microprofile.graphql.Query;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import static io.smallrye.graphql.client.core.Document.document;
@@ -37,8 +39,8 @@ public class GitHubServices {
     GitHubGraphQLClient gitHubGraphQLClient;
 
     @Inject
-    private DynamicGraphQLClient dynamicGraphQLClient;
-
+    @GraphQLClient("github-api-dynamic")
+    DynamicGraphQLClient dynamicGraphQLClient;
     /**
      * Get information for the current organization.
      *
@@ -96,13 +98,19 @@ public class GitHubServices {
     }
 
     public ContributionsBean getContributionsData(final String login) {
-        return gitHubGraphQLClient.getUserContributions(login);
 
-        /*
+        return gitHubGraphQLClient.getUserContributions(login);
+    }
+
+
+    public ContributionsBean getContributionsDataDynamic(final String login) {
+        Response response = null;
+        try {
                 
+        /*
         Document query = document(
                 operation(
-                        field("getUserContributions",
+                        field("getUserContributions", 
                                 field("user",
                                         field("contributionsCollection",
                                             field("totalIssueContributions"),
@@ -115,15 +123,27 @@ public class GitHubServices {
                         )
                 )
         );
-        Response response = null;
-        try {
+       
             response = dynamicGraphQLClient.executeSync(query);
+         */
+            response = dynamicGraphQLClient.executeSync("""
+                  query getUserContributions($login: String!) { user(login: $login) {
+                    contributionsCollection {
+                        totalIssueContributions,
+                        totalCommitContributions,
+                        totalPullRequestContributions,
+                        totalPullRequestReviewContributions,
+                        totalRepositoryContributions
+                    }
+                    } 
+                }
+              """, login);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
         return response.getObject(ContributionsBean.class, "getUserContributions");
-        */
+        
     }
 }
