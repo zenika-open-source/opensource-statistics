@@ -1,6 +1,6 @@
 package zenika.oss.stats.beans;
 
-public class ContributionsBean {
+public class ContributionsCollection {
     
     private int totalIssueContributions;
     private int totalCommitContributions;
