@@ -1,0 +1,7 @@
+
+image:
+  file: docker/Dockerfile
+
+vscode:
+  extensions:
+    - pomdtr.excalidraw-editor
