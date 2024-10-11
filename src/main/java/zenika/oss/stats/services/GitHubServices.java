@@ -5,16 +5,28 @@ import io.smallrye.graphql.client.Response;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import zenika.oss.stats.beans.CustomStatsContributionsUserByMonth;
 import zenika.oss.stats.beans.GitHubMember;
 import zenika.oss.stats.beans.GitHubOrganization;
 import zenika.oss.stats.beans.GitHubProject;
+import zenika.oss.stats.beans.PullRequestContributions;
 import zenika.oss.stats.beans.User;
+import zenika.oss.stats.beans.UserStatsNumberContributions;
 import zenika.oss.stats.config.GitHubClient;
 import zenika.oss.stats.config.GitHubGraphQLClient;
+import zenika.oss.stats.config.GitHubGraphQLQueries;
 
 import java.io.IOException;
+import java.time.Month;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -23,19 +35,19 @@ import org.eclipse.microprofile.rest.client.inject.RestClient;
 @ApplicationScoped
 public class GitHubServices {
 
-    private static final int NB_MEMBERS_PAR_PAGE= 100;
-    
+    private static final int NB_MEMBERS_PAR_PAGE = 100;
+
     @Inject
     @RestClient
     GitHubClient gitHubClient;
-    
+
     @Inject
     GitHubGraphQLClient gitHubGraphQLClient;
 
     @Inject
     @GraphQLClient("github-api-dynamic")
     DynamicGraphQLClient dynamicGraphQLClient;
-    
+
     /**
      * Get information for the current organization.
      *
@@ -67,6 +79,7 @@ public class GitHubServices {
      * @return user
      */
     public GitHubMember getUserInformation(final String id) {
+
         return gitHubClient.getUserInformation(id);
     }
 
@@ -77,10 +90,13 @@ public class GitHubServices {
      * @return a list of public projects created by the user.
      */
     public List<GitHubProject> getPersonalProjectForAnUser(final String login) {
+
         var repos = gitHubClient.getReposForAnUser(login);
-        return repos.stream().filter(repo -> !repo.isFork()).collect(Collectors.toList());
+        return repos.stream()
+                .filter(repo -> !repo.isFork())
+                .collect(Collectors.toList());
     }
-    
+
     /**
      * Get forked project (ie no forked) for a user.
      *
@@ -88,60 +104,88 @@ public class GitHubServices {
      * @return a list of public projects created by the user.
      */
     public List<GitHubProject> getForkedProjectForAnUser(final String login) {
+
         var repos = gitHubClient.getReposForAnUser(login);
-        return repos.stream().filter(repo -> repo.isFork()).collect(Collectors.toList());
+        return repos.stream()
+                .filter(GitHubProject::isFork)
+                .collect(Collectors.toList());
     }
 
     public User getContributionsData(final String login) {
 
-        return gitHubGraphQLClient.user("jeanphi-baconnais");
+        return gitHubGraphQLClient.user(login);
     }
 
-
     public User getContributionsDataDynamic(final String login) {
+
         Response response = null;
         try {
-                
-        /*
-        Document query = document(
-                operation(
-                        field("getUserContributions", 
-                                field("user",
-                                        field("contributionsCollection",
-                                            field("totalIssueContributions"),
-                                            field("totalCommitContributions"),
-                                            field("totalPullRequestContributions"), 
-                                                field("totalPullRequestReviewContributions"),
-                                                field("totalRepositoryContributions")
-                                        )
-                                )
-                        )
-                )
-        );
-       
-            response = dynamicGraphQLClient.executeSync(query);
-         */
             var variables = new HashMap<String, Object>(); // <3>
             variables.put("login", login);
-            String query = "query($login: String!) {\n" + 
-                    "                    user(login: $login) {\n" +
-                    "                        contributionsCollection {\n" + 
-                    "                            totalIssueContributions,\n" +
+            String query = "query($login: String!) {\n" + "                    user(login: $login) {\n" +
+                    "                        contributionsCollection {\n" + "                            totalIssueContributions,\n" +
                     "                            totalCommitContributions,\n" +
                     "                            totalPullRequestContributions,\n" +
                     "                            totalPullRequestReviewContributions,\n" +
-                    "                            totalRepositoryContributions\n" + 
-                    "                        }\n" +
+                    "                            totalRepositoryContributions\n" + "                        }\n" +
                     "                    }\n" + "                }";
 
             response = dynamicGraphQLClient.executeSync(query, variables);
-            
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
+
+        } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
         }
         return response.getObject(User.class, "user");
-        
+
+    }
+
+    /**
+     * Get contributions for the current year.
+     *
+     * @param login
+     * @param year : year to search number of contributions
+     * @return a map of String (Month), Integer (number of contributions)
+     */
+    public List<CustomStatsContributionsUserByMonth> getContributionsForTheCurrentYear(final String login, final int year) {
+
+        Response response = null;
+        PullRequestContributions prContributions = null;
+        var contributionsTab = new ArrayList<CustomStatsContributionsUserByMonth>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
+        try {
+
+            for (Month month : Month.values()) {
+                var variables = new HashMap<String, Object>();
+                variables.put("login", login);
+
+                ZonedDateTime firtDayOfMonth = YearMonth.of(year, month)
+                        .atDay(1)
+                        .atTime(0, 0, 0)
+                        .atZone(ZoneOffset.UTC);
+                ZonedDateTime lastDayOfMonth = YearMonth.of(year, month)
+                        .atEndOfMonth()
+                        .atTime(23, 59, 59)
+                        .atZone(ZoneOffset.UTC);
+
+                variables.put("from", firtDayOfMonth.format(formatter));
+                variables.put("to", lastDayOfMonth.format(formatter));
+
+                response = dynamicGraphQLClient.executeSync(GitHubGraphQLQueries.qGetNumberOfContributionsForAPeriod, variables);
+                prContributions = response.getObject(UserStatsNumberContributions.class, "user")
+                        .getContributionsCollection()
+                        .getPullRequestContributions();
+
+                contributionsTab.add(
+                        new CustomStatsContributionsUserByMonth(month.getValue(), month.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+                                prContributions.getTotalCount()));
+
+            }
+
+        } catch (ExecutionException | InterruptedException e) {
+            throw new RuntimeException(e);
+        } 
+
+        return contributionsTab;
     }
 }

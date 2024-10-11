@@ -8,6 +8,8 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.Response;
 import zenika.oss.stats.services.GitHubServices;
 
+import java.time.Year;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
@@ -56,18 +58,15 @@ public class GitHubRessources {
     }
 
     @GET
-    @Path("user/{login}/contributions")
+    @Path("user/{login}/contributions/year/current")
     public Response getContributionsData(@PathParam("login") String login) {
-        return Response.ok(gitHubServices.getContributionsData(login)).build();
+        return Response.ok(gitHubServices.getContributionsForTheCurrentYear(login, Year.now().getValue())).build();
     }
-
 
     @GET
-    @Path("user/{login}/contributions-dynamic")
-    public Response getContributionsDataDynamic(@PathParam("login") String login) {
-        return Response.ok(gitHubServices.getContributionsDataDynamic(login)).build();
+    @Path("user/{login}/contributions/year/{year}")
+    public Response getContributionsData(@PathParam("login") String login, @PathParam("year") int year) {
+        return Response.ok(gitHubServices.getContributionsForTheCurrentYear(login, year)).build();
     }
-
-
-
+    
 }

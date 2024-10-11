@@ -10,7 +10,6 @@ import org.eclipse.microprofile.graphql.NonNull;
 @AuthorizationHeader(type = AuthorizationHeader.Type.BEARER)
 public interface GitHubGraphQLClient {
     
-    
     User user(@NonNull String login);
     
 }

@@ -14,6 +14,15 @@ Using :
 - [Cloud SQL](https://quarkus.io/guides/deploying-to-google-cloud#using-cloud-sql) to save data
 - [GitHub actions](https://github.com/features/actions) as CICD.
 
+## 🌐 API 
+
+Some resources are available but only the first is in progress : 
+- `/github/` to get information about Zenika Open Source GitHub organization and members from GitHub
+- `/members/` to get information from GCP database 🚧 not implemented
+- `/contributions/` to get information about contributions from GCP database 🚧 not implemented
+
+one future step concerns GitLab. We could easily imagine an endpoint `/gitlab`to get all information in this platform.
+
 ## 📝 Setup 
 
 - You need a GitHub token you can generate on [this page](https://github.com/settings/tokens).
