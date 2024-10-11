@@ -2,6 +2,7 @@ package zenika.oss.stats.ressources.github;
 
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
+import zenika.oss.stats.beans.CustomStatsContributionsUserByMonth;
 import zenika.oss.stats.beans.GitHubMember;
 import zenika.oss.stats.services.GitHubServices;
 
@@ -15,7 +16,7 @@ import org.mockito.Mockito;
 import static io.restassured.RestAssured.given;
 
 @QuarkusTest
-public class GitHubRessourcesTest {
+class GitHubRessourcesTest {
 
     private GitHubMember member;
 
@@ -45,7 +46,7 @@ public class GitHubRessourcesTest {
     }
 
     @Test
-    public void test_getOrganizationInformation() {
+    void test_getOrganizationInformation() {
 
         given().when()
                 .get("/v1/github/organization/infos/")
@@ -54,7 +55,7 @@ public class GitHubRessourcesTest {
     }
 
     @Test
-    public void test_getOrganizationMembers() {
+    void test_getOrganizationMembers() {
 
         given().when()
                 .get("/v1/github/organization/members/")
@@ -63,7 +64,7 @@ public class GitHubRessourcesTest {
     }
 
     @Test
-    public void test_getUserInformation() {
+    void test_getUserInformation() {
 
         given().when()
                 .get("/v1/github/user/" + member.id)
@@ -73,7 +74,7 @@ public class GitHubRessourcesTest {
     }
 
     @Test
-    public void test_getPersonalProjectForAnUser() {
+    void test_getPersonalProjectForAnUser() {
 
         given().when()
                 .get("/v1/github/user/" + member.login + "/personal-projects")
@@ -83,10 +84,36 @@ public class GitHubRessourcesTest {
     }
 
     @Test
-    public void test_getForkedProjectsForAnUser() {
+    void test_getForkedProjectsForAnUser() {
 
         given().when()
                 .get("/v1/github/user/" + member.login + "/forked-projects")
+                .then()
+                .statusCode(200);
+
+    }
+
+    @Test
+    void test_getContributionsDataWithLoginAndCurrentyear() {
+
+        Mockito.when(gitHubServices.getContributionsForTheCurrentYear("test", 2024))
+                .thenReturn(List.of(new CustomStatsContributionsUserByMonth(1, "JANUARY", 10)));
+
+        given().when()
+                .get("/v1/github/user/" + member.login + "/contributions/year/current")
+                .then()
+                .statusCode(200);
+
+    }
+
+    @Test
+    void test_getContributionsDataWithLoginAndYear() {
+
+        Mockito.when(gitHubServices.getContributionsForTheCurrentYear("test", 2024))
+                .thenReturn(List.of(new CustomStatsContributionsUserByMonth(1, "JANUARY", 10)));
+
+        given().when()
+                .get("/v1/github/user/" + member.login + "/contributions/year/" + 2024)
                 .then()
                 .statusCode(200);
 

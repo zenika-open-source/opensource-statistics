@@ -5,17 +5,28 @@ import io.smallrye.graphql.client.Response;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import zenika.oss.stats.beans.CustomStatsContributionsUserByMonth;
 import zenika.oss.stats.beans.GitHubMember;
 import zenika.oss.stats.beans.GitHubOrganization;
 import zenika.oss.stats.beans.GitHubProject;
+import zenika.oss.stats.beans.PullRequestContributions;
 import zenika.oss.stats.beans.User;
 import zenika.oss.stats.beans.UserStatsNumberContributions;
 import zenika.oss.stats.config.GitHubClient;
 import zenika.oss.stats.config.GitHubGraphQLClient;
+import zenika.oss.stats.config.GitHubGraphQLQueries;
 
 import java.io.IOException;
+import java.time.Month;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -96,7 +107,7 @@ public class GitHubServices {
 
         var repos = gitHubClient.getReposForAnUser(login);
         return repos.stream()
-                .filter(repo -> repo.isFork())
+                .filter(GitHubProject::isFork)
                 .collect(Collectors.toList());
     }
 
@@ -121,9 +132,7 @@ public class GitHubServices {
 
             response = dynamicGraphQLClient.executeSync(query, variables);
 
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        } catch (InterruptedException e) {
+        } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
         }
         return response.getObject(User.class, "user");
@@ -137,35 +146,46 @@ public class GitHubServices {
      * @param year : year to search number of contributions
      * @return a map of String (Month), Integer (number of contributions)
      */
-    public UserStatsNumberContributions getContributionsForTheCurrentYear(final String login, final int year) {
+    public List<CustomStatsContributionsUserByMonth> getContributionsForTheCurrentYear(final String login, final int year) {
 
         Response response = null;
+        PullRequestContributions prContributions = null;
+        var contributionsTab = new ArrayList<CustomStatsContributionsUserByMonth>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+
         try {
-            var variables = new HashMap<String, Object>();
-            variables.put("login", login);
-            variables.put("from", "2024-01-01T23:59:59Z");
-            variables.put("to", "2024-10-31T23:59:59Z");
 
-            String query = """
-                    query ($login: String!, $from: DateTime!, $to: DateTime!) {
-                      user(login: $login) {
-                        contributionsCollection(
-                          from: $from
-                          to: $to
-                        ) {
-                          pullRequestContributions(first: 1) {
-                            totalCount
-                          }
-                        }
-                      }
-                    }
-                    """;
-            response = dynamicGraphQLClient.executeSync(query, variables);
+            for (Month month : Month.values()) {
+                var variables = new HashMap<String, Object>();
+                variables.put("login", login);
 
-        } catch (ExecutionException e) {
+                ZonedDateTime firtDayOfMonth = YearMonth.of(year, month)
+                        .atDay(1)
+                        .atTime(0, 0, 0)
+                        .atZone(ZoneOffset.UTC);
+                ZonedDateTime lastDayOfMonth = YearMonth.of(year, month)
+                        .atEndOfMonth()
+                        .atTime(23, 59, 59)
+                        .atZone(ZoneOffset.UTC);
+
+                variables.put("from", firtDayOfMonth.format(formatter));
+                variables.put("to", lastDayOfMonth.format(formatter));
+
+                response = dynamicGraphQLClient.executeSync(GitHubGraphQLQueries.qGetNumberOfContributionsForAPeriod, variables);
+                prContributions = response.getObject(UserStatsNumberContributions.class, "user")
+                        .getContributionsCollection()
+                        .getPullRequestContributions();
+
+                contributionsTab.add(
+                        new CustomStatsContributionsUserByMonth(month.getValue(), month.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+                                prContributions.getTotalCount()));
+
+            }
+
+        } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } return response.getObject(UserStatsNumberContributions.class, "user");
+        } 
+
+        return contributionsTab;
     }
 }
