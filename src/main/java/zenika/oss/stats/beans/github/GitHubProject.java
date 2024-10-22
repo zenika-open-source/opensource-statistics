@@ -1,6 +1,4 @@
-package zenika.oss.stats.beans;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
+package zenika.oss.stats.beans.github;
 
 public class GitHubProject {
     public String id;

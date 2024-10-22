@@ -1,4 +1,4 @@
-package zenika.oss.stats.beans;
+package zenika.oss.stats.beans.github;
 
 public class GitHubMember {
     public String login;

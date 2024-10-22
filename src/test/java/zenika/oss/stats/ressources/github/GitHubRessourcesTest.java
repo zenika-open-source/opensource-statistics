@@ -3,20 +3,26 @@ package zenika.oss.stats.ressources.github;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
 import zenika.oss.stats.beans.CustomStatsContributionsUserByMonth;
-import zenika.oss.stats.beans.GitHubMember;
+import zenika.oss.stats.beans.github.GitHubMember;
 import zenika.oss.stats.services.GitHubServices;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static io.restassured.RestAssured.given;
+import static org.mockito.ArgumentMatchers.any;
 
 @QuarkusTest
 class GitHubRessourcesTest {
+
+    private static final Logger log = LoggerFactory.getLogger(GitHubRessourcesTest.class);
 
     private GitHubMember member;
 
@@ -118,5 +124,16 @@ class GitHubRessourcesTest {
                 .statusCode(200);
 
     }
+    
+    @Test
+    void test_getContributionsForAnOrganizationAndForAllMembersAndTheCurrentYear(){
 
+        Mockito.when(gitHubServices.getContributionsForTheCurrentYearAndAllTheOrganizationMembers(any()))
+                .thenReturn(new ArrayList());
+
+        given().when()
+                .get("/v1/github/organization/members/contributions/year/current")
+                .then()
+                .statusCode(200);
+    }
 }

@@ -4,9 +4,9 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
-import zenika.oss.stats.beans.GitHubOrganization;
-import zenika.oss.stats.beans.GitHubMember;
-import zenika.oss.stats.beans.GitHubProject;
+import zenika.oss.stats.beans.github.GitHubOrganization;
+import zenika.oss.stats.beans.github.GitHubMember;
+import zenika.oss.stats.beans.github.GitHubProject;
 
 import java.util.List;
 
