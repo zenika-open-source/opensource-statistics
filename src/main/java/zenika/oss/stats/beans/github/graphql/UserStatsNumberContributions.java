@@ -8,4 +8,9 @@ public class UserStatsNumberContributions {
 
         return contributionsCollection;
     }
+
+    public void setContributionsCollection(final ContributionsCollectionNumber contributionsCollection) {
+
+        this.contributionsCollection = contributionsCollection;
+    }
 }

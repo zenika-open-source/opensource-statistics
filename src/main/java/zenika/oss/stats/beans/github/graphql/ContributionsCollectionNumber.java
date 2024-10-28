@@ -9,4 +9,8 @@ public class ContributionsCollectionNumber {
         return pullRequestContributions;
     }
 
+    public void setPullRequestContributions(final PullRequestContributions pullRequestContributions) {
+
+        this.pullRequestContributions = pullRequestContributions;
+    }
 }

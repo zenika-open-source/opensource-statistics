@@ -105,7 +105,7 @@ public class GitHubServices {
      * @param login : id of the user
      * @return a list of public projects created by the user.
      */
-    public List<GitHubProject> getForkedProjectForAnUser(final String login) {
+        public List<GitHubProject> getForkedProjectForAnUser(final String login) {
 
         var repos = gitHubClient.getReposForAnUser(login);
         return repos.stream()

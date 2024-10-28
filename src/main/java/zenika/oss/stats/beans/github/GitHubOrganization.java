@@ -14,4 +14,14 @@ public class GitHubOrganization {
 
         return description;
     }
+
+    public void setName(final String name) {
+
+        this.name = name;
+    }
+
+    public void setDescription(final String description) {
+
+        this.description = description;
+    }
 }

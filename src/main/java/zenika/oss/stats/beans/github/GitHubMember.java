@@ -22,4 +22,19 @@ public class GitHubMember {
 
         return type;
     }
+
+    public void setLogin(final String login) {
+
+        this.login = login;
+    }
+
+    public void setId(final String id) {
+
+        this.id = id;
+    }
+
+    public void setType(final String type) {
+
+        this.type = type;
+    }
 }

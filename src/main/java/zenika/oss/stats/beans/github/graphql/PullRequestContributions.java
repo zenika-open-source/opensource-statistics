@@ -7,4 +7,9 @@ public class PullRequestContributions {
 
         return totalCount;
     }
+
+    public void setTotalCount(final int totalCount) {
+
+        this.totalCount = totalCount;
+    }
 }
