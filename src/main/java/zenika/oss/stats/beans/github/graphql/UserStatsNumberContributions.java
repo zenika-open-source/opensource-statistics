@@ -1,4 +1,4 @@
-package zenika.oss.stats.beans;
+package zenika.oss.stats.beans.github.graphql;
 
 public class UserStatsNumberContributions {
     
@@ -7,5 +7,10 @@ public class UserStatsNumberContributions {
     public ContributionsCollectionNumber getContributionsCollection() {
 
         return contributionsCollection;
+    }
+
+    public void setContributionsCollection(final ContributionsCollectionNumber contributionsCollection) {
+
+        this.contributionsCollection = contributionsCollection;
     }
 }

@@ -6,18 +6,20 @@ import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import zenika.oss.stats.beans.CustomStatsContributionsUserByMonth;
-import zenika.oss.stats.beans.GitHubMember;
-import zenika.oss.stats.beans.GitHubOrganization;
-import zenika.oss.stats.beans.GitHubProject;
-import zenika.oss.stats.beans.PullRequestContributions;
-import zenika.oss.stats.beans.User;
-import zenika.oss.stats.beans.UserStatsNumberContributions;
+import zenika.oss.stats.beans.CustomStatsUser;
+import zenika.oss.stats.beans.github.GitHubMember;
+import zenika.oss.stats.beans.github.GitHubOrganization;
+import zenika.oss.stats.beans.github.GitHubProject;
+import zenika.oss.stats.beans.github.graphql.PullRequestContributions;
+import zenika.oss.stats.beans.github.graphql.User;
+import zenika.oss.stats.beans.github.graphql.UserStatsNumberContributions;
 import zenika.oss.stats.config.GitHubClient;
 import zenika.oss.stats.config.GitHubGraphQLClient;
 import zenika.oss.stats.config.GitHubGraphQLQueries;
 
 import java.io.IOException;
 import java.time.Month;
+import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
@@ -103,7 +105,7 @@ public class GitHubServices {
      * @param login : id of the user
      * @return a list of public projects created by the user.
      */
-    public List<GitHubProject> getForkedProjectForAnUser(final String login) {
+        public List<GitHubProject> getForkedProjectForAnUser(final String login) {
 
         var repos = gitHubClient.getReposForAnUser(login);
         return repos.stream()
@@ -184,8 +186,30 @@ public class GitHubServices {
 
         } catch (ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
-        } 
+        }
 
         return contributionsTab;
+    }
+
+    /**
+     * Get contributions for all the organization members for the current year .
+     *
+     * @param organizationName : organization name
+     * @return a map of String (Month), Integer (number of contributions)
+     */
+    public List<CustomStatsUser> getContributionsForTheCurrentYearAndAllTheOrganizationMembers(final String organizationName) {
+
+        var statsMembers = new ArrayList<CustomStatsUser>();
+
+        var members = this.getOrganizationMembers(organizationName);
+        
+        members.stream()
+                .map(member -> {
+                    return statsMembers.add(new CustomStatsUser(member.getLogin(), this.getContributionsForTheCurrentYear(member.login, Year.now()
+                            .getValue())));
+                })
+                .collect(Collectors.toList());
+
+        return statsMembers;
     }
 }

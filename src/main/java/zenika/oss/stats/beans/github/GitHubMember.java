@@ -1,4 +1,4 @@
-package zenika.oss.stats.beans;
+package zenika.oss.stats.beans.github;
 
 public class GitHubMember {
     public String login;
@@ -21,5 +21,20 @@ public class GitHubMember {
     public String getType() {
 
         return type;
+    }
+
+    public void setLogin(final String login) {
+
+        this.login = login;
+    }
+
+    public void setId(final String id) {
+
+        this.id = id;
+    }
+
+    public void setType(final String type) {
+
+        this.type = type;
     }
 }

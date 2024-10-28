@@ -1,4 +1,4 @@
-package zenika.oss.stats.beans;
+package zenika.oss.stats.beans.github;
 
 public class GitHubOrganization {
 
@@ -13,5 +13,15 @@ public class GitHubOrganization {
     public String getDescription() {
 
         return description;
+    }
+
+    public void setName(final String name) {
+
+        this.name = name;
+    }
+
+    public void setDescription(final String description) {
+
+        this.description = description;
     }
 }

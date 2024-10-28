@@ -1,4 +1,4 @@
-package zenika.oss.stats.beans;
+package zenika.oss.stats.beans.github.graphql;
 
 public class ContributionsCollectionNumber {
     
@@ -9,4 +9,8 @@ public class ContributionsCollectionNumber {
         return pullRequestContributions;
     }
 
+    public void setPullRequestContributions(final PullRequestContributions pullRequestContributions) {
+
+        this.pullRequestContributions = pullRequestContributions;
+    }
 }
