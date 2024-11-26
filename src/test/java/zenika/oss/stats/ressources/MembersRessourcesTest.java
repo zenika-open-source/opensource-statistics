@@ -7,16 +7,33 @@ import org.junit.jupiter.api.Test;
 import static io.restassured.RestAssured.given;
     
 @QuarkusTest
-public class MembersRessourcesTest {
+class MembersRessourcesTest {
 
     @Test
-    public void test_getAllMembers() {
+    void test_getAllMembers() {
 
         given().when()
-                .get("/v1/members/")
+                .get("/v1/members/all")
                 .then()
-                .statusCode(404);
+                .statusCode(200);
+    }
 
+    @Test
+    void test_getMember() {
+
+        given().when()
+                .get("/v1/members/id-test")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    void test_getInactivesMembers() {
+
+        given().when()
+                .get("/v1/members/inactives")
+                .then()
+                .statusCode(200);
     }
 
 }
