@@ -33,7 +33,7 @@ class GitHubServicesTest {
 
     @Mock
     private GitHubClient gitHubClient;
-    
+
     @Mock
     DynamicGraphQLClient dynamicGraphQLClient;
 
@@ -41,7 +41,7 @@ class GitHubServicesTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
     }
-    
+
     @Test
     void test_getOrganizationInformation() {
         var organizationName = "testOrg";
@@ -50,7 +50,7 @@ class GitHubServicesTest {
         GitHubOrganization expectedOrganization = new GitHubOrganization();
         expectedOrganization.setName(organizationName);
         expectedOrganization.setDescription(organizationDescription);
-        
+
         when(gitHubClient.getOrgnizationByName(organizationName)).thenReturn(expectedOrganization);
 
         GitHubOrganization result = gitHubServices.getOrganizationInformation(organizationName);
@@ -58,7 +58,7 @@ class GitHubServicesTest {
         assertNotNull(result);
         assertEquals(organizationName, result.getName());
         assertEquals(organizationDescription, result.getDescription());
-        
+
         verify(gitHubClient, times(1)).getOrgnizationByName(organizationName);
     }
 
@@ -73,7 +73,7 @@ class GitHubServicesTest {
 
         verify(gitHubClient, times(1)).getOrgnizationByName(null);
     }
-    
+
     @Test
     void test_getUserInformation() {
         var idUser = "idUser";
@@ -81,16 +81,16 @@ class GitHubServicesTest {
         githubMember.setId(idUser);
         githubMember.setLogin("login");
         githubMember.setType("type");
-        
+
         when(gitHubClient.getUserInformation(idUser)).thenReturn(githubMember);
-        
+
         final GitHubMember result = gitHubServices.getUserInformation(idUser);
-        
+
         assertNotNull(result);
 
         verify(gitHubClient, times(1)).getUserInformation(idUser);
     }
-    
+
     @Test
     void test_getPersonalProjectForAnUser() {
         String login = "testUser";
@@ -109,10 +109,10 @@ class GitHubServicesTest {
 
         verify(gitHubClient, times(1)).getReposForAnUser(login);
     }
-    
+
     //@Test
     void test_getContributionsData(){
-       
+
     }
     
     
