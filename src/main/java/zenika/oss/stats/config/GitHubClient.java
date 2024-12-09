@@ -4,25 +4,33 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
-import zenika.oss.stats.beans.github.GitHubOrganization;
 import zenika.oss.stats.beans.github.GitHubMember;
+import zenika.oss.stats.beans.github.GitHubOrganization;
 import zenika.oss.stats.beans.github.GitHubProject;
 
 import java.util.List;
 
-import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 @RegisterRestClient(configKey="github-api")
-@RegisterClientHeaders(GitHuClientHeaderFactory.class)
+@ClientHeaderParam(name = "Accept", value = "application/vnd.github+json")
+@ClientHeaderParam(name = "X-GitHub-Api-Version", value = "2022-11-28")
 @Path("/")
 public interface GitHubClient {
+    
+    default String prepareToken() {
+        String token = ConfigProvider.getConfig().getValue("github.token", String.class);
+        return "Bearer " + token;
+    }
 
     @GET
     @Path("/orgs/{organizationName}")
     GitHubOrganization getOrgnizationByName(@PathParam("organizationName") String organizationName);
     
     @GET
+    @ClientHeaderParam(name = "Authorization", value = "{zenika.oss.stats.config.GitHubClient.prepareToken}")
     @Path("/orgs/{organizationName}/members")
     List<GitHubMember> getOrganizationMembers(@PathParam("organizationName") String organizationName, @QueryParam("per_page") int page);
 
