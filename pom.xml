@@ -14,6 +14,7 @@
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
     <quarkus.platform.version>3.12.1</quarkus.platform.version>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
+    <quarkus.google-cloud-services.version>2.13.0</quarkus.google-cloud-services.version>
   </properties>
   
   <dependencyManagement>
@@ -21,6 +22,21 @@
       <dependency>
         <groupId>${quarkus.platform.group-id}</groupId>
         <artifactId>${quarkus.platform.artifact-id}</artifactId>
+        <version>${quarkus.platform.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>io.quarkiverse.googlecloudservices</groupId>
+        <artifactId>quarkus-google-cloud-services-bom</artifactId>
+        <version>${quarkus.google-cloud-services.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>${quarkus.platform.group-id}</groupId>
+        <artifactId>quarkus-google-cloud-services-bom</artifactId>
         <version>${quarkus.platform.version}</version>
         <type>pom</type>
         <scope>import</scope>
@@ -64,6 +80,10 @@
       <artifactId>quarkus-smallrye-graphql-client</artifactId>
     </dependency>
     
+    <dependency>
+      <groupId>io.quarkiverse.googlecloudservices</groupId>
+      <artifactId>quarkus-google-cloud-firestore</artifactId>
+    </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-junit5</artifactId>
