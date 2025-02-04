@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -49,4 +50,21 @@ public class WorkflowRessources {
     public Response savePersonalProjects() {
         return Response.ok("\uD83D\uDEA7 Not implemented yet").build();
     }
+
+    @POST
+    @Path("stats/save/{year}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response saveStatsForYear(@PathParam("year") int year) {
+
+        return Response.ok("\uD83D\uDEA7 Not implemented yet").build();
+    }
+
+    @POST
+    @Path("stats/save/{githubMember}/{year}")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response saveStatsForAGitHubAccountForAYear(@PathParam("githubMember") int githubMember, @PathParam("year") int year) {
+
+        return Response.ok("\uD83D\uDEA7 Not implemented yet").build();
+    }
+
 }
