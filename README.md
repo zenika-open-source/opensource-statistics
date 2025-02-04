@@ -31,6 +31,8 @@ Some resources are available but only the first is in progress :
 - Create a `.env` file based on the `.env-example` file and set the token previously created. 
 - You have to create a `.gcloud-conf.json` to save service account (it's not the best option actually, this can be replaced by another configuration).
 - Run the application with `quarkus dev` if you have the [Quarkus CLI](https://quarkus.io/guides/cli-tooling) installed on your environment, or `mvn quarkus:dev`command.
+- You can use Quarkus dev service for Firestore enabling this variable `quarkus.google.cloud.firestore.devservice.enabled` in application.properties file.
+
 
 ## ✨Contribute 
 
