@@ -19,9 +19,8 @@ public class ZenikaMemberMapper {
 
         zenikaMember.setFirstname(documentMember.getString("firstname"));
         zenikaMember.setName(documentMember.getString("name"));
-        //zenikaMember.setId( documentMember.getId());
-        zenikaMember.setGitHubAccount(new GitHubMember());
-        //zenikaMember.getGitHubAccount().setLogin(documentMember.;
+        zenikaMember.setId(documentMember.getId());
+        zenikaMember.setGitHubAccount(documentMember.get("gitHubAccount", GitHubMember.class));
 
         return zenikaMember;
     }
