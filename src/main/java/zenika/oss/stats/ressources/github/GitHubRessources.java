@@ -6,11 +6,10 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import zenika.oss.stats.services.GitHubServices;
 
 import java.time.Year;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 @ApplicationScoped
 @Path("/v1/github/")
@@ -46,7 +45,7 @@ public class GitHubRessources {
                 .build();
     }
 
-        @GET
+    @GET
     @Path("/user/{id}")
     public Response getUserInformation(@PathParam("id") String id) {
 

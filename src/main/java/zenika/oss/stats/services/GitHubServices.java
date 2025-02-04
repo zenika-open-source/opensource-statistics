@@ -5,6 +5,8 @@ import io.smallrye.graphql.client.Response;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 import zenika.oss.stats.beans.CustomStatsContributionsUserByMonth;
 import zenika.oss.stats.beans.CustomStatsUser;
 import zenika.oss.stats.beans.github.GitHubMember;
@@ -18,11 +20,7 @@ import zenika.oss.stats.config.GitHubGraphQLClient;
 import zenika.oss.stats.config.GitHubGraphQLQueries;
 
 import java.io.IOException;
-import java.time.Month;
-import java.time.Year;
-import java.time.YearMonth;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
@@ -32,12 +30,13 @@ import java.util.Locale;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-
 @ApplicationScoped
 public class GitHubServices {
 
     private static final int NB_MEMBERS_PAR_PAGE = 100;
+
+    @ConfigProperty(name = "organization.name")
+    String organizationName;
 
     @Inject
     @RestClient
@@ -211,5 +210,9 @@ public class GitHubServices {
                 .collect(Collectors.toList());
 
         return statsMembers;
+    }
+
+    public List<GitHubMember> getZenikaOpenSourceMembers() {
+        return gitHubClient.getOrganizationMembers(organizationName, NB_MEMBERS_PAR_PAGE);
     }
 }
