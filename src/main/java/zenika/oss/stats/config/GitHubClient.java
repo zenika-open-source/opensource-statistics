@@ -4,15 +4,14 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
+import org.eclipse.microprofile.config.ConfigProvider;
+import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
+import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import zenika.oss.stats.beans.github.GitHubMember;
 import zenika.oss.stats.beans.github.GitHubOrganization;
 import zenika.oss.stats.beans.github.GitHubProject;
 
 import java.util.List;
-
-import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
-import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 @RegisterRestClient(configKey="github-api")
 @ClientHeaderParam(name = "Accept", value = "application/vnd.github+json")
