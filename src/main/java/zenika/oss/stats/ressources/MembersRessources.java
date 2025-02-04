@@ -6,36 +6,26 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.core.Response;
-import zenika.oss.stats.services.GitHubServices;
+import zenika.oss.stats.exception.DatabaseException;
+import zenika.oss.stats.services.FirestoreServices;
 
 @ApplicationScoped
 @Path("/v1/members/")
 public class MembersRessources {
 
     @Inject
-    GitHubServices gitHubServices;
+    FirestoreServices firestoreServices;
 
     @GET
     @Path("/all")
-    public Response getAllMembers() {
-
-        return Response.ok()
-                .build();
+    public Response getAllMembers() throws DatabaseException {
+        return Response.ok(firestoreServices.getAllMembers()).build();
     }
 
     @GET
     @Path("/{memberId}")
     public Response getMember(@PathParam("memberId") String memberId) {
-
-        return Response.ok()
-                .build();
+        return Response.ok("\uD83D\uDEA7 Not implemented yet").build();
     }
 
-    @GET
-    @Path("/inactives")
-    public Response getInactivesMembers() {
-
-        return Response.ok()
-                .build();
-    }
 }

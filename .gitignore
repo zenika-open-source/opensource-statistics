@@ -26,3 +26,6 @@ bin/
 
 # Local environment
 .env
+
+# GCP
+.gcloud-conf.json
