@@ -8,6 +8,7 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import zenika.oss.stats.beans.CustomStatsContributionsUserByMonth;
 import zenika.oss.stats.beans.github.GitHubMember;
 import zenika.oss.stats.exception.DatabaseException;
 import zenika.oss.stats.mapper.ZenikaMemberMapper;
@@ -62,9 +63,17 @@ public class WorkflowRessources {
     @POST
     @Path("stats/save/{githubMember}/{year}")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response saveStatsForAGitHubAccountForAYear(@PathParam("githubMember") int githubMember, @PathParam("year") int year) {
+    public Response saveStatsForAGitHubAccountForAYear(@PathParam("githubMember") String githubMember, @PathParam("year") int year) throws DatabaseException {
 
-        return Response.ok("\uD83D\uDEA7 Not implemented yet").build();
+        firestoreServices.deleteStatsForAGitHubAccountForAYear(githubMember, year);
+
+        List<CustomStatsContributionsUserByMonth> stats = gitHubServices.getContributionsForTheCurrentYear(githubMember, year);
+
+        if (!stats.isEmpty()) {
+            firestoreServices.saveStatsForAGitHubAccountForAYear(githubMember, year, stats);
+        }
+
+        return Response.ok().build();
     }
 
 }
