@@ -104,7 +104,7 @@ public class GitHubServices {
      * @param login : id of the user
      * @return a list of public projects created by the user.
      */
-        public List<GitHubProject> getForkedProjectForAnUser(final String login) {
+    public List<GitHubProject> getForkedProjectForAnUser(final String login) {
 
         var repos = gitHubClient.getReposForAnUser(login);
         return repos.stream()
@@ -144,7 +144,7 @@ public class GitHubServices {
      * Get contributions for the current year.
      *
      * @param login
-     * @param year : year to search number of contributions
+     * @param year  : year to search number of contributions
      * @return a map of String (Month), Integer (number of contributions)
      */
     public List<CustomStatsContributionsUserByMonth> getContributionsForTheCurrentYear(final String login, final int year) {
@@ -201,11 +201,11 @@ public class GitHubServices {
         var statsMembers = new ArrayList<CustomStatsUser>();
 
         var members = this.getOrganizationMembers(organizationName);
-        
+        var currentYear = Year.now().getValue();
+
         members.stream()
                 .map(member -> {
-                    return statsMembers.add(new CustomStatsUser(member.getLogin(), this.getContributionsForTheCurrentYear(member.login, Year.now()
-                            .getValue())));
+                    return statsMembers.add(new CustomStatsUser(member.getLogin(), currentYear, this.getContributionsForTheCurrentYear(member.login, currentYear)));
                 })
                 .collect(Collectors.toList());
 

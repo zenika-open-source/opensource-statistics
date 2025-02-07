@@ -9,8 +9,11 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import zenika.oss.stats.beans.CustomStatsContributionsUserByMonth;
+import zenika.oss.stats.beans.CustomStatsUser;
+import zenika.oss.stats.beans.gcp.StatsContribution;
 import zenika.oss.stats.beans.github.GitHubMember;
 import zenika.oss.stats.exception.DatabaseException;
+import zenika.oss.stats.mapper.StatsMapper;
 import zenika.oss.stats.mapper.ZenikaMemberMapper;
 import zenika.oss.stats.services.FirestoreServices;
 import zenika.oss.stats.services.GitHubServices;
@@ -69,8 +72,12 @@ public class WorkflowRessources {
 
         List<CustomStatsContributionsUserByMonth> stats = gitHubServices.getContributionsForTheCurrentYear(githubMember, year);
 
-        if (!stats.isEmpty()) {
-            firestoreServices.saveStatsForAGitHubAccountForAYear(githubMember, year, stats);
+        List<StatsContribution> statsMap = StatsMapper.mapGithubStatisticsToStatsContribution(githubMember, year, stats);
+
+        if (!statsMap.isEmpty()) {
+            for (StatsContribution stat : statsMap) {
+                firestoreServices.saveStatsForAGitHubAccountForAYear(stat);
+            }
         }
 
         return Response.ok().build();
