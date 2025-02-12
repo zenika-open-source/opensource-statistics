@@ -2,11 +2,8 @@ package zenika.oss.stats.services;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
-import com.google.firestore.v1.Write;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
-import zenika.oss.stats.beans.CustomStatsContributionsUserByMonth;
-import zenika.oss.stats.beans.CustomStatsUser;
 import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.gcp.StatsContribution;
 import zenika.oss.stats.exception.DatabaseException;
@@ -48,6 +45,7 @@ public class FirestoreServices {
      *
      * @param githubMember : GitHub login
      * @param year         : year to delete
+     * @throws DatabaseException exception
      */
     public void deleteStatsForAGitHubAccountForAYear(String githubMember, int year) throws DatabaseException {
         CollectionReference zStats = firestore.collection("stats");
@@ -71,5 +69,42 @@ public class FirestoreServices {
     public void saveStatsForAGitHubAccountForAYear(StatsContribution statsContribution) throws DatabaseException {
         List<ApiFuture<WriteResult>> futures = new ArrayList<>();
         futures.add(firestore.collection("stats").document().set(statsContribution));
+    }
+
+    /**
+     * Delete all stats for the year in parameter.
+     * @param year : the year that we want to remove stats
+     * @throws DatabaseException exception
+     */
+    public void deleteStatsForAllGitHubAccountForAYear(int year) throws DatabaseException {
+        CollectionReference zStats = firestore.collection("stats");
+        Query query = zStats.whereEqualTo("year", String.valueOf(year));
+        ApiFuture<QuerySnapshot> querySnapshot = query.get();
+        try {
+            List<QueryDocumentSnapshot> stats = querySnapshot.get().getDocuments();
+            for (QueryDocumentSnapshot document : stats) {
+                document.getReference().delete();
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    /**
+     * Remove all members
+     *
+     * @throws DatabaseException exception
+     */
+    public void deleteAllMembers() throws DatabaseException {
+        CollectionReference zStats = firestore.collection("members");
+        ApiFuture<QuerySnapshot> querySnapshot = zStats.get();
+        try {
+            List<QueryDocumentSnapshot> stats = querySnapshot.get().getDocuments();
+            for (QueryDocumentSnapshot document : stats) {
+                document.getReference().delete();
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            throw new DatabaseException(e);
+        }
     }
 }

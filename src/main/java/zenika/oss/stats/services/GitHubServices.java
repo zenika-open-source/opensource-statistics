@@ -173,14 +173,15 @@ public class GitHubServices {
                 variables.put("to", lastDayOfMonth.format(formatter));
 
                 response = dynamicGraphQLClient.executeSync(GitHubGraphQLQueries.qGetNumberOfContributionsForAPeriod, variables);
-                prContributions = response.getObject(UserStatsNumberContributions.class, "user")
-                        .getContributionsCollection()
-                        .getPullRequestContributions();
+                var userStats = response.getObject(UserStatsNumberContributions.class, "user");
 
-                contributionsTab.add(
-                        new CustomStatsContributionsUserByMonth(month.getValue(), month.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
-                                prContributions.getTotalCount()));
+                if (userStats != null) {
+                    prContributions = userStats.getContributionsCollection().getPullRequestContributions();
 
+                    contributionsTab.add(
+                            new CustomStatsContributionsUserByMonth(month.getValue(), month.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+                                    prContributions.getTotalCount()));
+                }
             }
 
         } catch (ExecutionException | InterruptedException e) {

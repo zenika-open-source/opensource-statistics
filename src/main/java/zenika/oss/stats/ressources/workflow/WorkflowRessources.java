@@ -9,7 +9,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import zenika.oss.stats.beans.CustomStatsContributionsUserByMonth;
-import zenika.oss.stats.beans.CustomStatsUser;
+import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.gcp.StatsContribution;
 import zenika.oss.stats.beans.github.GitHubMember;
 import zenika.oss.stats.exception.DatabaseException;
@@ -18,6 +18,7 @@ import zenika.oss.stats.mapper.ZenikaMemberMapper;
 import zenika.oss.stats.services.FirestoreServices;
 import zenika.oss.stats.services.GitHubServices;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
@@ -33,7 +34,9 @@ public class WorkflowRessources {
     @POST
     @Path("members/save")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response saveMembers() {
+    public Response saveMembers() throws DatabaseException {
+
+        firestoreServices.deleteAllMembers();
 
         List<GitHubMember> gitHubMembers = gitHubServices.getZenikaOpenSourceMembers();
         gitHubMembers.forEach(gitHubMember -> firestoreServices.createMember(ZenikaMemberMapper.mapGitHubMemberToZenikaMember(gitHubMember)));
@@ -58,9 +61,29 @@ public class WorkflowRessources {
     @POST
     @Path("stats/save/{year}")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response saveStatsForYear(@PathParam("year") int year) {
+    public Response saveStatsForYear(@PathParam("year") int year) throws DatabaseException {
+        List<CustomStatsContributionsUserByMonth> stats = new ArrayList<>();
 
-        return Response.ok("\uD83D\uDEA7 Not implemented yet").build();
+        firestoreServices.deleteStatsForAllGitHubAccountForAYear(year);
+
+        List<ZenikaMember> zMembers = firestoreServices.getAllMembers();
+
+        for (ZenikaMember zenikaMember : zMembers) {
+            if (zenikaMember.getGitHubAccount() != null) {
+                System.out.println("\uD83D\uDD0E Check information for " + zenikaMember.getGitHubAccount().getLogin());
+                stats.addAll(gitHubServices.getContributionsForTheCurrentYear(zenikaMember.getGitHubAccount().getLogin(), year));
+                List<StatsContribution> statsMap = StatsMapper.mapGithubStatisticsToStatsContribution(zenikaMember.getGitHubAccount().getLogin(), year, stats);
+
+                System.out.println("\uD83D\uDCBD Save information for " + zenikaMember.getGitHubAccount().getLogin());
+                if (!statsMap.isEmpty()) {
+                    for (StatsContribution stat : statsMap) {
+                        firestoreServices.saveStatsForAGitHubAccountForAYear(stat);
+                    }
+                }
+            }
+        }
+
+        return Response.ok().build();
     }
 
     @POST
