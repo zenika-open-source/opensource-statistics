@@ -57,4 +57,22 @@ public class WorkflowRessourcesTest {
                 .then()
                 .statusCode(200);
     }
+
+    @Test
+    void test_saveStatsForYear() {
+
+        given().when()
+                .post("/v1/workflow/stats/save/2024")
+                .then()
+                .statusCode(200);
+    }
+
+    @Test
+    void test_saveStatsForAGitHubAccountForAYear() {
+
+        given().when()
+                .post("/v1/workflow/stats/save/my-user/2024")
+                .then()
+                .statusCode(200);
+    }
 }

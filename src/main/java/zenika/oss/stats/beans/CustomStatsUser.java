@@ -5,12 +5,15 @@ import java.util.List;
 public class CustomStatsUser {
     
     private String login;
-    
+
+    private int year;
+
     private List<CustomStatsContributionsUserByMonth> contributionsUserByMonths;
 
-    public CustomStatsUser(final String login, final List<CustomStatsContributionsUserByMonth> contributionsUserByMonths) {
+    public CustomStatsUser(final String login, final int year, final List<CustomStatsContributionsUserByMonth> contributionsUserByMonths) {
 
         this.login = login;
+        this.year = year;
         this.contributionsUserByMonths = contributionsUserByMonths;
     }
 
@@ -22,6 +25,14 @@ public class CustomStatsUser {
     public void setLogin(final String login) {
 
         this.login = login;
+    }
+
+    public int getYear() {
+        return year;
+    }
+
+    public void setYear(int year) {
+        this.year = year;
     }
 
     public List<CustomStatsContributionsUserByMonth> getContributionsUserByMonths() {
