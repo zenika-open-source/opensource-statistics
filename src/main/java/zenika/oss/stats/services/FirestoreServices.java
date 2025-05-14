@@ -5,9 +5,11 @@ import com.google.cloud.firestore.*;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import zenika.oss.stats.beans.ZenikaMember;
+import zenika.oss.stats.beans.github.GitHubProject;
 import zenika.oss.stats.beans.gcp.StatsContribution;
 import zenika.oss.stats.exception.DatabaseException;
 import zenika.oss.stats.mapper.ZenikaMemberMapper;
+import zenika.oss.stats.mapper.ZenikaProjectMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,7 +23,6 @@ public class FirestoreServices {
 
     /**
      * Create one member in the databse.
-     *
      * @param zMember the member to create.
      */
     public void createMember(ZenikaMember zMember) {
@@ -35,8 +36,8 @@ public class FirestoreServices {
         try {
             return querySnapshot.get().getDocuments().stream()
                     .map(ZenikaMemberMapper::mapFirestoreZenikaMemberToZenikaMember).toList();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new DatabaseException(e);
+        } catch (InterruptedException | ExecutionException exception) {
+            throw new DatabaseException(exception);
         }
     }
 
@@ -107,4 +108,28 @@ public class FirestoreServices {
             throw new DatabaseException(e);
         }
     }
+
+    /**
+     * Create a project in the Firestore database.
+     * @param project the project to create.
+     */
+    public void createProject(GitHubProject project) {
+        List<ApiFuture<WriteResult>> futures = new ArrayList<>();
+        futures.add(firestore.collection("projects").document(project.getId()).set(project));
+    }
+
+    /**
+     * Retrieve all projects from the Firestore database.
+     * @return a list of all projects.
+     */
+    public List<GitHubProject> getAllProjects() throws DatabaseException {
+        CollectionReference zProjects = firestore.collection("projects");
+        ApiFuture<QuerySnapshot> querySnapshot = zProjects.get();
+        try {
+            return querySnapshot.get().getDocuments().stream().map(ZenikaProjectMapper::mapFirestoreZenikaProjectToGitHubProject).toList();
+        } catch (InterruptedException | ExecutionException exception) {
+            throw new DatabaseException(exception);
+        }
+    }
+
 }

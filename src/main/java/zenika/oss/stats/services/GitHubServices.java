@@ -94,7 +94,7 @@ public class GitHubServices {
 
         var repos = gitHubClient.getReposForAnUser(login);
         return repos.stream()
-                .filter(repo -> !repo.isFork())
+                .filter(repo -> !repo.isFork() && !repo.isArchived())
                 .collect(Collectors.toList());
     }
 

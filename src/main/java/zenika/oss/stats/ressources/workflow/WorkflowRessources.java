@@ -8,10 +8,12 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.CustomStatsContributionsUserByMonth;
 import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.gcp.StatsContribution;
 import zenika.oss.stats.beans.github.GitHubMember;
+import zenika.oss.stats.beans.github.GitHubProject;
 import zenika.oss.stats.exception.DatabaseException;
 import zenika.oss.stats.mapper.StatsMapper;
 import zenika.oss.stats.mapper.ZenikaMemberMapper;
@@ -54,8 +56,18 @@ public class WorkflowRessources {
     @POST
     @Path("personal-projects/save")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response savePersonalProjects() {
-        return Response.ok("\uD83D\uDEA7 Not implemented yet").build();
+    public Response savePersonalProjects() throws DatabaseException {
+
+        List<ZenikaMember> members = firestoreServices.getAllMembers();
+
+        members.forEach(member -> {
+            List<GitHubProject> gitHubProjects = gitHubServices.getPersonalProjectForAnUser(member.getGitHubAccount().getLogin());
+
+            gitHubProjects.forEach(project -> {
+                firestoreServices.createProject(project);
+            });
+        });
+        return Response.ok().build();
     }
 
     @POST
