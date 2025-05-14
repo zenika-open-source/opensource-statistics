@@ -132,4 +132,20 @@ public class FirestoreServices {
         }
     }
 
+    /**
+     * Remove all projects from the Firestore database.
+     * @throws DatabaseException exception
+     */
+    public void deleteAllProjects() throws DatabaseException {
+        CollectionReference zStats = firestore.collection("projects");
+        ApiFuture<QuerySnapshot> querySnapshot = zStats.get();
+        try {
+            List<QueryDocumentSnapshot> stats = querySnapshot.get().getDocuments();
+            for (QueryDocumentSnapshot document : stats) {
+                document.getReference().delete();
+            }
+        } catch (InterruptedException | ExecutionException exception) {
+            throw new DatabaseException(exception);
+        }
+    }
 }

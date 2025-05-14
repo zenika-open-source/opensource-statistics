@@ -58,6 +58,8 @@ public class WorkflowRessources {
     @Produces(MediaType.TEXT_PLAIN)
     public Response savePersonalProjects() throws DatabaseException {
 
+        firestoreServices.deleteAllProjects();
+
         List<ZenikaMember> members = firestoreServices.getAllMembers();
 
         members.forEach(member -> {
