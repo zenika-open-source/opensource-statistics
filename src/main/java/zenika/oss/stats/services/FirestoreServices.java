@@ -27,11 +27,11 @@ public class FirestoreServices {
      * @param zMember the member to create.
      */
     public void createMember(ZenikaMember zMember) {
-        createDocument(zMember, FirestoreCollections.MEMBERS.toString(), zMember.getId());
+        createDocument(zMember, FirestoreCollections.MEMBERS.value, zMember.getId());
     }
 
     public List<ZenikaMember> getAllMembers() throws DatabaseException {
-        CollectionReference zmembers = firestore.collection(FirestoreCollections.MEMBERS.toString());
+        CollectionReference zmembers = firestore.collection(FirestoreCollections.MEMBERS.value);
         ApiFuture<QuerySnapshot> querySnapshot = zmembers.get();
         try {
             return querySnapshot.get().getDocuments().stream()
@@ -49,7 +49,7 @@ public class FirestoreServices {
      * @throws DatabaseException exception
      */
     public void deleteStatsForAGitHubAccountForAYear(String githubMember, int year) throws DatabaseException {
-        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.toString());
+        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
         Query query = zStats.whereEqualTo("githubHandle", githubMember).whereEqualTo("year", String.valueOf(year));
         ApiFuture<QuerySnapshot> querySnapshot = query.get();
         try {
@@ -67,9 +67,9 @@ public class FirestoreServices {
      *
      * @param statsContribution : stats to save
      */
-    public void saveStatsForAGitHubAccountForAYear(StatsContribution statsContribution) throws DatabaseException {
+    public void saveStatsForAGitHubAccountForAYear(StatsContribution statsContribution) {
         List<ApiFuture<WriteResult>> futures = new ArrayList<>();
-        futures.add(firestore.collection(FirestoreCollections.STATS.toString()).document().set(statsContribution));
+        futures.add(firestore.collection(FirestoreCollections.STATS.value).document().set(statsContribution));
     }
 
     /**
@@ -78,7 +78,7 @@ public class FirestoreServices {
      * @throws DatabaseException exception
      */
     public void deleteStatsForAllGitHubAccountForAYear(int year) throws DatabaseException {
-        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.toString());
+        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
         Query query = zStats.whereEqualTo("year", String.valueOf(year));
         ApiFuture<QuerySnapshot> querySnapshot = query.get();
         try {
@@ -96,7 +96,7 @@ public class FirestoreServices {
      * @param project the project to create.
      */
     public void createProject(GitHubProject project) {
-        createDocument(project, FirestoreCollections.PROJECTS.toString(), project.getId());
+        createDocument(project, FirestoreCollections.PROJECTS.value, project.getId());
     }
 
     /**
@@ -104,7 +104,7 @@ public class FirestoreServices {
      * @return a list of all projects.
      */
     public List<GitHubProject> getAllProjects() throws DatabaseException {
-        CollectionReference zProjects = firestore.collection(FirestoreCollections.PROJECTS.toString());
+        CollectionReference zProjects = firestore.collection(FirestoreCollections.PROJECTS.value);
         ApiFuture<QuerySnapshot> querySnapshot = zProjects.get();
         try {
             return querySnapshot.get().getDocuments().stream().map(ZenikaProjectMapper::mapFirestoreZenikaProjectToGitHubProject).toList();
@@ -150,7 +150,7 @@ public class FirestoreServices {
      * @throws DatabaseException exception
      */
     public <T> void deleteAllDocuments(FirestoreCollections collectionType) throws DatabaseException {
-        CollectionReference collection = firestore.collection(collectionType.toString());
+        CollectionReference collection = firestore.collection(collectionType.value);
         ApiFuture<QuerySnapshot> querySnapshot = collection.get();
         try {
             List<QueryDocumentSnapshot> documents = querySnapshot.get().getDocuments();

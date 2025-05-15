@@ -6,6 +6,9 @@ public enum FirestoreCollections {
     STATS("stats"),
     ;
 
-    FirestoreCollections(String members) {
+    public final String value;
+
+    FirestoreCollections(String value) {
+        this.value = value;
     }
 }
