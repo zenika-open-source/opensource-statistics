@@ -161,4 +161,22 @@ public class FirestoreServices {
             throw new DatabaseException(exception);
         }
     }
+
+    public List<StatsContribution> getContributionsForAMemberOrderByYear(String memberId) throws DatabaseException {
+        List<StatsContribution> stats = null;
+        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
+        Query query = zStats.whereEqualTo("githubHandle", memberId);
+        ApiFuture<QuerySnapshot> querySnapshot = query.get();
+        try {
+            stats = querySnapshot.get().getDocuments().stream()
+                     .map(document -> document.toObject(StatsContribution.class))
+                     .sorted((s1, s2) -> s2.getYear().compareTo(s1.getYear()))
+                     .sorted((s1, s2) -> s2.getMonth().compareTo(s1.getMonth()))
+                        .collect(java.util.stream.Collectors.toList());
+            } catch (InterruptedException | ExecutionException exception) {
+                throw new DatabaseException(exception);
+            }
+
+            return stats;
+    }
 }
