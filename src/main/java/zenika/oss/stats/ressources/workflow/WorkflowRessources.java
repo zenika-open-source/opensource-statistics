@@ -8,7 +8,6 @@ import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.CustomStatsContributionsUserByMonth;
 import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.gcp.StatsContribution;
@@ -84,11 +83,11 @@ public class WorkflowRessources {
 
         for (ZenikaMember zenikaMember : zMembers) {
             if (zenikaMember.getGitHubAccount() != null) {
-                System.out.println("\uD83D\uDD0E Check information for " + zenikaMember.getGitHubAccount().getLogin());
+                System.out.print("\uD83D\uDD0E Check information for " + zenikaMember.getGitHubAccount().getLogin());
                 stats.addAll(gitHubServices.getContributionsForTheCurrentYear(zenikaMember.getGitHubAccount().getLogin(), year));
                 List<StatsContribution> statsMap = StatsMapper.mapGithubStatisticsToStatsContribution(zenikaMember.getGitHubAccount().getLogin(), year, stats);
+                System.out.println("... ✅");
 
-                System.out.println("\uD83D\uDCBD Save information for " + zenikaMember.getGitHubAccount().getLogin());
                 if (!statsMap.isEmpty()) {
                     for (StatsContribution stat : statsMap) {
                         firestoreServices.saveStatsForAGitHubAccountForAYear(stat);

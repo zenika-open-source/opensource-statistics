@@ -15,7 +15,7 @@ public class StatsMapper {
         return statsContributions;
     }
 
-    private static StatsContribution mapGithubStatisticToStatsContribution(String githubMember, int year, CustomStatsContributionsUserByMonth customStatsContributionsUserByMonth) {
+    public static StatsContribution mapGithubStatisticToStatsContribution(String githubMember, int year, CustomStatsContributionsUserByMonth customStatsContributionsUserByMonth) {
         StatsContribution statsContribution = new StatsContribution();
 
         statsContribution.setYear(String.valueOf(year));

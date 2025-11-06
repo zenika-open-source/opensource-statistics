@@ -24,6 +24,7 @@ public class FirestoreServices {
 
     /**
      * Create one member in the databse.
+     *
      * @param zMember the member to create.
      */
     public void createMember(ZenikaMember zMember) {
@@ -74,6 +75,7 @@ public class FirestoreServices {
 
     /**
      * Delete all stats for the year in parameter.
+     *
      * @param year : the year that we want to remove stats
      * @throws DatabaseException exception
      */
@@ -93,6 +95,7 @@ public class FirestoreServices {
 
     /**
      * Create a project in the Firestore database.
+     *
      * @param project the project to create.
      */
     public void createProject(GitHubProject project) {
@@ -101,6 +104,7 @@ public class FirestoreServices {
 
     /**
      * Retrieve all projects from the Firestore database.
+     *
      * @return a list of all projects.
      */
     public List<GitHubProject> getAllProjects() throws DatabaseException {
@@ -115,6 +119,7 @@ public class FirestoreServices {
 
     /**
      * Remove all projects from the Firestore database.
+     *
      * @throws DatabaseException exception
      */
     public void deleteAllProjects() throws DatabaseException {
@@ -133,10 +138,11 @@ public class FirestoreServices {
 
     /**
      * Create a document in the Firestore database.
-     * @param document the document to create.
+     *
+     * @param document       the document to create.
      * @param collectionPath the path of the collection in which to create the document.
-     * @param documentId the id of the document to create.
-     * @param <T> the type of the document to create.
+     * @param documentId     the id of the document to create.
+     * @param <T>            the type of the document to create.
      */
     public <T> void createDocument(T document, String collectionPath, String documentId) {
         List<ApiFuture<WriteResult>> futures = new ArrayList<>();
@@ -145,8 +151,9 @@ public class FirestoreServices {
 
     /**
      * Delete all documents in a specific Firestore collection.
+     *
      * @param collectionType the type of collection to delete.
-     * @param <T> the type of document
+     * @param <T>            the type of document
      * @throws DatabaseException exception
      */
     public <T> void deleteAllDocuments(FirestoreCollections collectionType) throws DatabaseException {
@@ -169,14 +176,31 @@ public class FirestoreServices {
         ApiFuture<QuerySnapshot> querySnapshot = query.get();
         try {
             stats = querySnapshot.get().getDocuments().stream()
-                     .map(document -> document.toObject(StatsContribution.class))
-                     .sorted((s1, s2) -> s2.getYear().compareTo(s1.getYear()))
-                     .sorted((s1, s2) -> s2.getMonth().compareTo(s1.getMonth()))
-                        .collect(java.util.stream.Collectors.toList());
-            } catch (InterruptedException | ExecutionException exception) {
-                throw new DatabaseException(exception);
-            }
+                    .map(document -> document.toObject(StatsContribution.class))
+                    .sorted((s1, s2) -> s2.getYear().compareTo(s1.getYear()))
+                    .sorted((s1, s2) -> s2.getMonth().compareTo(s1.getMonth()))
+                    .collect(java.util.stream.Collectors.toList());
+        } catch (InterruptedException | ExecutionException exception) {
+            throw new DatabaseException(exception);
+        }
 
-            return stats;
+        return stats;
+    }
+
+    public List<StatsContribution> getContributionsForAYearAndMonthOrderByMonth(int year, String month) throws DatabaseException {
+        List<StatsContribution> stats = null;
+        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
+        Query query = zStats.whereEqualTo("year", String.valueOf(year)).whereEqualTo("month", month);
+        ApiFuture<QuerySnapshot> querySnapshot = query.get();
+        try {
+            stats = querySnapshot.get().getDocuments().stream()
+                    .map(document -> document.toObject(StatsContribution.class))
+                    .sorted((s1, s2) -> s2.getMonth().compareTo(s1.getMonth()))
+                    .collect(java.util.stream.Collectors.toList());
+        } catch (InterruptedException | ExecutionException exception) {
+            throw new DatabaseException(exception);
+        }
+
+        return stats;
     }
 }

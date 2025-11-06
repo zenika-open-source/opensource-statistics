@@ -4,6 +4,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
 import zenika.oss.stats.exception.DatabaseException;
 import zenika.oss.stats.services.FirestoreServices;
@@ -31,10 +32,8 @@ public class ContributionsRessources {
     }
 
     @GET
-    @Path("/contributions/month/{month}")
-    public Response getContributionsForAMonth(@PathParam("month") int month) {
-
-        return Response.ok()
-                .build();
+    @Path("/")
+    public Response getContributionsForAMonth(@QueryParam("year") int year, @QueryParam("month") String month) throws DatabaseException {
+        return Response.ok(firestoreServices.getContributionsForAYearAndMonthOrderByMonth(year, month)).build();
     }
 }
