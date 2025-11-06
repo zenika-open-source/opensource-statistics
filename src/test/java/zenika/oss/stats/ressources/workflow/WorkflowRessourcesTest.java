@@ -6,10 +6,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import zenika.oss.stats.beans.github.GitHubMember;
+import zenika.oss.stats.mapper.StatsMapper;
 import zenika.oss.stats.services.FirestoreServices;
 import zenika.oss.stats.services.GitHubServices;
 
-import java.util.Arrays;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
@@ -20,6 +20,9 @@ public class WorkflowRessourcesTest {
     @InjectMock
     GitHubServices gitHubServices;
 
+    @InjectMock
+    FirestoreServices firestoreServices;
+
     @BeforeEach
     public void setup() {
         GitHubMember member = new GitHubMember();
@@ -27,7 +30,6 @@ public class WorkflowRessourcesTest {
         member.login = "login-test";
 
         List<GitHubMember> members = List.of(member);
-
         Mockito.when(gitHubServices.getZenikaOpenSourceMembers()).thenReturn(members);
     }
 

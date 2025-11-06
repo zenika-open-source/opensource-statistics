@@ -23,7 +23,7 @@ class ContributionsRessourcesTest {
     void test_getContributionsForAMonth() {
 
         given().when()
-                .get("/v1/contributions/contributions/month/1")
+                .get("/v1/contributions?year=2025&month=1")
                 .then()
                 .statusCode(200);
 
