@@ -105,6 +105,7 @@ public class FirestoreServices {
      *
      * @param project the project to create.
      */
+    @CacheInvalidateAll(cacheName = "projects-cache")
     public void createProject(GitHubProject project) {
         createDocument(project, FirestoreCollections.PROJECTS.value, project.getId());
     }
@@ -114,6 +115,7 @@ public class FirestoreServices {
      *
      * @return a list of all projects.
      */
+    @CacheResult(cacheName = "projects-cache")
     public List<GitHubProject> getAllProjects() throws DatabaseException {
         CollectionReference zProjects = firestore.collection(FirestoreCollections.PROJECTS.value);
         ApiFuture<QuerySnapshot> querySnapshot = zProjects.get();
@@ -130,6 +132,7 @@ public class FirestoreServices {
      *
      * @throws DatabaseException exception
      */
+    @CacheInvalidateAll(cacheName = "projects-cache")
     public void deleteAllProjects() throws DatabaseException {
         deleteAllDocuments(FirestoreCollections.PROJECTS);
     }
