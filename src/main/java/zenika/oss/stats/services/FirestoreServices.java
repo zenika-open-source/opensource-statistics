@@ -2,6 +2,8 @@ package zenika.oss.stats.services;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
+import io.quarkus.cache.CacheInvalidateAll;
+import io.quarkus.cache.CacheResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import zenika.oss.stats.beans.ZenikaMember;
@@ -30,10 +32,12 @@ public class FirestoreServices {
      *
      * @param zMember the member to create.
      */
+    @CacheInvalidateAll(cacheName = "members-cache")
     public void createMember(ZenikaMember zMember) {
         createDocument(zMember, FirestoreCollections.MEMBERS.value, zMember.getId());
     }
 
+    @CacheResult(cacheName = "members-cache")
     public List<ZenikaMember> getAllMembers() throws DatabaseException {
         CollectionReference zmembers = firestore.collection(FirestoreCollections.MEMBERS.value);
         ApiFuture<QuerySnapshot> querySnapshot = zmembers.get();
@@ -135,6 +139,7 @@ public class FirestoreServices {
      *
      * @throws DatabaseException exception
      */
+    @CacheInvalidateAll(cacheName = "members-cache")
     public void deleteAllMembers() throws DatabaseException {
         deleteAllDocuments(FirestoreCollections.MEMBERS);
     }

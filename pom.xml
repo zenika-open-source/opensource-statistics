@@ -104,6 +104,10 @@
       <artifactId>javelit</artifactId>
       <version>0.86.0</version>
     </dependency>
+    <dependency>
+      <groupId>io.quarkus</groupId>
+      <artifactId>quarkus-cache</artifactId>
+    </dependency>
     
   </dependencies>
   <build>
