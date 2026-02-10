@@ -37,7 +37,6 @@ Some resources are available but only the first is in progress :
 - Run the application with `quarkus dev` if you have the [Quarkus CLI](https://quarkus.io/guides/cli-tooling) installed on your environment, or `mvn quarkus:dev`command.
 - You can use Quarkus dev service for Firestore enabling this variable `quarkus.google.cloud.firestore.devservice.enabled` in application.properties file.
 
-
 ## ✨Contribute 
 
 Anyone can contribute to this project. For the moment, please add your question or propose something in [a new issue](https://github.com/zenika-open-source/opensource-statistics/issues).
