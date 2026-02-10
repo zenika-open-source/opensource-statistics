@@ -21,8 +21,9 @@ import zenika.oss.stats.config.GitHubGraphQLQueries;
 
 import java.io.IOException;
 import java.time.*;
-import java.time.format.DateTimeFormatter;
+
 import java.time.format.TextStyle;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -52,7 +53,8 @@ public class GitHubServices {
     /**
      * Get information for the current organization.
      *
-     * @param organizationName The name of the GitHub organization to fetch members from.
+     * @param organizationName The name of the GitHub organization to fetch members
+     *                         from.
      * @return Organization information.
      */
     public GitHubOrganization getOrganizationInformation(String organizationName) {
@@ -61,10 +63,13 @@ public class GitHubServices {
     }
 
     /**
-     * Retrieves members from a specified GitHub organization. This method fetches the list of members belonging to the given organization
-     * using the GitHub API. It can be used to obtain information about the members of a particular GitHub organization.
+     * Retrieves members from a specified GitHub organization. This method fetches
+     * the list of members belonging to the given organization
+     * using the GitHub API. It can be used to obtain information about the members
+     * of a particular GitHub organization.
      *
-     * @param organizationName The name of the GitHub organization to fetch members from.
+     * @param organizationName The name of the GitHub organization to fetch members
+     *                         from.
      * @return a List of GHUsers
      * @throws IOException If there's an error communicating with the GitHub API.
      */
@@ -124,7 +129,8 @@ public class GitHubServices {
             var variables = new HashMap<String, Object>(); // <3>
             variables.put("login", login);
             String query = "query($login: String!) {\n" + "                    user(login: $login) {\n" +
-                    "                        contributionsCollection {\n" + "                            totalIssueContributions,\n" +
+                    "                        contributionsCollection {\n"
+                    + "                            totalIssueContributions,\n" +
                     "                            totalCommitContributions,\n" +
                     "                            totalPullRequestContributions,\n" +
                     "                            totalPullRequestReviewContributions,\n" +
@@ -147,12 +153,12 @@ public class GitHubServices {
      * @param year  : year to search number of contributions
      * @return a map of String (Month), Integer (number of contributions)
      */
-    public List<CustomStatsContributionsUserByMonth> getContributionsForTheCurrentYear(final String login, final int year) {
+    public List<CustomStatsContributionsUserByMonth> getContributionsForTheCurrentYear(final String login,
+            final int year) {
 
         Response response = null;
         PullRequestContributions prContributions = null;
         var contributionsTab = new ArrayList<CustomStatsContributionsUserByMonth>();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
 
         try {
 
@@ -160,7 +166,7 @@ public class GitHubServices {
                 var variables = new HashMap<String, Object>();
                 variables.put("login", login);
 
-                ZonedDateTime firtDayOfMonth = YearMonth.of(year, month)
+                ZonedDateTime firstDayOfMonth = YearMonth.of(year, month)
                         .atDay(1)
                         .atTime(0, 0, 0)
                         .atZone(ZoneOffset.UTC);
@@ -169,17 +175,19 @@ public class GitHubServices {
                         .atTime(23, 59, 59)
                         .atZone(ZoneOffset.UTC);
 
-                variables.put("from", firtDayOfMonth.format(formatter));
-                variables.put("to", lastDayOfMonth.format(formatter));
+                variables.put("from", firstDayOfMonth.toInstant().toString());
+                variables.put("to", lastDayOfMonth.toInstant().toString());
 
-                response = dynamicGraphQLClient.executeSync(GitHubGraphQLQueries.qGetNumberOfContributionsForAPeriod, variables);
+                response = dynamicGraphQLClient.executeSync(GitHubGraphQLQueries.qGetNumberOfContributionsForAPeriod,
+                        variables);
                 var userStats = response.getObject(UserStatsNumberContributions.class, "user");
 
                 if (userStats != null) {
                     prContributions = userStats.getContributionsCollection().getPullRequestContributions();
 
                     contributionsTab.add(
-                            new CustomStatsContributionsUserByMonth(month.getValue(), month.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+                            new CustomStatsContributionsUserByMonth(month.getValue(),
+                                    month.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
                                     prContributions.getTotalCount()));
                 }
             }
@@ -197,7 +205,8 @@ public class GitHubServices {
      * @param organizationName : organization name
      * @return a map of String (Month), Integer (number of contributions)
      */
-    public List<CustomStatsUser> getContributionsForTheCurrentYearAndAllTheOrganizationMembers(final String organizationName) {
+    public List<CustomStatsUser> getContributionsForTheCurrentYearAndAllTheOrganizationMembers(
+            final String organizationName) {
 
         var statsMembers = new ArrayList<CustomStatsUser>();
 
@@ -206,7 +215,8 @@ public class GitHubServices {
 
         members.stream()
                 .map(member -> {
-                    return statsMembers.add(new CustomStatsUser(member.getLogin(), currentYear, this.getContributionsForTheCurrentYear(member.login, currentYear)));
+                    return statsMembers.add(new CustomStatsUser(member.getLogin(), currentYear,
+                            this.getContributionsForTheCurrentYear(member.login, currentYear)));
                 })
                 .collect(Collectors.toList());
 

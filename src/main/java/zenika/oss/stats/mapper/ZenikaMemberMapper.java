@@ -3,6 +3,7 @@ package zenika.oss.stats.mapper;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.github.GitHubMember;
+import zenika.oss.stats.beans.gitlab.GitLabMember;
 
 import java.util.UUID;
 
@@ -19,14 +20,18 @@ public class ZenikaMemberMapper {
 
         zenikaMember.setFirstname(documentMember.getString("firstname"));
         zenikaMember.setName(documentMember.getString("name"));
+        zenikaMember.setCity(documentMember.getString("city"));
         zenikaMember.setId(documentMember.getId());
         zenikaMember.setGitHubAccount(documentMember.get("gitHubAccount", GitHubMember.class));
+        zenikaMember.setGitlabAccount(documentMember.get("gitlabAccount", GitLabMember.class));
 
         return zenikaMember;
+
     }
 
     /**
      * Create a ZenikaMember from a GitHub Member.
+     * 
      * @param gitHubMember : the github Member to map
      * @return an instance of ZenikaMember
      */

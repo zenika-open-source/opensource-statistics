@@ -2,6 +2,8 @@ package zenika.oss.stats.services;
 
 import com.google.api.core.ApiFuture;
 import com.google.cloud.firestore.*;
+import io.quarkus.cache.CacheInvalidateAll;
+import io.quarkus.cache.CacheResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import zenika.oss.stats.beans.ZenikaMember;
@@ -13,8 +15,11 @@ import zenika.oss.stats.mapper.ZenikaMemberMapper;
 import zenika.oss.stats.mapper.ZenikaProjectMapper;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.time.Month;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class FirestoreServices {
@@ -27,16 +32,19 @@ public class FirestoreServices {
      *
      * @param zMember the member to create.
      */
+    @CacheInvalidateAll(cacheName = "members-cache")
     public void createMember(ZenikaMember zMember) {
         createDocument(zMember, FirestoreCollections.MEMBERS.value, zMember.getId());
     }
 
+    @CacheResult(cacheName = "members-cache")
     public List<ZenikaMember> getAllMembers() throws DatabaseException {
         CollectionReference zmembers = firestore.collection(FirestoreCollections.MEMBERS.value);
         ApiFuture<QuerySnapshot> querySnapshot = zmembers.get();
         try {
             return querySnapshot.get().getDocuments().stream()
-                    .map(ZenikaMemberMapper::mapFirestoreZenikaMemberToZenikaMember).toList();
+                    .map(ZenikaMemberMapper::mapFirestoreZenikaMemberToZenikaMember)
+                    .collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException exception) {
             throw new DatabaseException(exception);
         }
@@ -98,6 +106,7 @@ public class FirestoreServices {
      *
      * @param project the project to create.
      */
+    @CacheInvalidateAll(cacheName = "projects-cache")
     public void createProject(GitHubProject project) {
         createDocument(project, FirestoreCollections.PROJECTS.value, project.getId());
     }
@@ -107,11 +116,14 @@ public class FirestoreServices {
      *
      * @return a list of all projects.
      */
+    @CacheResult(cacheName = "projects-cache")
     public List<GitHubProject> getAllProjects() throws DatabaseException {
         CollectionReference zProjects = firestore.collection(FirestoreCollections.PROJECTS.value);
         ApiFuture<QuerySnapshot> querySnapshot = zProjects.get();
         try {
-            return querySnapshot.get().getDocuments().stream().map(ZenikaProjectMapper::mapFirestoreZenikaProjectToGitHubProject).toList();
+            return querySnapshot.get().getDocuments().stream()
+                    .map(ZenikaProjectMapper::mapFirestoreZenikaProjectToGitHubProject)
+                    .collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException exception) {
             throw new DatabaseException(exception);
         }
@@ -122,16 +134,17 @@ public class FirestoreServices {
      *
      * @throws DatabaseException exception
      */
+    @CacheInvalidateAll(cacheName = "projects-cache")
     public void deleteAllProjects() throws DatabaseException {
         deleteAllDocuments(FirestoreCollections.PROJECTS);
     }
-
 
     /**
      * Remove all members
      *
      * @throws DatabaseException exception
      */
+    @CacheInvalidateAll(cacheName = "members-cache")
     public void deleteAllMembers() throws DatabaseException {
         deleteAllDocuments(FirestoreCollections.MEMBERS);
     }
@@ -140,7 +153,8 @@ public class FirestoreServices {
      * Create a document in the Firestore database.
      *
      * @param document       the document to create.
-     * @param collectionPath the path of the collection in which to create the document.
+     * @param collectionPath the path of the collection in which to create the
+     *                       document.
      * @param documentId     the id of the document to create.
      * @param <T>            the type of the document to create.
      */
@@ -177,9 +191,10 @@ public class FirestoreServices {
         try {
             stats = querySnapshot.get().getDocuments().stream()
                     .map(document -> document.toObject(StatsContribution.class))
-                    .sorted((s1, s2) -> s2.getYear().compareTo(s1.getYear()))
-                    .sorted((s1, s2) -> s2.getMonth().compareTo(s1.getMonth()))
-                    .collect(java.util.stream.Collectors.toList());
+                    .sorted(Comparator.comparing(StatsContribution::getYear).reversed()
+                            .thenComparing(s -> Month.valueOf(s.getMonth().toUpperCase()).getValue(),
+                                    Comparator.reverseOrder()))
+                    .collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException exception) {
             throw new DatabaseException(exception);
         }
@@ -187,7 +202,8 @@ public class FirestoreServices {
         return stats;
     }
 
-    public List<StatsContribution> getContributionsForAYearAndMonthOrderByMonth(int year, String month) throws DatabaseException {
+    public List<StatsContribution> getContributionsForAYearAndMonthOrderByMonth(int year, String month)
+            throws DatabaseException {
         List<StatsContribution> stats = null;
         CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
         Query query = zStats.whereEqualTo("year", String.valueOf(year)).whereEqualTo("month", month);

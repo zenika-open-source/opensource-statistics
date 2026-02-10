@@ -1,0 +1,33 @@
+{
+  "branches": ["main"],
+  "plugins": [
+    [
+      "semantic-release-gitmoji",
+      {
+        "releaseRules": {
+          "major": [":boom:"],
+          "minor": [":sparkles:"],
+          "patch": [":bug:", ":ambulance:", ":lock:"]
+        },
+        "releaseNotes": {
+          "template": "default"
+        }
+      }
+    ],
+    "@semantic-release/github",
+    [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "mvn versions:set -DnewVersion=${nextRelease.version} && mvn versions:commit",
+        "publishCmd": "mvn deploy -DskipTests"
+      }
+    ],
+    [
+      "@semantic-release/git",
+      {
+        "assets": ["pom.xml"],
+        "message": ":bookmark: ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+      }
+    ]
+  ]
+}
