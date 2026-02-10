@@ -1,15 +1,19 @@
 # Opensource-statistiques 📊
 
+![GitHub Release](https://img.shields.io/github/v/release/zenika-open-source/opensource-statistics)
+![Quarkus](https://img.shields.io/badge/Quarkus-3.12.1-4695EB?logo=quarkus)
+![Java](https://img.shields.io/badge/Java-17-ED8B00?logo=openjdk&logoColor=white)
+
 🚧 This project is in progress ... 
 
-One objective of this project is to highlight Zenika members for your open source contributions. 
+One objective of this project is to highlight Zenika members for their open source contributions. 
 
-To do this, the zenika-open-source GitHub Organization is scanned and data are be saved in a private Database on GCP.
-Datas could be used to find and list projects maintained or forked by Zenika Members, all projects which Zenika members contributed, etc.
+To do this, the zenika-open-source GitHub Organization is scanned and data is saved in a private Database on GCP.
+Data could be used to find and list projects maintained or forked by Zenika Members, all projects to which Zenika members contributed, etc.
 
 ## 🗄️ Tech 
 
-Using :
+Using:
 - [Quarkus](https://quarkus.io/)
 - [Firestore](https://docs.quarkiverse.io/quarkus-google-cloud-services/) to save data
 - [GitHub actions](https://github.com/features/actions) as CICD - 🚧 not implemented
@@ -23,7 +27,7 @@ Some resources are available but only the first is in progress :
 - `/contributions/` to get information about contributions from GCP database 🚧 not implemented
 - `/workflow/` to get data and save them on GCP database
 
-> 🎯 The last one resource will be removed after implementing all features and will be replaced by schedules. 
+> 🎯 The last resource will be removed after implementing all features and will be replaced by schedules. 
 
 ## 📝 Setup 
 
@@ -36,6 +40,6 @@ Some resources are available but only the first is in progress :
 
 ## ✨Contribute 
 
-Anyone can contribute to this project. For the moment, please add your question or purpose something in [a new issue](https://github.com/zenika-open-source/opensource-statistics/issues).
+Anyone can contribute to this project. For the moment, please add your question or propose something in [a new issue](https://github.com/zenika-open-source/opensource-statistics/issues).
 
 ![with love by zenika](https://img.shields.io/badge/With%20%E2%9D%A4%EF%B8%8F%20by-Zenika-b51432.svg?link=https://oss.zenika.com)

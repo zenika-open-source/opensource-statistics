@@ -40,7 +40,8 @@ public class WorkflowRessources {
         firestoreServices.deleteAllMembers();
 
         List<GitHubMember> gitHubMembers = gitHubServices.getZenikaOpenSourceMembers();
-        gitHubMembers.forEach(gitHubMember -> firestoreServices.createMember(ZenikaMemberMapper.mapGitHubMemberToZenikaMember(gitHubMember)));
+        gitHubMembers.forEach(gitHubMember -> firestoreServices
+                .createMember(ZenikaMemberMapper.mapGitHubMemberToZenikaMember(gitHubMember)));
 
         return Response.ok().build();
     }
@@ -62,7 +63,8 @@ public class WorkflowRessources {
         List<ZenikaMember> members = firestoreServices.getAllMembers();
 
         members.forEach(member -> {
-            List<GitHubProject> gitHubProjects = gitHubServices.getPersonalProjectForAnUser(member.getGitHubAccount().getLogin());
+            List<GitHubProject> gitHubProjects = gitHubServices
+                    .getPersonalProjectForAnUser(member.getGitHubAccount().getLogin());
 
             gitHubProjects.forEach(project -> {
                 firestoreServices.createProject(project);
@@ -75,7 +77,6 @@ public class WorkflowRessources {
     @Path("stats/save/{year}")
     @Produces(MediaType.TEXT_PLAIN)
     public Response saveStatsForYear(@PathParam("year") int year) throws DatabaseException {
-        List<CustomStatsContributionsUserByMonth> stats = new ArrayList<>();
 
         firestoreServices.deleteStatsForAllGitHubAccountForAYear(year);
 
@@ -84,8 +85,10 @@ public class WorkflowRessources {
         for (ZenikaMember zenikaMember : zMembers) {
             if (zenikaMember.getGitHubAccount() != null) {
                 System.out.print("\uD83D\uDD0E Check information for " + zenikaMember.getGitHubAccount().getLogin());
-                stats.addAll(gitHubServices.getContributionsForTheCurrentYear(zenikaMember.getGitHubAccount().getLogin(), year));
-                List<StatsContribution> statsMap = StatsMapper.mapGithubStatisticsToStatsContribution(zenikaMember.getGitHubAccount().getLogin(), year, stats);
+                List<CustomStatsContributionsUserByMonth> stats = gitHubServices
+                        .getContributionsForTheCurrentYear(zenikaMember.getGitHubAccount().getLogin(), year);
+                List<StatsContribution> statsMap = StatsMapper.mapGithubStatisticsToStatsContribution(
+                        zenikaMember.getGitHubAccount().getLogin(), year, stats);
                 System.out.println("... ✅");
 
                 if (!statsMap.isEmpty()) {
@@ -102,13 +105,16 @@ public class WorkflowRessources {
     @POST
     @Path("stats/save/{githubMember}/{year}")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response saveStatsForAGitHubAccountForAYear(@PathParam("githubMember") String githubMember, @PathParam("year") int year) throws DatabaseException {
+    public Response saveStatsForAGitHubAccountForAYear(@PathParam("githubMember") String githubMember,
+            @PathParam("year") int year) throws DatabaseException {
 
         firestoreServices.deleteStatsForAGitHubAccountForAYear(githubMember, year);
 
-        List<CustomStatsContributionsUserByMonth> stats = gitHubServices.getContributionsForTheCurrentYear(githubMember, year);
+        List<CustomStatsContributionsUserByMonth> stats = gitHubServices.getContributionsForTheCurrentYear(githubMember,
+                year);
 
-        List<StatsContribution> statsMap = StatsMapper.mapGithubStatisticsToStatsContribution(githubMember, year, stats);
+        List<StatsContribution> statsMap = StatsMapper.mapGithubStatisticsToStatsContribution(githubMember, year,
+                stats);
 
         if (!statsMap.isEmpty()) {
             for (StatsContribution stat : statsMap) {

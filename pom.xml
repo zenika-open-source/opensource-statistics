@@ -99,6 +99,11 @@
       <artifactId>quarkus-junit5-mockito</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>io.javelit</groupId>
+      <artifactId>javelit</artifactId>
+      <version>0.86.0</version>
+    </dependency>
     
   </dependencies>
   <build>

@@ -13,8 +13,11 @@ import zenika.oss.stats.mapper.ZenikaMemberMapper;
 import zenika.oss.stats.mapper.ZenikaProjectMapper;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.time.Month;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class FirestoreServices {
@@ -111,7 +114,8 @@ public class FirestoreServices {
         CollectionReference zProjects = firestore.collection(FirestoreCollections.PROJECTS.value);
         ApiFuture<QuerySnapshot> querySnapshot = zProjects.get();
         try {
-            return querySnapshot.get().getDocuments().stream().map(ZenikaProjectMapper::mapFirestoreZenikaProjectToGitHubProject).toList();
+            return querySnapshot.get().getDocuments().stream()
+                    .map(ZenikaProjectMapper::mapFirestoreZenikaProjectToGitHubProject).toList();
         } catch (InterruptedException | ExecutionException exception) {
             throw new DatabaseException(exception);
         }
@@ -126,7 +130,6 @@ public class FirestoreServices {
         deleteAllDocuments(FirestoreCollections.PROJECTS);
     }
 
-
     /**
      * Remove all members
      *
@@ -140,7 +143,8 @@ public class FirestoreServices {
      * Create a document in the Firestore database.
      *
      * @param document       the document to create.
-     * @param collectionPath the path of the collection in which to create the document.
+     * @param collectionPath the path of the collection in which to create the
+     *                       document.
      * @param documentId     the id of the document to create.
      * @param <T>            the type of the document to create.
      */
@@ -177,9 +181,10 @@ public class FirestoreServices {
         try {
             stats = querySnapshot.get().getDocuments().stream()
                     .map(document -> document.toObject(StatsContribution.class))
-                    .sorted((s1, s2) -> s2.getYear().compareTo(s1.getYear()))
-                    .sorted((s1, s2) -> s2.getMonth().compareTo(s1.getMonth()))
-                    .collect(java.util.stream.Collectors.toList());
+                    .sorted(Comparator.comparing(StatsContribution::getYear).reversed()
+                            .thenComparing(s -> Month.valueOf(s.getMonth().toUpperCase()).getValue(),
+                                    Comparator.reverseOrder()))
+                    .collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException exception) {
             throw new DatabaseException(exception);
         }
@@ -187,7 +192,8 @@ public class FirestoreServices {
         return stats;
     }
 
-    public List<StatsContribution> getContributionsForAYearAndMonthOrderByMonth(int year, String month) throws DatabaseException {
+    public List<StatsContribution> getContributionsForAYearAndMonthOrderByMonth(int year, String month)
+            throws DatabaseException {
         List<StatsContribution> stats = null;
         CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
         Query query = zStats.whereEqualTo("year", String.valueOf(year)).whereEqualTo("month", month);
