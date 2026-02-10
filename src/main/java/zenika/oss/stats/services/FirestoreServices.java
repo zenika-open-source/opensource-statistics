@@ -43,7 +43,8 @@ public class FirestoreServices {
         ApiFuture<QuerySnapshot> querySnapshot = zmembers.get();
         try {
             return querySnapshot.get().getDocuments().stream()
-                    .map(ZenikaMemberMapper::mapFirestoreZenikaMemberToZenikaMember).toList();
+                    .map(ZenikaMemberMapper::mapFirestoreZenikaMemberToZenikaMember)
+                    .collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException exception) {
             throw new DatabaseException(exception);
         }
@@ -121,7 +122,8 @@ public class FirestoreServices {
         ApiFuture<QuerySnapshot> querySnapshot = zProjects.get();
         try {
             return querySnapshot.get().getDocuments().stream()
-                    .map(ZenikaProjectMapper::mapFirestoreZenikaProjectToGitHubProject).toList();
+                    .map(ZenikaProjectMapper::mapFirestoreZenikaProjectToGitHubProject)
+                    .collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException exception) {
             throw new DatabaseException(exception);
         }
