@@ -22,118 +22,118 @@ import static org.mockito.ArgumentMatchers.any;
 @QuarkusTest
 class GitHubRessourcesTest {
 
-    private static final Logger log = LoggerFactory.getLogger(GitHubRessourcesTest.class);
+        private static final Logger log = LoggerFactory.getLogger(GitHubRessourcesTest.class);
 
-    private GitHubMember member;
+        private GitHubMember member;
 
-    @InjectMock
-    GitHubServices gitHubServices;
+        @InjectMock
+        GitHubServices gitHubServices;
 
-    @BeforeEach
-    public void setup() {
+        @BeforeEach
+        public void setup() {
 
-        member = new GitHubMember();
-        member.id = "test";
-        member.login = "login-test";
+                member = new GitHubMember();
+                member.id = "test";
+                member.login = "login-test";
 
-        List<GitHubMember> members = Arrays.asList(member);
+                List<GitHubMember> members = Arrays.asList(member);
 
-        Mockito.when(gitHubServices.getOrganizationInformation("test"))
-                .thenReturn(null);
-        Mockito.when(gitHubServices.getUserInformation("test"))
-                .thenReturn(null);
-        Mockito.when(gitHubServices.getPersonalProjectForAnUser("test"))
-                .thenReturn(null);
-        Mockito.when(gitHubServices.getForkedProjectForAnUser("test"))
-                .thenReturn(null);
+                Mockito.when(gitHubServices.getOrganizationInformation("test"))
+                                .thenReturn(null);
+                Mockito.when(gitHubServices.getUserInformation("test"))
+                                .thenReturn(null);
+                Mockito.when(gitHubServices.getPersonalProjectForAnUser("test"))
+                                .thenReturn(null);
+                Mockito.when(gitHubServices.getForkedProjectForAnUser("test"))
+                                .thenReturn(null);
 
-        Mockito.when(gitHubServices.getOrganizationMembers("test"))
-                .thenReturn(members);
-    }
+                Mockito.when(gitHubServices.getOrganizationMembers("test"))
+                                .thenReturn(members);
+        }
 
-    @Test
-    void test_getOrganizationInformation() {
+        @Test
+        void test_getOrganizationInformation() {
 
-        given().when()
-                .get("/v1/github/organization/infos/")
-                .then()
-                .statusCode(200);
-    }
+                given().when()
+                                .get("/v1/github/organization/infos/")
+                                .then()
+                                .statusCode(200);
+        }
 
-    @Test
-    void test_getOrganizationMembers() {
+        @Test
+        void test_getOrganizationMembers() {
 
-        given().when()
-                .get("/v1/github/organization/members/")
-                .then()
-                .statusCode(200);
-    }
+                given().when()
+                                .get("/v1/github/organization/members/")
+                                .then()
+                                .statusCode(200);
+        }
 
-    @Test
-    void test_getUserInformation() {
+        @Test
+        void test_getUserInformation() {
 
-        given().when()
-                .get("/v1/github/user/" + member.id)
-                .then()
-                .statusCode(200);
+                given().when()
+                                .get("/v1/github/user/" + member.id)
+                                .then()
+                                .statusCode(200);
 
-    }
+        }
 
-    @Test
-    void test_getPersonalProjectForAnUser() {
+        @Test
+        void test_getPersonalProjectForAnUser() {
 
-        given().when()
-                .get("/v1/github/user/" + member.login + "/personal-projects")
-                .then()
-                .statusCode(200);
+                given().when()
+                                .get("/v1/github/user/" + member.login + "/personal-projects")
+                                .then()
+                                .statusCode(200);
 
-    }
+        }
 
-    @Test
-    void test_getForkedProjectsForAnUser() {
+        @Test
+        void test_getForkedProjectsForAnUser() {
 
-        given().when()
-                .get("/v1/github/user/" + member.login + "/forked-projects")
-                .then()
-                .statusCode(200);
+                given().when()
+                                .get("/v1/github/user/" + member.login + "/forked-projects")
+                                .then()
+                                .statusCode(200);
 
-    }
+        }
 
-    @Test
-    void test_getContributionsDataWithLoginAndCurrentyear() {
+        @Test
+        void test_getContributionsDataWithLoginAndCurrentyear() {
 
-        Mockito.when(gitHubServices.getContributionsForTheCurrentYear("test", 2024))
-                .thenReturn(List.of(new CustomStatsContributionsUserByMonth(1, "JANUARY", 10)));
+                Mockito.when(gitHubServices.getContributionsForTheCurrentYear("test", 2024))
+                                .thenReturn(List.of(new CustomStatsContributionsUserByMonth(1, "JANUARY", 10)));
 
-        given().when()
-                .get("/v1/github/user/" + member.login + "/contributions/year/current")
-                .then()
-                .statusCode(200);
+                given().when()
+                                .get("/v1/github/user/" + member.login + "/contributions/year/current")
+                                .then()
+                                .statusCode(200);
 
-    }
+        }
 
-    @Test
-    void test_getContributionsDataWithLoginAndYear() {
+        @Test
+        void test_getContributionsDataWithLoginAndYear() {
 
-        Mockito.when(gitHubServices.getContributionsForTheCurrentYear("test", 2024))
-                .thenReturn(List.of(new CustomStatsContributionsUserByMonth(1, "JANUARY", 10)));
+                Mockito.when(gitHubServices.getContributionsForTheCurrentYear("test", 2024))
+                                .thenReturn(List.of(new CustomStatsContributionsUserByMonth(1, "JANUARY", 10)));
 
-        given().when()
-                .get("/v1/github/user/" + member.login + "/contributions/year/" + 2024)
-                .then()
-                .statusCode(200);
+                given().when()
+                                .get("/v1/github/user/" + member.login + "/contributions/year/" + 2024)
+                                .then()
+                                .statusCode(200);
 
-    }
-    
-    @Test
-    void test_getContributionsForAnOrganizationAndForAllMembersAndTheCurrentYear(){
+        }
 
-        Mockito.when(gitHubServices.getContributionsForTheCurrentYearAndAllTheOrganizationMembers(any()))
-                .thenReturn(new ArrayList());
+        @Test
+        void test_getContributionsForAnOrganizationAndForAllMembersAndTheCurrentYear() {
 
-        given().when()
-                .get("/v1/github/organization/members/contributions/year/current")
-                .then()
-                .statusCode(200);
-    }
+                Mockito.when(gitHubServices.getContributionsForTheCurrentYearAndAllTheOrganizationMembers(any()))
+                                .thenReturn(new ArrayList());
+
+                given().when()
+                                .get("/v1/github/organization/members/contributions/year/current")
+                                .then()
+                                .statusCode(200);
+        }
 }

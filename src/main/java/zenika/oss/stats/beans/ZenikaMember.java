@@ -11,6 +11,8 @@ public class ZenikaMember {
 
     private String firstname;
 
+    private String city;
+
     private GitHubMember gitHubAccount;
 
     private GitLabMember gitlabAccount;
@@ -37,6 +39,14 @@ public class ZenikaMember {
 
     public void setFirstname(String firstname) {
         this.firstname = firstname;
+    }
+
+    public String getCity() {
+        return city;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
     }
 
     public GitHubMember getGitHubAccount() {
