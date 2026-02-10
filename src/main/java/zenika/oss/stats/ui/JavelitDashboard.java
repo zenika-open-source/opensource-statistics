@@ -10,6 +10,7 @@ import jakarta.inject.Inject;
 import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.github.GitHubMember;
 import zenika.oss.stats.beans.github.GitHubProject;
+import zenika.oss.stats.beans.gitlab.GitLabMember;
 import zenika.oss.stats.mapper.ZenikaMemberMapper;
 import zenika.oss.stats.services.FirestoreServices;
 import zenika.oss.stats.services.GitHubServices;
@@ -56,6 +57,30 @@ public class JavelitDashboard {
     private void renderMembersTab(JtContainer membersTab) {
 
         try {
+            // Inject CSS for red buttons and vertical alignment
+            Jt.markdown("""
+                <style>
+                button[id^="btn_save_"], button[id^="btn_cancel_"] {
+                    background-color: #d32f2f !important;
+                    color: white !important;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    transition: background-color 0.3s;
+                }
+                button[id^="btn_save_"]:hover, button[id^="btn_cancel_"]:hover {
+                    background-color: #b71c1c !important;
+                }
+                button[id^="btn_save_"]:active, button[id^="btn_cancel_"]:active {
+                    background-color: #a93226 !important;
+                }
+                div[id^="edit_row_"] {
+                    align-items: center !important;
+                }
+                </style>
+                """).use(membersTab);
+
             List<ZenikaMember> members = firestoreServices.getAllMembers();
 
             var columns = Jt.columns(2).key("members_columns").use(membersTab);
@@ -101,31 +126,32 @@ public class JavelitDashboard {
                 if (Jt.button("📝").key("btn_edit_" + m.getId()).use(row.col(5))) {
                     selectedMemberId = m.getId();
                 }
-            }
 
-            if (selectedMemberId != null) {
-                ZenikaMember memberToEdit = members.stream()
-                        .filter(m -> m.getId().equals(selectedMemberId))
-                        .findFirst().orElse(null);
-                if (memberToEdit != null) {
-                    Jt.subheader("Edit Member: " + memberToEdit.getId()).use(membersTab);
+                if (m.getId().equals(selectedMemberId)) {
+                    var editRow = Jt.columns(6).key("edit_row_" + m.getId()).use(membersTab);
 
-                    String newFirstname = Jt.textInput("Firstname").value(memberToEdit.getFirstname())
-                            .use(membersTab);
-                    String newName = Jt.textInput("Name").value(memberToEdit.getName()).use(membersTab);
-                    String newCity = Jt.textInput("City").value(memberToEdit.getCity()).use(membersTab);
+                    String newFirstname = Jt.textInput("Firstname").value(m.getFirstname())
+                            .use(editRow.col(0));
+                    String newName = Jt.textInput("Name").value(m.getName()).use(editRow.col(1));
+                    String newGitLabHandle = Jt.textInput("GitLab").value(m.getGitlabAccount() != null ? m.getGitlabAccount().getUsername() : "").use(editRow.col(2));
+                    String newCity = Jt.textInput("City").value(m.getCity()).use(editRow.col(3));
 
-                    var actions = Jt.columns(2).key("edit_actions").use(membersTab);
-                    if (Jt.button("Save").use(actions.col(0))) {
-                        memberToEdit.setFirstname(newFirstname);
-                        memberToEdit.setName(newName);
-                        memberToEdit.setCity(newCity);
-                        firestoreServices.createMember(memberToEdit);
+                    if (Jt.button("Save").key("btn_save_" + m.getId()).use(editRow.col(4))) {
+                        m.setFirstname(newFirstname);
+                        m.setName(newName);
+                        if (m.getGitlabAccount() == null) {
+                            m.setGitlabAccount(new GitLabMember());
+                        }
+                        m.getGitlabAccount().setUsername(newGitLabHandle);
+                        m.setCity(newCity);
+                        firestoreServices.createMember(m);
                         selectedMemberId = null;
-                        Jt.success("Successfully updated " + memberToEdit.getId()).use(membersTab);
+                        Jt.success("Successfully updated ✅").use(membersTab);
+                        Jt.markdown("<style>#edit_row_" + m.getId() + " { display: none !important; }</style>").use(membersTab);
                     }
-                    if (Jt.button("Cancel").use(actions.col(1))) {
+                    if (Jt.button("Cancel").key("btn_cancel_" + m.getId()).use(editRow.col(5))) {
                         selectedMemberId = null;
+                        Jt.markdown("<style>#edit_row_" + m.getId() + " { display: none !important; }</style>").use(membersTab);
                     }
                 }
             }
@@ -176,6 +202,20 @@ public class JavelitDashboard {
                 } catch (Exception e) {
                     Jt.error("Error syncing projects: " + e.getMessage()).use(projectsTab);
                 }
+            }
+
+            if (!allProjects.isEmpty()) {
+                record ProjectDisplay(String name, String fullName, String url, Long stars, Long forks) {
+                }
+                List<ProjectDisplay> rows = allProjects.stream()
+                        .map(p -> new ProjectDisplay(p.getName(), p.getFull_name(), p.getHtml_url(),
+                                p.getWatchers_count(), p.getForks()))
+                        .collect(Collectors.toList());
+
+                Jt.subheader("Projects List").use(projectsTab);
+                Jt.table(rows).use(projectsTab);
+            } else {
+                Jt.text("no data available").use(projectsTab);
             }
 
             Jt.text("Fetch and save personal projects (not forked) for all saved members.").use(projectsTab);
