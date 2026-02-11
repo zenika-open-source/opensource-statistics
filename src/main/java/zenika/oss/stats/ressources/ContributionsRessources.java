@@ -19,14 +19,8 @@ public class ContributionsRessources {
         this.firestoreServices = firestoreServices;
     }
 
-    /**
-     * Get contributions for one member.
-     *
-     * @param memberId of the member requested
-     * @return
-     */
     @GET
-    @Path("/contributions/member/{memberId}")
+    @Path("/member/{memberId}")
     public Response getContributionsByMember(@PathParam("memberId") String memberId) throws DatabaseException {
         return Response.ok(firestoreServices.getContributionsForAMemberOrderByYear(memberId)).build();
     }

@@ -4,20 +4,22 @@ import io.javelit.core.Jt;
 import io.javelit.core.JtContainer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.jboss.logging.Logger;
 import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.github.GitHubMember;
 import zenika.oss.stats.beans.gitlab.GitLabMember;
+import zenika.oss.stats.exception.DatabaseException;
 import zenika.oss.stats.mapper.ZenikaMemberMapper;
 import zenika.oss.stats.services.FirestoreServices;
 import zenika.oss.stats.services.GitHubServices;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class MembersTab {
+
+    private static final Logger LOG = Logger.getLogger(MembersTab.class);
 
     @Inject
     GitHubServices gitHubServices;
@@ -65,10 +67,12 @@ public class MembersTab {
                 try {
                     firestoreServices.deleteAllMembers();
                     List<GitHubMember> gitHubMembers = gitHubServices.getZenikaOpenSourceMembers();
-                    gitHubMembers.forEach(gitHubMember -> firestoreServices
-                            .createMember(ZenikaMemberMapper.mapGitHubMemberToZenikaMember(gitHubMember)));
+                    
+                    for (GitHubMember gitHubMember : gitHubMembers) {
+                        firestoreServices.createMember(ZenikaMemberMapper.mapGitHubMemberToZenikaMember(gitHubMember));
+                    }
                     Jt.success("Successfully synced " + gitHubMembers.size() + " members!").use(membersTab);
-                } catch (Exception e) {
+                } catch (DatabaseException e) {
                     Jt.error("Error syncing members: " + e.getMessage()).use(membersTab);
                 }
             }
@@ -136,6 +140,7 @@ public class MembersTab {
 
         } catch (Exception e) {
             Jt.warning("Could not load current members: " + e.getMessage()).use(membersTab);
+            LOG.error("Could not load current members", e);
         }
     }
 
