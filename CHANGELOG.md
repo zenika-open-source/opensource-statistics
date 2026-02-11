@@ -1,3 +1,8 @@
+# [v1.1.3](https://github.com/zenika-open-source/opensource-statistics/compare/v1.1.2...v1.1.3) (2026-02-11)
+
+## 🐛 Bug Fixes
+- [`d9f69f4`](https://github.com/zenika-open-source/opensource-statistics/commit/d9f69f4)  Fix Docker configuration + add doc + remove gitpod configuration (#33) (Issues: [`#33`](https://github.com/zenika-open-source/opensource-statistics/issues/33))
+
 # [v1.1.2](https://github.com/zenika-open-source/opensource-statistics/compare/v1.1.1...v1.1.2) (2026-02-11)
 
 ## 🐛 Bug Fixes
