@@ -15,6 +15,7 @@
     <quarkus.platform.version>3.31.2</quarkus.platform.version>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
     <quarkus.google-cloud-services.version>2.20.1</quarkus.google-cloud-services.version>
+    <javelit-version>0.86.0</javelit-version>
   </properties>
   
   <dependencyManagement>
@@ -102,7 +103,7 @@
     <dependency>
       <groupId>io.javelit</groupId>
       <artifactId>javelit</artifactId>
-      <version>0.86.0</version>
+      <version>${javelit-version}</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>

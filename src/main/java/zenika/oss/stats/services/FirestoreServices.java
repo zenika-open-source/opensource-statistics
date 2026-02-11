@@ -7,18 +7,17 @@ import io.quarkus.cache.CacheResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import zenika.oss.stats.beans.ZenikaMember;
-import zenika.oss.stats.beans.github.GitHubProject;
 import zenika.oss.stats.beans.gcp.StatsContribution;
+import zenika.oss.stats.beans.github.GitHubProject;
 import zenika.oss.stats.config.FirestoreCollections;
 import zenika.oss.stats.exception.DatabaseException;
 import zenika.oss.stats.mapper.ZenikaMemberMapper;
 import zenika.oss.stats.mapper.ZenikaProjectMapper;
 
-import java.util.ArrayList;
+import java.time.Month;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
-import java.time.Month;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -33,7 +32,7 @@ public class FirestoreServices {
      * @param zMember the member to create.
      */
     @CacheInvalidateAll(cacheName = "members-cache")
-    public void createMember(ZenikaMember zMember) {
+    public void createMember(ZenikaMember zMember) throws DatabaseException {
         createDocument(zMember, FirestoreCollections.MEMBERS.value, zMember.getId());
     }
 
@@ -63,9 +62,15 @@ public class FirestoreServices {
         ApiFuture<QuerySnapshot> querySnapshot = query.get();
         try {
             List<QueryDocumentSnapshot> stats = querySnapshot.get().getDocuments();
-            for (QueryDocumentSnapshot document : stats) {
-                document.getReference().delete();
+            if (stats.isEmpty()) {
+                return;
             }
+            // Use a WriteBatch for atomic and efficient bulk deletes
+            WriteBatch batch = firestore.batch();
+            for (QueryDocumentSnapshot document : stats) {
+                batch.delete(document.getReference());
+            }
+            batch.commit().get(); // Wait for the batch to complete
         } catch (InterruptedException | ExecutionException e) {
             throw new DatabaseException(e);
         }
@@ -76,9 +81,13 @@ public class FirestoreServices {
      *
      * @param statsContribution : stats to save
      */
-    public void saveStatsForAGitHubAccountForAYear(StatsContribution statsContribution) {
-        List<ApiFuture<WriteResult>> futures = new ArrayList<>();
-        futures.add(firestore.collection(FirestoreCollections.STATS.value).document().set(statsContribution));
+    public void saveStatsForAGitHubAccountForAYear(StatsContribution statsContribution) throws DatabaseException {
+        try {
+            // .get() waits for the operation to complete, making it synchronous and reliable
+            firestore.collection(FirestoreCollections.STATS.value).document().set(statsContribution).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new DatabaseException(e);
+        }
     }
 
     /**
@@ -93,9 +102,14 @@ public class FirestoreServices {
         ApiFuture<QuerySnapshot> querySnapshot = query.get();
         try {
             List<QueryDocumentSnapshot> stats = querySnapshot.get().getDocuments();
-            for (QueryDocumentSnapshot document : stats) {
-                document.getReference().delete();
+            if (stats.isEmpty()) {
+                return;
             }
+            WriteBatch batch = firestore.batch();
+            for (QueryDocumentSnapshot document : stats) {
+                batch.delete(document.getReference());
+            }
+            batch.commit().get();
         } catch (InterruptedException | ExecutionException e) {
             throw new DatabaseException(e);
         }
@@ -107,7 +121,7 @@ public class FirestoreServices {
      * @param project the project to create.
      */
     @CacheInvalidateAll(cacheName = "projects-cache")
-    public void createProject(GitHubProject project) {
+    public void createProject(GitHubProject project) throws DatabaseException {
         createDocument(project, FirestoreCollections.PROJECTS.value, project.getId());
     }
 
@@ -158,9 +172,12 @@ public class FirestoreServices {
      * @param documentId     the id of the document to create.
      * @param <T>            the type of the document to create.
      */
-    public <T> void createDocument(T document, String collectionPath, String documentId) {
-        List<ApiFuture<WriteResult>> futures = new ArrayList<>();
-        futures.add(firestore.collection(collectionPath).document(documentId).set(document));
+    public <T> void createDocument(T document, String collectionPath, String documentId) throws DatabaseException {
+        try {
+            firestore.collection(collectionPath).document(documentId).set(document).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new DatabaseException(e);
+        }
     }
 
     /**
@@ -175,9 +192,14 @@ public class FirestoreServices {
         ApiFuture<QuerySnapshot> querySnapshot = collection.get();
         try {
             List<QueryDocumentSnapshot> documents = querySnapshot.get().getDocuments();
-            for (QueryDocumentSnapshot document : documents) {
-                document.getReference().delete();
+            if (documents.isEmpty()) {
+                return;
             }
+            WriteBatch batch = firestore.batch();
+            for (QueryDocumentSnapshot document : documents) {
+                batch.delete(document.getReference());
+            }
+            batch.commit().get();
         } catch (InterruptedException | ExecutionException exception) {
             throw new DatabaseException(exception);
         }

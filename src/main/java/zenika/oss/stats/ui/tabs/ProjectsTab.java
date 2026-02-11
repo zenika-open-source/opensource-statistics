@@ -4,8 +4,10 @@ import io.javelit.core.Jt;
 import io.javelit.core.JtContainer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.jboss.logging.Logger;
 import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.github.GitHubProject;
+import zenika.oss.stats.exception.DatabaseException;
 import zenika.oss.stats.services.FirestoreServices;
 import zenika.oss.stats.services.GitHubServices;
 
@@ -15,6 +17,8 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class ProjectsTab {
+
+    private static final Logger LOG = Logger.getLogger(ProjectsTab.class);
 
     @Inject
     GitHubServices gitHubServices;
@@ -42,13 +46,15 @@ public class ProjectsTab {
                         if (member.getGitHubAccount() != null) {
                             List<GitHubProject> gitHubProjects = gitHubServices
                                     .getPersonalProjectForAnUser(member.getGitHubAccount().getLogin());
-                            gitHubProjects.forEach(firestoreServices::createProject);
+                            for (GitHubProject project : gitHubProjects) {
+                                firestoreServices.createProject(project);
+                            }
                             totalProjects += gitHubProjects.size();
                         }
                     }
                     Jt.success("Successfully synced " + totalProjects + " projects for " + members.size() + " members!")
                             .use(projectsTab);
-                } catch (Exception e) {
+                } catch (DatabaseException e) {
                     Jt.error("Error syncing projects: " + e.getMessage()).use(projectsTab);
                 }
             }
@@ -107,6 +113,7 @@ public class ProjectsTab {
 
         } catch (Exception e) {
             Jt.warning("Could not load current projects: " + e.getMessage()).use(projectsTab);
+            LOG.error("Could not load current projects", e);
         }
     }
 

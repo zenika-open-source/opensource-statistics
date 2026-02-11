@@ -19,7 +19,6 @@ import zenika.oss.stats.mapper.ZenikaMemberMapper;
 import zenika.oss.stats.services.FirestoreServices;
 import zenika.oss.stats.services.GitHubServices;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @ApplicationScoped
@@ -40,8 +39,10 @@ public class WorkflowRessources {
         firestoreServices.deleteAllMembers();
 
         List<GitHubMember> gitHubMembers = gitHubServices.getZenikaOpenSourceMembers();
-        gitHubMembers.forEach(gitHubMember -> firestoreServices
-                .createMember(ZenikaMemberMapper.mapGitHubMemberToZenikaMember(gitHubMember)));
+        // Use a for-loop to properly handle the checked DatabaseException
+        for (GitHubMember gitHubMember : gitHubMembers) {
+            firestoreServices.createMember(ZenikaMemberMapper.mapGitHubMemberToZenikaMember(gitHubMember));
+        }
 
         return Response.ok().build();
     }
@@ -62,14 +63,14 @@ public class WorkflowRessources {
 
         List<ZenikaMember> members = firestoreServices.getAllMembers();
 
-        members.forEach(member -> {
+        for (ZenikaMember member : members) {
             List<GitHubProject> gitHubProjects = gitHubServices
                     .getPersonalProjectForAnUser(member.getGitHubAccount().getLogin());
 
-            gitHubProjects.forEach(project -> {
+            for (GitHubProject project : gitHubProjects) {
                 firestoreServices.createProject(project);
-            });
-        });
+            }
+        }
         return Response.ok().build();
     }
 
