@@ -7,14 +7,14 @@
   <properties>
     <compiler-plugin.version>3.13.0</compiler-plugin.version>
     <failsafe.useModulePath>false</failsafe.useModulePath>
-    <maven.compiler.release>17</maven.compiler.release>
+    <maven.compiler.release>25</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
     <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
-    <quarkus.platform.version>3.12.1</quarkus.platform.version>
+    <quarkus.platform.version>3.31.2</quarkus.platform.version>
     <surefire-plugin.version>3.2.5</surefire-plugin.version>
-    <quarkus.google-cloud-services.version>2.13.0</quarkus.google-cloud-services.version>
+    <quarkus.google-cloud-services.version>2.20.1</quarkus.google-cloud-services.version>
   </properties>
   
   <dependencyManagement>
@@ -134,6 +134,8 @@
           <compilerArgs>
             <arg>-parameters</arg>
           </compilerArgs>
+          <source>25</source>
+          <target>25</target>
         </configuration>
       </plugin>
       <plugin>
@@ -146,14 +148,7 @@
           </systemPropertyVariables>
         </configuration>
       </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>15</source>
-          <target>15</target>
-        </configuration>
-      </plugin>
+
     </plugins>
   </build>
   <profiles>
