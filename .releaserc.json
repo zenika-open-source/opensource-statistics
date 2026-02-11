@@ -1,5 +1,7 @@
 {
-  "branches": ["main"],
+  "branches": [
+    "main"
+  ],
   "plugins": [
     [
       "semantic-release-gitmoji",
@@ -29,8 +31,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepareCmd": "mvn versions:set -DnewVersion=${nextRelease.version} && mvn versions:commit",
-        "publishCmd": "mvn deploy -DskipTests"
+        "prepareCmd": "mvn versions:set -DnewVersion=${nextRelease.version} && mvn versions:commit"
       }
     ],
     [
