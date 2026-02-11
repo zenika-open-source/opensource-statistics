@@ -7,21 +7,24 @@
       "semantic-release-gitmoji",
       {
         "releaseRules": {
-          "major": [
-            ":boom:"
-          ],
-          "minor": [
-            ":sparkles:"
-          ],
+          "major": [":boom:", ":tada:"],
+          "minor": [":sparkles:"],
           "patch": [
-            ":bug:",
             ":ambulance:",
-            ":lock:"
-          ]
+            ":bug:",
+            ":fire:",
+            ":adhesive_bandage:",
+            ":wrench:"]
         },
         "releaseNotes": {
           "template": "default"
         }
+      }
+    ],
+    [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
       }
     ],
     "@semantic-release/github",
@@ -35,6 +38,7 @@
       "@semantic-release/git",
       {
         "assets": [
+          "CHANGELOG.md",
           "pom.xml"
         ],
         "message": ":bookmark: ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
