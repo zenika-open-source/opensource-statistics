@@ -7,17 +7,20 @@
       "semantic-release-gitmoji",
       {
         "releaseRules": {
-          "major": [":boom:", ":tada:"],
-          "minor": [":sparkles:"],
+          "major": [
+            ":boom:",
+            ":tada:"
+          ],
+          "minor": [
+            ":sparkles:"
+          ],
           "patch": [
             ":ambulance:",
             ":bug:",
             ":fire:",
             ":adhesive_bandage:",
-            ":wrench:"]
-        },
-        "releaseNotes": {
-          "template": "default"
+            ":wrench:"
+          ]
         }
       }
     ],
