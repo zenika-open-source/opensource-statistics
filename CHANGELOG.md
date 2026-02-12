@@ -1,3 +1,8 @@
+# [v1.2.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.1.3...v1.2.0) (2026-02-12)
+
+## ✨ New Features
+- [`1b8fed6`](https://github.com/zenika-open-source/opensource-statistics/commit/1b8fed6)  Fix users recuperation to not remove all users before gett… (#34) (Issues: [`#34`](https://github.com/zenika-open-source/opensource-statistics/issues/34))
+
 # [v1.1.3](https://github.com/zenika-open-source/opensource-statistics/compare/v1.1.2...v1.1.3) (2026-02-11)
 
 ## 🐛 Bug Fixes
