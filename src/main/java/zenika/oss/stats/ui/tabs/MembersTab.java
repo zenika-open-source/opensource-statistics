@@ -139,8 +139,26 @@ public class MembersTab {
                 var row = Jt.columns(6).key("member_row_" + m.getId()).use(membersTab);
                 Jt.text(m.getFirstname() != null ? m.getFirstname() : "").use(row.col(0));
                 Jt.text(m.getName() != null ? m.getName() : "").use(row.col(1));
-                Jt.text(m.getGitHubAccount() != null ? m.getGitHubAccount().getLogin() : "").use(row.col(2));
-                Jt.text(m.getGitlabAccount() != null ? m.getGitlabAccount().getUsername() : "").use(row.col(3));
+
+                if (m.getGitHubAccount() != null && m.getGitHubAccount().getLogin() != null) {
+                    String githubLogin = m.getGitHubAccount().getLogin();
+                    String githubLinkMarkdown = "<a href=\"https://github.com/" + githubLogin
+                            + "\" target=\"_blank\" rel=\"noopener noreferrer\">"
+                            + githubLogin + "</a>";
+                    Jt.markdown(githubLinkMarkdown).use(row.col(2));
+                } else {
+                    Jt.text("").use(row.col(2));
+                }
+
+                if (m.getGitlabAccount() != null && m.getGitlabAccount().getUsername() != null) {
+                    String gitlabUsername = m.getGitlabAccount().getUsername();
+                    String gitlabLinkMarkdown = "<a href=\"https://gitlab.com/" + gitlabUsername
+                            + "\" target=\"_blank\" rel=\"noopener noreferrer\">"
+                            + gitlabUsername + "</a>";
+                    Jt.markdown(gitlabLinkMarkdown).use(row.col(3));
+                } else {
+                    Jt.text("").use(row.col(3));
+                }
                 Jt.text(m.getCity() != null ? m.getCity() : "").use(row.col(4));
                 if (Jt.button("📝").key("btn_edit_" + m.getId()).use(row.col(5))) {
                     selectedMemberId = m.getId();
