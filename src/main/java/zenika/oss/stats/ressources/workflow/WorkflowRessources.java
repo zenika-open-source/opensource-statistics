@@ -20,6 +20,8 @@ import zenika.oss.stats.services.FirestoreServices;
 import zenika.oss.stats.services.GitHubServices;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 @Path("/v1/workflow/")
@@ -36,12 +38,39 @@ public class WorkflowRessources {
     @Produces(MediaType.TEXT_PLAIN)
     public Response saveMembers() throws DatabaseException {
 
-        firestoreServices.deleteAllMembers();
-
+        // Load current state
+        List<ZenikaMember> existingMembers = firestoreServices.getAllMembers();
         List<GitHubMember> gitHubMembers = gitHubServices.getZenikaOpenSourceMembers();
-        // Use a for-loop to properly handle the checked DatabaseException
+
+        // Build a set of current GitHub logins in the organization
+        Set<String> currentGitHubLogins = gitHubMembers.stream()
+                .map(GitHubMember::getLogin)
+                .collect(Collectors.toSet());
+
+        // Upsert: add new GitHub members and update existing ones
         for (GitHubMember gitHubMember : gitHubMembers) {
-            firestoreServices.createMember(ZenikaMemberMapper.mapGitHubMemberToZenikaMember(gitHubMember));
+            ZenikaMember existing = existingMembers.stream()
+                    .filter(m -> m.getGitHubAccount() != null
+                            && gitHubMember.getLogin().equals(m.getGitHubAccount().getLogin()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (existing == null) {
+                // New member from GitHub organization
+                firestoreServices.createMember(ZenikaMemberMapper.mapGitHubMemberToZenikaMember(gitHubMember));
+            } else {
+                // Keep the same ZenikaMember (id, city, GitLab, etc.) but refresh GitHub data
+                existing.setGitHubAccount(gitHubMember);
+                firestoreServices.createMember(existing);
+            }
+        }
+
+        // Cleanup: remove members whose GitHub account is no longer in the organization
+        for (ZenikaMember member : existingMembers) {
+            if (member.getGitHubAccount() != null
+                    && !currentGitHubLogins.contains(member.getGitHubAccount().getLogin())) {
+                firestoreServices.deleteMember(member.getId());
+            }
         }
 
         return Response.ok().build();

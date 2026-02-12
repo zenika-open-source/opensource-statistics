@@ -109,8 +109,6 @@ public class ProjectsTab {
                 Jt.text("no data available").use(projectsTab);
             }
 
-            Jt.text("Fetch and save personal projects (not forked) for all saved members.").use(projectsTab);
-
         } catch (Exception e) {
             Jt.warning("Could not load current projects: " + e.getMessage()).use(projectsTab);
             LOG.error("Could not load current projects", e);

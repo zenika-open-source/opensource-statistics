@@ -164,6 +164,24 @@ public class FirestoreServices {
     }
 
     /**
+     * Delete a single member by id.
+     *
+     * @param memberId the id of the member document to delete.
+     * @throws DatabaseException exception
+     */
+    @CacheInvalidateAll(cacheName = "members-cache")
+    public void deleteMember(String memberId) throws DatabaseException {
+        try {
+            firestore.collection(FirestoreCollections.MEMBERS.value)
+                    .document(memberId)
+                    .delete()
+                    .get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    /**
      * Create a document in the Firestore database.
      *
      * @param document       the document to create.

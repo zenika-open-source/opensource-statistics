@@ -15,6 +15,8 @@ import zenika.oss.stats.services.GitHubServices;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class MembersTab {
@@ -65,13 +67,48 @@ public class MembersTab {
 
             if (Jt.button("🔄 Sync Members from GitHub").use(columns.col(1))) {
                 try {
-                    firestoreServices.deleteAllMembers();
+                    // Load current state from Firestore and GitHub
+                    List<ZenikaMember> existingMembers = firestoreServices.getAllMembers();
                     List<GitHubMember> gitHubMembers = gitHubServices.getZenikaOpenSourceMembers();
-                    
+
+                    Set<String> currentGitHubLogins = gitHubMembers.stream()
+                            .map(GitHubMember::getLogin)
+                            .collect(Collectors.toSet());
+
+                    int added = 0;
+                    int updated = 0;
+                    int removed = 0;
+
+                    // Upsert: add/update members based on GitHub organization
                     for (GitHubMember gitHubMember : gitHubMembers) {
-                        firestoreServices.createMember(ZenikaMemberMapper.mapGitHubMemberToZenikaMember(gitHubMember));
+                        ZenikaMember existing = existingMembers.stream()
+                                .filter(m -> m.getGitHubAccount() != null
+                                        && gitHubMember.getLogin().equals(m.getGitHubAccount().getLogin()))
+                                .findFirst()
+                                .orElse(null);
+
+                        if (existing == null) {
+                            firestoreServices.createMember(
+                                    ZenikaMemberMapper.mapGitHubMemberToZenikaMember(gitHubMember));
+                            added++;
+                        } else {
+                            existing.setGitHubAccount(gitHubMember);
+                            firestoreServices.createMember(existing);
+                            updated++;
+                        }
                     }
-                    Jt.success("Successfully synced " + gitHubMembers.size() + " members!").use(membersTab);
+
+                    // Remove members that are no longer in the GitHub organization
+                    for (ZenikaMember member : existingMembers) {
+                        if (member.getGitHubAccount() != null
+                                && !currentGitHubLogins.contains(member.getGitHubAccount().getLogin())) {
+                            firestoreServices.deleteMember(member.getId());
+                            removed++;
+                        }
+                    }
+
+                    Jt.success("✅ Synchronization completed: " + added + " added, " + updated + " updated, " + removed
+                            + " removed.").use(membersTab);
                 } catch (DatabaseException e) {
                     Jt.error("Error syncing members: " + e.getMessage()).use(membersTab);
                 }
@@ -102,8 +139,26 @@ public class MembersTab {
                 var row = Jt.columns(6).key("member_row_" + m.getId()).use(membersTab);
                 Jt.text(m.getFirstname() != null ? m.getFirstname() : "").use(row.col(0));
                 Jt.text(m.getName() != null ? m.getName() : "").use(row.col(1));
-                Jt.text(m.getGitHubAccount() != null ? m.getGitHubAccount().getLogin() : "").use(row.col(2));
-                Jt.text(m.getGitlabAccount() != null ? m.getGitlabAccount().getUsername() : "").use(row.col(3));
+
+                if (m.getGitHubAccount() != null && m.getGitHubAccount().getLogin() != null) {
+                    String githubLogin = m.getGitHubAccount().getLogin();
+                    String githubLinkMarkdown = "<a href=\"https://github.com/" + githubLogin
+                            + "\" target=\"_blank\" rel=\"noopener noreferrer\">"
+                            + githubLogin + "</a>";
+                    Jt.markdown(githubLinkMarkdown).use(row.col(2));
+                } else {
+                    Jt.text("").use(row.col(2));
+                }
+
+                if (m.getGitlabAccount() != null && m.getGitlabAccount().getUsername() != null) {
+                    String gitlabUsername = m.getGitlabAccount().getUsername();
+                    String gitlabLinkMarkdown = "<a href=\"https://gitlab.com/" + gitlabUsername
+                            + "\" target=\"_blank\" rel=\"noopener noreferrer\">"
+                            + gitlabUsername + "</a>";
+                    Jt.markdown(gitlabLinkMarkdown).use(row.col(3));
+                } else {
+                    Jt.text("").use(row.col(3));
+                }
                 Jt.text(m.getCity() != null ? m.getCity() : "").use(row.col(4));
                 if (Jt.button("📝").key("btn_edit_" + m.getId()).use(row.col(5))) {
                     selectedMemberId = m.getId();
@@ -128,7 +183,7 @@ public class MembersTab {
                         m.setCity(newCity);
                         firestoreServices.createMember(m);
                         selectedMemberId = null;
-                        Jt.success("Successfully updated ✅").use(membersTab);
+                        Jt.success("✅ Successfully updated").use(membersTab);
                         Jt.markdown("<style>#edit_row_" + m.getId() + " { display: none !important; }</style>").use(membersTab);
                     }
                     if (Jt.button("Cancel").key("btn_cancel_" + m.getId()).use(editRow.col(5))) {
