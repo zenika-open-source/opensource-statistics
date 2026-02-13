@@ -223,6 +223,19 @@ public class FirestoreServices {
         }
     }
 
+    public List<StatsContribution> getStatsForYear(int year) throws DatabaseException {
+        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
+        Query query = zStats.whereEqualTo("year", String.valueOf(year));
+        ApiFuture<QuerySnapshot> querySnapshot = query.get();
+        try {
+            return querySnapshot.get().getDocuments().stream()
+                    .map(document -> document.toObject(StatsContribution.class))
+                    .collect(Collectors.toList());
+        } catch (InterruptedException | ExecutionException exception) {
+            throw new DatabaseException(exception);
+        }
+    }
+
     public List<StatsContribution> getContributionsForAMemberOrderByYear(String memberId) throws DatabaseException {
         List<StatsContribution> stats = null;
         CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);

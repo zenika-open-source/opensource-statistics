@@ -29,5 +29,6 @@ public class ContributionsRessources {
     @Path("/")
     public Response getContributionsForAMonth(@QueryParam("year") int year, @QueryParam("month") String month) throws DatabaseException {
         return Response.ok(firestoreServices.getContributionsForAYearAndMonthOrderByMonth(year, month)).build();
-    }
+    } 
+    
 }
