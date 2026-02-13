@@ -5,11 +5,14 @@ import io.javelit.core.JtContainer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import zenika.oss.stats.beans.ZenikaMember;
+import zenika.oss.stats.beans.gcp.StatsContribution;
 import zenika.oss.stats.beans.github.GitHubProject;
 import zenika.oss.stats.services.FirestoreServices;
 import org.icepear.echarts.Pie;
 import org.icepear.echarts.charts.pie.PieSeries;
 
+import java.time.Year;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -37,7 +40,7 @@ public class StatsTab {
                     .setLegend();
 
             pie.addSeries(new PieSeries()
-                    .setName("\uD83C\uDF0D Members by City")
+                    .setName("Members by City")
                     .setRadius("50%")
                     .setData(data));
 
@@ -70,8 +73,100 @@ public class StatsTab {
                 Jt.warning("Could not load top projects: " + e.getMessage()).use(statsTab);
             }
 
+            // Top 3 Contributors Section
+            renderTopContributors(statsTab);
+
         } catch (Exception e) {
             Jt.warning("Could not load stats: " + e.getMessage()).use(statsTab);
         }
     }
+
+    private void renderTopContributors(JtContainer statsTab) {
+        int currentYear = Year.now().getValue();
+        int previousYear = currentYear - 1;
+
+        Jt.subheader("\uD83E\uDD47 Top 3 Contributors by number of contributions").use(statsTab);
+
+        var columns = Jt.columns(2).key("top_contributors_columns").use(statsTab);
+
+        // Current Year
+        try {
+            List<ContributorDisplay> topCurrent = getTopContributors(currentYear);
+            Jt.markdown("##" + currentYear).use(columns.col(0));
+            if (!topCurrent.isEmpty()) {
+                Jt.table(topCurrent).use(columns.col(0));
+            } else {
+                Jt.text("No data available").use(columns.col(0));
+            }
+        } catch (Exception e) {
+            Jt.error("Error loading " + currentYear + " stats: " + e.getMessage()).use(columns.col(0));
+        }
+
+        // Previous Year
+        try {
+            List<ContributorDisplay> topPrevious = getTopContributors(previousYear);
+            Jt.markdown("##" + previousYear).use(columns.col(1));
+            if (!topPrevious.isEmpty()) {
+                Jt.table(topPrevious).use(columns.col(1));
+            } else {
+                Jt.text("No data available").use(columns.col(1));
+            }
+        } catch (Exception e) {
+            Jt.error("Error loading " + previousYear + " stats: " + e.getMessage()).use(columns.col(1));
+        }
+    }
+
+    private List<ContributorDisplay> getTopContributors(int year) throws Exception {
+        List<StatsContribution> stats = firestoreServices.getStatsForYear(year);
+        List<ZenikaMember> members = firestoreServices.getAllMembers();
+
+        Map<String, ZenikaMember> membersByGithub = members.stream()
+                .filter(m -> m.getGitHubAccount() != null && m.getGitHubAccount().getLogin() != null)
+                .collect(Collectors.toMap(
+                        m -> m.getGitHubAccount().getLogin().toLowerCase(),
+                        m -> m,
+                        (existing, replacement) -> existing
+                ));
+
+        Map<String, Integer> contributionsByHandle = stats.stream()
+                .filter(s -> s.getGithubHandle() != null)
+                .collect(Collectors.groupingBy(
+                        s -> s.getGithubHandle().toLowerCase(),
+                        Collectors.summingInt(s -> s.getNumberOfContributionsOnGitHub() + s.getNumberOfContributionsOnGitLab())
+                ));
+
+        return contributionsByHandle.entrySet().stream()
+                .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                .limit(3)
+                .map(e -> {
+                    String handle = e.getKey();
+                    ZenikaMember m = membersByGithub.get(handle);
+                    
+                    String name = handle;
+                    String github = handle;
+                    String gitlab = "";
+                    
+                    if (m != null) {
+                        String firstName = m.getFirstname() != null ? m.getFirstname() : "";
+                        String lastName = m.getName() != null ? m.getName() : "";
+                        String fullName = (firstName + " " + lastName).trim();
+                        if (!fullName.isEmpty()) {
+                            name = fullName;
+                        }
+                        
+                        if (m.getGitHubAccount() != null && m.getGitHubAccount().getLogin() != null) {
+                            github = m.getGitHubAccount().getLogin();
+                        }
+                        
+                        if (m.getGitlabAccount() != null && m.getGitlabAccount().getUsername() != null) {
+                            gitlab = m.getGitlabAccount().getUsername();
+                        }
+                    }
+                    
+                    return new ContributorDisplay(name, github, gitlab, e.getValue());
+                })
+                .collect(Collectors.toList());
+    }
+
+    record ContributorDisplay(String name, String github, String gitlab, Integer contributions) {}
 }

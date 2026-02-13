@@ -56,6 +56,7 @@ public class FirestoreServices {
      * @param year         : year to delete
      * @throws DatabaseException exception
      */
+    @CacheInvalidateAll(cacheName = "contributions-cache")
     public void deleteStatsForAGitHubAccountForAYear(String githubMember, int year) throws DatabaseException {
         CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
         Query query = zStats.whereEqualTo("githubHandle", githubMember).whereEqualTo("year", String.valueOf(year));
@@ -81,6 +82,7 @@ public class FirestoreServices {
      *
      * @param statsContribution : stats to save
      */
+    @CacheInvalidateAll(cacheName = "contributions-cache")
     public void saveStatsForAGitHubAccountForAYear(StatsContribution statsContribution) throws DatabaseException {
         try {
             // .get() waits for the operation to complete, making it synchronous and reliable
@@ -96,6 +98,7 @@ public class FirestoreServices {
      * @param year : the year that we want to remove stats
      * @throws DatabaseException exception
      */
+    @CacheInvalidateAll(cacheName = "contributions-cache")
     public void deleteStatsForAllGitHubAccountForAYear(int year) throws DatabaseException {
         CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
         Query query = zStats.whereEqualTo("year", String.valueOf(year));
@@ -223,6 +226,7 @@ public class FirestoreServices {
         }
     }
 
+    @CacheResult(cacheName = "contributions-cache")
     public List<StatsContribution> getStatsForYear(int year) throws DatabaseException {
         CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
         Query query = zStats.whereEqualTo("year", String.valueOf(year));
@@ -236,6 +240,7 @@ public class FirestoreServices {
         }
     }
 
+    @CacheResult(cacheName = "contributions-cache")
     public List<StatsContribution> getContributionsForAMemberOrderByYear(String memberId) throws DatabaseException {
         List<StatsContribution> stats = null;
         CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
@@ -255,6 +260,7 @@ public class FirestoreServices {
         return stats;
     }
 
+    @CacheResult(cacheName = "contributions-cache")
     public List<StatsContribution> getContributionsForAYearAndMonthOrderByMonth(int year, String month)
             throws DatabaseException {
         List<StatsContribution> stats = null;
