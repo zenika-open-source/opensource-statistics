@@ -13,8 +13,14 @@ import zenika.oss.stats.ui.tabs.StatsTab;
 
 import java.util.List;
 
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+
 @ApplicationScoped
 public class JavelitDashboard {
+
+    @ConfigProperty(name = "javelit.port", defaultValue = "8888")
+    int port;
 
     @Inject
     MembersTab membersTab;
@@ -43,6 +49,6 @@ public class JavelitDashboard {
             contributionsTab.render(tabs.tab("📊 Contributions"));
             statsTab.render(tabs.tab("📈 Stats"));
 
-        }, 8888).build().start();
+        }, port).build().start();
     }
 }

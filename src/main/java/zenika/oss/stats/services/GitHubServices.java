@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -51,7 +52,7 @@ public class GitHubServices {
     String graphQLUrl;
 
     @ConfigProperty(name = "github.token")
-    String githubToken;
+    Optional<String> githubToken;
 
     DynamicGraphQLClient dynamicGraphQLClient;
 
@@ -59,7 +60,7 @@ public class GitHubServices {
     public void init() {
         dynamicGraphQLClient = DynamicGraphQLClientBuilder.newBuilder()
                 .url(graphQLUrl)
-                .header("Authorization", "Bearer " + githubToken)
+                .header("Authorization", "Bearer " + githubToken.orElse(""))
                 .build();
     }
 

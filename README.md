@@ -39,7 +39,7 @@ An interface made with Javelit is available.
 
 > 🎯 The last resource will be removed after implementing all features and will be replaced by schedules. 
 
-## 📝 Setup 
+## 📝 Local Setup 
 
 - You need a GitHub token you can generate on [this page](https://github.com/settings/tokens).
 - Create a `.env` file based on the `.env-example` file and set the token previously created. 
@@ -63,10 +63,25 @@ Then run the container mapping the ports (8080 for API, 8888 for UI) and mountin
 
 ```bash
 docker run -it --rm \
-  -p 8080:8080 -p 8888:8888 \
+  -p 8080:8081 \
   -v "$(pwd)/.gcloud-conf.json:/etc/gcp/creds.json:ro" \
+  --env-file .env \
   -e GOOGLE_APPLICATION_CREDENTIALS=/etc/gcp/creds.json \
   zoss-dashboard
+```
+
+## ⛅ Deploy on Cloud Run 
+
+This project can be deployed on [Cloud Run](https://cloud.google.com/run) with this command: 
+
+```bash
+  gcloud run deploy zenika-opensource-statistics \
+   --source . \
+   --region $GOOGLE_CLOUD_LOCATION \
+   --project $GOOGLE_CLOUD_PROJECT_ID \
+   --allow-unauthenticated \
+   --memory 1Gi \
+   --max-instances 1
 ```
 
 ## ✨Contribute 
