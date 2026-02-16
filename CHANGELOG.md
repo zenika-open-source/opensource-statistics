@@ -1,3 +1,8 @@
+# [v1.4.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.3.0...v1.4.0) (2026-02-16)
+
+## ✨ New Features
+- [`fa1a143`](https://github.com/zenika-open-source/opensource-statistics/commit/fa1a143)   🔧  Configure Cloud Run deployment (#37) (Issues: [`#37`](https://github.com/zenika-open-source/opensource-statistics/issues/37))
+
 # [v1.3.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.2.0...v1.3.0) (2026-02-16)
 
 ## ✨ New Features
