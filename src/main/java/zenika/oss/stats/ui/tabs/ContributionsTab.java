@@ -45,7 +45,7 @@ public class ContributionsTab {
                 .value(Year.now().getValue())
                 .use(columns.col(1));
 
-        if (Jt.button("📈 Sync Contributions for " + yearValue).use(columns.col(1))) {
+        if (Jt.button("📈 Sync Contributions for the year selected").use(columns.col(1))) {
             try {
                 int year = yearValue;
                 firestoreServices.deleteStatsForAllGitHubAccountForAYear(year);
@@ -109,7 +109,7 @@ public class ContributionsTab {
             Jt.error("Could not load contributions chart: " + e.getMessage()).use(contributionsTab);
         }
 
-        Jt.subheader("Individual Member Stats").use(contributionsTab);
+        Jt.subheader("Individual Member Stats for " + yearValue).use(contributionsTab);
 
         try {
             List<ZenikaMember> members = firestoreServices.getAllMembers();
@@ -120,12 +120,11 @@ public class ContributionsTab {
                             m -> m.getGitHubAccount().getLogin(),
                             (existing, replacement) -> existing));
 
-            String selectedMemberLabel = Jt.selectbox("Select Member", new ArrayList<>(memberOptions.keySet()))
+            String selectedMemberLabel = Jt.selectbox("", new ArrayList<>(memberOptions.keySet()))
                     .use(contributionsTab);
 
             if (selectedMemberLabel != null) {
                 String selectedMemberHandle = memberOptions.get(selectedMemberLabel);
-                Jt.text("Stats for " + selectedMemberHandle + " in " + yearValue).use(contributionsTab);
 
                 List<StatsContribution> memberStats = firestoreServices
                         .getContributionsForAMemberOrderByYear(selectedMemberHandle);

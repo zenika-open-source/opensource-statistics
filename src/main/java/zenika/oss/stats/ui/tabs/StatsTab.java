@@ -48,7 +48,7 @@ public class StatsTab {
                     .setRadius("50%")
                     .setData(data));
 
-            Jt.subheader("Members by City").use(statsTab);
+            Jt.subheader("🗾 Members by City").use(statsTab);
             if (!members.isEmpty()) {
                 Jt.echarts(pie).use(statsTab);
             } else {
@@ -137,7 +137,7 @@ public class StatsTab {
         // Current Year
         try {
             List<ContributorDisplay> topCurrent = getTopContributors(currentYear);
-            Jt.markdown("##" + currentYear).use(columns.col(0));
+            Jt.markdown("## " + currentYear).use(columns.col(0));
             if (!topCurrent.isEmpty()) {
                 Jt.table(topCurrent).use(columns.col(0));
             } else {
@@ -150,7 +150,7 @@ public class StatsTab {
         // Previous Year
         try {
             List<ContributorDisplay> topPrevious = getTopContributors(previousYear);
-            Jt.markdown("##" + previousYear).use(columns.col(1));
+            Jt.markdown("## " + previousYear).use(columns.col(1));
             if (!topPrevious.isEmpty()) {
                 Jt.table(topPrevious).use(columns.col(1));
             } else {
