@@ -1,3 +1,8 @@
+# [v1.3.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.2.0...v1.3.0) (2026-02-16)
+
+## ✨ New Features
+- [`ffa140a`](https://github.com/zenika-open-source/opensource-statistics/commit/ffa140a)  Add contributions elements and some stats  (#36) (Issues: [`#36`](https://github.com/zenika-open-source/opensource-statistics/issues/36))
+
 # [v1.2.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.1.3...v1.2.0) (2026-02-12)
 
 ## ✨ New Features
