@@ -63,10 +63,10 @@ public class ProjectsTab {
                 // Search Bar
                 var searchRow = Jt.columns(2).use(projectsTab);
                 projectSearchTerm = Jt.textInput("Search Projects").value(projectSearchTerm).use(searchRow.col(0));
-                
+
                 List<GitHubProject> filteredProjects = allProjects.stream()
-                    .filter(p -> matchesProject(p, projectSearchTerm))
-                    .collect(Collectors.toList());
+                        .filter(p -> matchesProject(p, projectSearchTerm))
+                        .collect(Collectors.toList());
 
                 // Sort
                 sortProjects(filteredProjects);
@@ -78,11 +78,9 @@ public class ProjectsTab {
                                 p.getWatchers_count(), p.getForks()))
                         .collect(Collectors.toList());
 
-                Jt.subheader("Projects List").use(projectsTab);
-                
                 // Custom Header with Sort Buttons
                 var header = Jt.columns(5).key("projects_header").use(projectsTab);
-                
+
                 if (Jt.button(getSortLabel("Name")).use(header.col(0))) {
                     toggleSort("Name");
                 }
@@ -116,11 +114,12 @@ public class ProjectsTab {
     }
 
     private boolean matchesProject(GitHubProject p, String term) {
-        if (term == null || term.isBlank()) return true;
+        if (term == null || term.isBlank())
+            return true;
         String lowerTerm = term.toLowerCase();
         return (p.getName() != null && p.getName().toLowerCase().contains(lowerTerm)) ||
-               (p.getFull_name() != null && p.getFull_name().toLowerCase().contains(lowerTerm)) ||
-               (p.getHtml_url() != null && p.getHtml_url().toLowerCase().contains(lowerTerm));
+                (p.getFull_name() != null && p.getFull_name().toLowerCase().contains(lowerTerm)) ||
+                (p.getHtml_url() != null && p.getHtml_url().toLowerCase().contains(lowerTerm));
     }
 
     private void toggleSort(String column) {

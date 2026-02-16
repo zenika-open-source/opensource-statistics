@@ -1,8 +1,9 @@
 package zenika.oss.stats.services;
 
-import io.smallrye.graphql.client.GraphQLClient;
 import io.smallrye.graphql.client.Response;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClientBuilder;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -46,9 +47,21 @@ public class GitHubServices {
     @Inject
     GitHubGraphQLClient gitHubGraphQLClient;
 
-    @Inject
-    @GraphQLClient("github-api-dynamic")
+    @ConfigProperty(name = "quarkus.smallrye-graphql-client.github-api-dynamic.url")
+    String graphQLUrl;
+
+    @ConfigProperty(name = "github.token")
+    String githubToken;
+
     DynamicGraphQLClient dynamicGraphQLClient;
+
+    @PostConstruct
+    public void init() {
+        dynamicGraphQLClient = DynamicGraphQLClientBuilder.newBuilder()
+                .url(graphQLUrl)
+                .header("Authorization", "Bearer " + githubToken)
+                .build();
+    }
 
     /**
      * Get information for the current organization.
@@ -130,7 +143,7 @@ public class GitHubServices {
             variables.put("login", login);
             String query = "query($login: String!) {\n" + "                    user(login: $login) {\n" +
                     "                        contributionsCollection {\n"
-                    + "                            totalIssueContributions,\n" +
+                    + "                          totalIssueContributions,\n" +
                     "                            totalCommitContributions,\n" +
                     "                            totalPullRequestContributions,\n" +
                     "                            totalPullRequestReviewContributions,\n" +
@@ -163,6 +176,9 @@ public class GitHubServices {
         try {
 
             for (Month month : Month.values()) {
+                if (year == Year.now().getValue() && month.getValue() > LocalDate.now().getMonthValue()) {
+                    break;
+                }
                 var variables = new HashMap<String, Object>();
                 variables.put("login", login);
 

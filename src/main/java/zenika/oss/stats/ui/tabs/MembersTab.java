@@ -37,27 +37,27 @@ public class MembersTab {
         try {
             // Inject CSS for red buttons and vertical alignment
             Jt.markdown("""
-                <style>
-                button[id^="btn_save_"], button[id^="btn_cancel_"] {
-                    background-color: #d32f2f !important;
-                    color: white !important;
-                    border: none;
-                    padding: 8px 16px;
-                    border-radius: 4px;
-                    cursor: pointer;
-                    transition: background-color 0.3s;
-                }
-                button[id^="btn_save_"]:hover, button[id^="btn_cancel_"]:hover {
-                    background-color: #b71c1c !important;
-                }
-                button[id^="btn_save_"]:active, button[id^="btn_cancel_"]:active {
-                    background-color: #a93226 !important;
-                }
-                div[id^="edit_row_"] {
-                    align-items: center !important;
-                }
-                </style>
-                """).use(membersTab);
+                    <style>
+                    button[id^="btn_save_"], button[id^="btn_cancel_"] {
+                        background-color: #d32f2f !important;
+                        color: white !important;
+                        border: none;
+                        padding: 8px 16px;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        transition: background-color 0.3s;
+                    }
+                    button[id^="btn_save_"]:hover, button[id^="btn_cancel_"]:hover {
+                        background-color: #b71c1c !important;
+                    }
+                    button[id^="btn_save_"]:active, button[id^="btn_cancel_"]:active {
+                        background-color: #a93226 !important;
+                    }
+                    div[id^="edit_row_"] {
+                        align-items: center !important;
+                    }
+                    </style>
+                    """).use(membersTab);
 
             List<ZenikaMember> members = firestoreServices.getAllMembers();
 
@@ -119,9 +119,8 @@ public class MembersTab {
             // Sort
             sortMembers(members);
 
-            Jt.subheader("Zenika Members List").use(membersTab);
             var header = Jt.columns(6).key("member_header").use(membersTab);
-            
+
             if (Jt.button(getMemberSortLabel("Firstname")).use(header.col(0))) {
                 toggleMemberSort("Firstname");
             }
@@ -170,7 +169,9 @@ public class MembersTab {
                     String newFirstname = Jt.textInput("Firstname").value(m.getFirstname())
                             .use(editRow.col(0));
                     String newName = Jt.textInput("Name").value(m.getName()).use(editRow.col(1));
-                    String newGitLabHandle = Jt.textInput("GitLab").value(m.getGitlabAccount() != null ? m.getGitlabAccount().getUsername() : "").use(editRow.col(2));
+                    String newGitLabHandle = Jt.textInput("GitLab")
+                            .value(m.getGitlabAccount() != null ? m.getGitlabAccount().getUsername() : "")
+                            .use(editRow.col(2));
                     String newCity = Jt.textInput("City").value(m.getCity()).use(editRow.col(3));
 
                     if (Jt.button("Save").key("btn_save_" + m.getId()).use(editRow.col(4))) {
@@ -184,11 +185,13 @@ public class MembersTab {
                         firestoreServices.createMember(m);
                         selectedMemberId = null;
                         Jt.success("✅ Successfully updated").use(membersTab);
-                        Jt.markdown("<style>#edit_row_" + m.getId() + " { display: none !important; }</style>").use(membersTab);
+                        Jt.markdown("<style>#edit_row_" + m.getId() + " { display: none !important; }</style>")
+                                .use(membersTab);
                     }
                     if (Jt.button("Cancel").key("btn_cancel_" + m.getId()).use(editRow.col(5))) {
                         selectedMemberId = null;
-                        Jt.markdown("<style>#edit_row_" + m.getId() + " { display: none !important; }</style>").use(membersTab);
+                        Jt.markdown("<style>#edit_row_" + m.getId() + " { display: none !important; }</style>")
+                                .use(membersTab);
                     }
                 }
             }
@@ -217,7 +220,8 @@ public class MembersTab {
 
     private void sortMembers(List<ZenikaMember> members) {
         Comparator<ZenikaMember> comparator = switch (memberSortColumn) {
-            case "Firstname" -> Comparator.comparing(m -> m.getFirstname() != null ? m.getFirstname().toLowerCase() : "");
+            case "Firstname" ->
+                Comparator.comparing(m -> m.getFirstname() != null ? m.getFirstname().toLowerCase() : "");
             case "Lastname" -> Comparator.comparing(m -> m.getName() != null ? m.getName().toLowerCase() : "");
             case "City" -> Comparator.comparing(m -> m.getCity() != null ? m.getCity().toLowerCase() : "");
             default -> Comparator.comparing(m -> m.getFirstname() != null ? m.getFirstname().toLowerCase() : "");
