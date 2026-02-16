@@ -176,6 +176,9 @@ public class GitHubServices {
         try {
 
             for (Month month : Month.values()) {
+                if (year == Year.now().getValue() && month.getValue() > LocalDate.now().getMonthValue()) {
+                    break;
+                }
                 var variables = new HashMap<String, Object>();
                 variables.put("login", login);
 

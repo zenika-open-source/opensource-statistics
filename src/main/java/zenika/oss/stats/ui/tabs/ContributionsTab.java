@@ -54,8 +54,6 @@ public class ContributionsTab {
                 int syncedCount = 0;
                 for (ZenikaMember zenikaMember : zMembers) {
                     if (zenikaMember.getGitHubAccount() != null) {
-                        Log.info("🙍 Syncing contributions for " + zenikaMember.getGitHubAccount().login);
-
                         List<CustomStatsContributionsUserByMonth> stats = gitHubServices
                                 .getContributionsForTheCurrentYear(zenikaMember.getGitHubAccount().getLogin(),
                                         year);
