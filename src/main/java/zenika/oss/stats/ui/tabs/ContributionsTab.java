@@ -2,6 +2,7 @@ package zenika.oss.stats.ui.tabs;
 
 import io.javelit.core.Jt;
 import io.javelit.core.JtContainer;
+import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import zenika.oss.stats.beans.CustomStatsContributionsUserByMonth;
@@ -53,6 +54,8 @@ public class ContributionsTab {
                 int syncedCount = 0;
                 for (ZenikaMember zenikaMember : zMembers) {
                     if (zenikaMember.getGitHubAccount() != null) {
+                        Log.info("🙍 Syncing contributions for " + zenikaMember.getGitHubAccount().login);
+
                         List<CustomStatsContributionsUserByMonth> stats = gitHubServices
                                 .getContributionsForTheCurrentYear(zenikaMember.getGitHubAccount().getLogin(),
                                         year);
@@ -70,7 +73,7 @@ public class ContributionsTab {
                 Jt.success("✅ Successfully synced contributions for " + syncedCount + " members in " + year + "!")
                         .use(contributionsTab);
             } catch (Exception e) {
-                Jt.error("Error syncing contributions: " + e.getMessage()).use(contributionsTab);
+                Jt.error("❌ Error syncing contributions: " + e.getMessage()).use(contributionsTab);
             }
         }
 
@@ -82,8 +85,8 @@ public class ContributionsTab {
             Map<Month, Integer> contributionsByMonth = allStats.stream()
                     .collect(Collectors.groupingBy(
                             s -> Month.valueOf(s.getMonth().toUpperCase()),
-                            Collectors.summingInt(s -> s.getNumberOfContributionsOnGitHub() + s.getNumberOfContributionsOnGitLab())
-                    ));
+                            Collectors.summingInt(
+                                    s -> s.getNumberOfContributionsOnGitHub() + s.getNumberOfContributionsOnGitLab())));
 
             List<String> months = new ArrayList<>();
             List<Integer> counts = new ArrayList<>();
@@ -117,8 +120,7 @@ public class ContributionsTab {
                     .collect(Collectors.toMap(
                             m -> m.getName() + " (" + m.getGitHubAccount().getLogin() + ")",
                             m -> m.getGitHubAccount().getLogin(),
-                            (existing, replacement) -> existing
-                    ));
+                            (existing, replacement) -> existing));
 
             String selectedMemberLabel = Jt.selectbox("Select Member", new ArrayList<>(memberOptions.keySet()))
                     .use(contributionsTab);
@@ -127,14 +129,15 @@ public class ContributionsTab {
                 String selectedMemberHandle = memberOptions.get(selectedMemberLabel);
                 Jt.text("Stats for " + selectedMemberHandle + " in " + yearValue).use(contributionsTab);
 
-                List<StatsContribution> memberStats = firestoreServices.getContributionsForAMemberOrderByYear(selectedMemberHandle);
+                List<StatsContribution> memberStats = firestoreServices
+                        .getContributionsForAMemberOrderByYear(selectedMemberHandle);
 
                 Map<Month, Integer> memberContributionsByMonth = memberStats.stream()
                         .filter(s -> String.valueOf(yearValue).equals(s.getYear()))
                         .collect(Collectors.groupingBy(
                                 s -> Month.valueOf(s.getMonth().toUpperCase()),
-                                Collectors.summingInt(s -> s.getNumberOfContributionsOnGitHub() + s.getNumberOfContributionsOnGitLab())
-                        ));
+                                Collectors.summingInt(s -> s.getNumberOfContributionsOnGitHub()
+                                        + s.getNumberOfContributionsOnGitLab())));
 
                 List<String> memberMonths = new ArrayList<>();
                 List<Integer> memberCounts = new ArrayList<>();
