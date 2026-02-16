@@ -20,7 +20,7 @@ import java.util.List;
 public interface GitHubClient {
 
     default String prepareToken() {
-        String token = ConfigProvider.getConfig().getValue("github.token", String.class);
+        String token = ConfigProvider.getConfig().getOptionalValue("github.token", String.class).orElse("");
         return "Bearer " + token;
     }
 

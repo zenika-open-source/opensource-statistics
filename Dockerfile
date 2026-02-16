@@ -8,7 +8,7 @@ COPY target/quarkus-app/*.jar /deployments/
 COPY target/quarkus-app/app/ /deployments/app/
 COPY target/quarkus-app/quarkus/ /deployments/quarkus/
 
-EXPOSE 8080 8888
-ENV JAVA_OPTS="-Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
+EXPOSE 8080
+ENV JAVA_OPTS="-Dquarkus.http.port=8081 -Djavelit.port=8080 -Djavelit.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager"
 ENV JAVA_APP_JAR="/deployments/quarkus-run.jar"
 ENTRYPOINT [ "/bin/sh", "-c", "java $JAVA_OPTS -jar $JAVA_APP_JAR" ]
