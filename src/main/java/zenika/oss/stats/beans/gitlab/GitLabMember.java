@@ -12,6 +12,8 @@ public class GitLabMember {
     private String webUrl;
     @JsonProperty("avatar_url")
     private String avatarUrl;
+    private Boolean active;
+    private Boolean blocked;
 
     public String getId() {
         return id;
@@ -51,5 +53,21 @@ public class GitLabMember {
 
     public void setAvatarUrl(String avatarUrl) {
         this.avatarUrl = avatarUrl;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
+
+    public Boolean getBlocked() {
+        return blocked;
+    }
+
+    public void setBlocked(Boolean blocked) {
+        this.blocked = blocked;
     }
 }

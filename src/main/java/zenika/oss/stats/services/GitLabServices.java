@@ -8,6 +8,7 @@ import zenika.oss.stats.beans.gitlab.GitLabProject;
 import zenika.oss.stats.config.GitLabClient;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -21,14 +22,14 @@ public class GitLabServices {
      * Get basic information for a user.
      *
      * @param username The GitLab username.
-     * @return The user information.
+     * @return An Optional containing the user information if found.
      */
-    public GitLabMember getUserInformation(String username) {
+    public Optional<GitLabMember> getUserInformation(String username) {
         List<GitLabMember> users = gitLabClient.getUserInformations(username);
         if (users != null && !users.isEmpty()) {
-            return users.get(0);
+            return Optional.of(users.get(0));
         }
-        return null;
+        return Optional.empty();
     }
 
     /**
@@ -38,14 +39,11 @@ public class GitLabServices {
      * @return A list of personal projects (not forks).
      */
     public List<GitLabProject> getPersonalProjectsForAnUser(String username) {
-        GitLabMember user = getUserInformation(username);
-        if (user == null) {
-            return List.of();
-        }
-
-        List<GitLabProject> projects = gitLabClient.getProjectsForAnUser(user.getId());
-        return projects.stream()
-                .filter(project -> !project.isFork())
-                .collect(Collectors.toList());
+        return getUserInformation(username)
+                .map(user -> gitLabClient.getProjectsForAnUser(user.getId()))
+                .map(projects -> projects.stream()
+                        .filter(project -> !project.isFork())
+                        .collect(Collectors.toList()))
+                .orElse(List.of());
     }
 }

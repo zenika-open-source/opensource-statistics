@@ -18,7 +18,7 @@ public class GitLabRessources {
     @GET
     @Path("/user/{username}")
     public Response getUserInformation(@PathParam("username") String username) {
-        return Response.ok(gitLabServices.getUserInformation(username))
+        return Response.ok(gitLabServices.getUserInformation(username).orElse(null))
                 .build();
     }
 

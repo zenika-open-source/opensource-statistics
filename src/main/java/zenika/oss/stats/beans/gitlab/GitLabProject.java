@@ -2,53 +2,45 @@ package zenika.oss.stats.beans.gitlab;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import zenika.oss.stats.beans.Project;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class GitLabProject {
-    private String id;
-    private String name;
-    @JsonProperty("path_with_namespace")
-    private String pathWithNamespace;
-    @JsonProperty("web_url")
-    private String webUrl;
+public class GitLabProject extends Project {
+    public GitLabProject() {
+        this.setSource("GitLab");
+    }
+
     private String description;
-    @JsonProperty("star_count")
-    private Long starCount;
-    @JsonProperty("forks_count")
-    private Long forksCount;
     @JsonProperty("forked_from_project")
     private Object forkedFromProject;
 
-    public String getId() {
-        return id;
+    @JsonProperty("path_with_namespace")
+    public void setGitLabPathWithNamespace(String pathWithNamespace) {
+        this.setFullName(pathWithNamespace);
     }
 
-    public void setId(String id) {
-        this.id = id;
+    @JsonProperty("web_url")
+    public void setGitLabWebUrl(String webUrl) {
+        this.setUrl(webUrl);
     }
 
-    public String getName() {
-        return name;
+    @JsonProperty("star_count")
+    public void setGitLabStarCount(Long starCount) {
+        this.setStarsCount(starCount);
     }
 
-    public void setName(String name) {
-        this.name = name;
+    @JsonProperty("forks_count")
+    public void setGitLabForksCount(Long forksCount) {
+        this.setForks(forksCount);
     }
 
-    public String getPathWithNamespace() {
-        return pathWithNamespace;
-    }
-
-    public void setPathWithNamespace(String pathWithNamespace) {
-        this.pathWithNamespace = pathWithNamespace;
-    }
-
-    public String getWebUrl() {
-        return webUrl;
-    }
-
-    public void setWebUrl(String webUrl) {
-        this.webUrl = webUrl;
+    @JsonProperty("archived")
+    public void setGitLabArchived(Object archived) {
+        if (archived instanceof Boolean) {
+            this.setArchived((Boolean) archived);
+        } else if (archived instanceof String) {
+            this.setArchived(Boolean.parseBoolean((String) archived));
+        }
     }
 
     public String getDescription() {
@@ -59,22 +51,7 @@ public class GitLabProject {
         this.description = description;
     }
 
-    public Long getStarCount() {
-        return starCount;
-    }
-
-    public void setStarCount(Long starCount) {
-        this.starCount = starCount;
-    }
-
-    public Long getForksCount() {
-        return forksCount;
-    }
-
-    public void setForksCount(Long forksCount) {
-        this.forksCount = forksCount;
-    }
-
+    @Override
     public boolean isFork() {
         return forkedFromProject != null;
     }
@@ -85,5 +62,26 @@ public class GitLabProject {
 
     public void setForkedFromProject(Object forkedFromProject) {
         this.forkedFromProject = forkedFromProject;
+    }
+
+    // Compatibility getters if needed by other parts of the code
+    public String getPathWithNamespace() {
+        return getFullName();
+    }
+
+    public String getWebUrl() {
+        return getUrl();
+    }
+
+    public Long getStarCount() {
+        return getStarsCount();
+    }
+
+    public Long getForksCount() {
+        return getForks();
+    }
+
+    public String getArchived() {
+        return String.valueOf(isArchived());
     }
 }

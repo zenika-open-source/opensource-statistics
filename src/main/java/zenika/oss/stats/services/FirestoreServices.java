@@ -6,9 +6,9 @@ import io.quarkus.cache.CacheInvalidateAll;
 import io.quarkus.cache.CacheResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import zenika.oss.stats.beans.Project;
 import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.gcp.StatsContribution;
-import zenika.oss.stats.beans.github.GitHubProject;
 import zenika.oss.stats.config.FirestoreCollections;
 import zenika.oss.stats.exception.DatabaseException;
 import zenika.oss.stats.mapper.ZenikaMemberMapper;
@@ -141,7 +141,7 @@ public class FirestoreServices {
      * @param project the project to create.
      */
     @CacheInvalidateAll(cacheName = "projects-cache")
-    public void createProject(GitHubProject project) throws DatabaseException {
+    public void createProject(Project project) throws DatabaseException {
         createDocument(project, FirestoreCollections.PROJECTS.value, project.getId());
     }
 
@@ -151,12 +151,12 @@ public class FirestoreServices {
      * @return a list of all projects.
      */
     @CacheResult(cacheName = "projects-cache")
-    public List<GitHubProject> getAllProjects() throws DatabaseException {
+    public List<Project> getAllProjects() throws DatabaseException {
         CollectionReference zProjects = firestore.collection(FirestoreCollections.PROJECTS.value);
         ApiFuture<QuerySnapshot> querySnapshot = zProjects.get();
         try {
             return querySnapshot.get().getDocuments().stream()
-                    .map(ZenikaProjectMapper::mapFirestoreZenikaProjectToGitHubProject)
+                    .map(ZenikaProjectMapper::mapFirestoreZenikaProjectToProject)
                     .collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException exception) {
             throw new DatabaseException(exception);

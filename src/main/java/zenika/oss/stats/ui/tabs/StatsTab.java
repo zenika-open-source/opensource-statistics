@@ -6,7 +6,6 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.gcp.StatsContribution;
-import zenika.oss.stats.beans.github.GitHubProject;
 import zenika.oss.stats.services.FirestoreServices;
 import org.icepear.echarts.Pie;
 import org.icepear.echarts.charts.pie.PieSeries;
@@ -57,7 +56,7 @@ public class StatsTab {
 
             // Top 3 Projects Section
             try {
-                List<GitHubProject> allProjects = firestoreServices.getAllProjects();
+                List<zenika.oss.stats.beans.Project> allProjects = firestoreServices.getAllProjects();
 
                 if (!allProjects.isEmpty()) {
                     Jt.subheader("\uD83C\uDFC6 Top 3 Projects by Stars").use(statsTab);

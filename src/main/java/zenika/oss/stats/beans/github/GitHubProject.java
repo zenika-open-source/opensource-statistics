@@ -1,107 +1,82 @@
 package zenika.oss.stats.beans.github;
 
-public class GitHubProject {
-    public String id;
-    public String name;
-    public String full_name;
-    public String html_url;
-    public boolean private_field;
-    private boolean fork;
-    private boolean archived;
-    private String visibility;
-    private Long watchers_count;
-    private Long forks;
-    
-    public Long getWatchers_count() {
+import com.fasterxml.jackson.annotation.JsonProperty;
+import zenika.oss.stats.beans.Project;
 
-        return watchers_count;
+public class GitHubProject extends Project {
+
+    public GitHubProject() {
+        this.setSource("GitHub");
     }
+
+    @JsonProperty("full_name")
+    public void setGitHubFullName(String fullName) {
+        this.setFullName(fullName);
+    }
+
+    @JsonProperty("html_url")
+    public void setGitHubUrl(String url) {
+        this.setUrl(url);
+    }
+
+    @JsonProperty("watchers_count")
+    public void setGitHubStarsCount(Long starsCount) {
+        this.setStarsCount(starsCount);
+    }
+
+    @JsonProperty("forks")
+    public void setGitHubForksCount(Long forksCount) {
+        this.setForks(forksCount);
+    }
+
+    // Compatibility for existing code using specific GitHub names if needed
+    // But we should ideally update the code to use the base class methods.
 
     public String getFull_name() {
-
-        return full_name;
+        return getFullName();
     }
-    
+
+    public void setFull_name(String fullName) {
+        setFullName(fullName);
+    }
+
     public String getHtml_url() {
-
-        return html_url;
+        return getUrl();
     }
 
-    public boolean isFork() {
-
-        return fork;
+    public void setHtml_url(String url) {
+        setUrl(url);
     }
 
-    public String getName() {
-
-        return name;
+    public Long getWatchers_count() {
+        return getStarsCount();
     }
 
-    public String getId() {
-
-        return id;
-    }
-
-    public boolean isPrivate() {
-
-        return private_field;
-    }
-
-    public String getVisibility() {
-
-        return visibility;
+    public void setWatchers_count(Long watchersCount) {
+        setStarsCount(watchersCount);
     }
 
     public Long getForks() {
-
-        return forks;
-    }
-
-    public boolean isArchived() {
-        return archived;
-    }
-
-    public void setArchived(boolean archived) {
-        this.archived = archived;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setFull_name(String full_name) {
-        this.full_name = full_name;
-    }
-
-    public void setHtml_url(String html_url) {
-        this.html_url = html_url;
-    }
-
-    public boolean isPrivate_field() {
-        return private_field;
-    }
-
-    public void setPrivate_field(boolean private_field) {
-        this.private_field = private_field;
-    }
-
-    public void setFork(boolean fork) {
-        this.fork = fork;
-    }
-
-    public void setVisibility(String visibility) {
-        this.visibility = visibility;
-    }
-
-    public void setWatchers_count(Long watchers_count) {
-        this.watchers_count = watchers_count;
+        return super.getForks();
     }
 
     public void setForks(Long forks) {
-        this.forks = forks;
+        super.setForks(forks);
+    }
+
+    public boolean isArchived() {
+        return super.isArchived();
+    }
+
+    public void setArchived(boolean archived) {
+        super.setArchived(archived);
+    }
+
+    public String getVisibility() {
+        return super.getVisibility();
+    }
+
+    public void setVisibility(String visibility) {
+        super.setVisibility(visibility);
     }
 }
