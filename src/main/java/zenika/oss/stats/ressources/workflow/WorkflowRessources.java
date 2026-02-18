@@ -108,22 +108,22 @@ public class WorkflowRessources {
     @Produces(MediaType.TEXT_PLAIN)
     public Response saveStatsForYear(@PathParam("year") int year) throws DatabaseException {
 
-        firestoreServices.deleteStatsForAllGitHubAccountForAYear(year);
+        firestoreServices.deleteStatsBySourceForYear(year, "GitHub");
 
         List<ZenikaMember> zMembers = firestoreServices.getAllMembers();
 
         for (ZenikaMember zenikaMember : zMembers) {
             if (zenikaMember.getGitHubAccount() != null) {
-                System.out.print("\uD83D\uDD0E Check information for " + zenikaMember.getGitHubAccount().getLogin());
+                System.out.print("🔎 Check information for " + zenikaMember.getGitHubAccount().getLogin());
                 List<CustomStatsContributionsUserByMonth> stats = gitHubServices
                         .getContributionsForTheCurrentYear(zenikaMember.getGitHubAccount().getLogin(), year);
-                List<StatsContribution> statsMap = StatsMapper.mapGithubStatisticsToStatsContribution(
-                        zenikaMember.getGitHubAccount().getLogin(), year, stats);
+                List<StatsContribution> statsList = StatsMapper.mapGitHubStatisticsToStatsContributions(
+                        zenikaMember, year, stats);
                 System.out.println("... ✅");
 
-                if (!statsMap.isEmpty()) {
-                    for (StatsContribution stat : statsMap) {
-                        firestoreServices.saveStatsForAGitHubAccountForAYear(stat);
+                if (!statsList.isEmpty()) {
+                    for (StatsContribution stat : statsList) {
+                        firestoreServices.saveStats(stat);
                     }
                 }
             }
@@ -138,21 +138,34 @@ public class WorkflowRessources {
     public Response saveStatsForAGitHubAccountForAYear(@PathParam("githubMember") String githubMember,
             @PathParam("year") int year) throws DatabaseException {
 
-        firestoreServices.deleteStatsForAGitHubAccountForAYear(githubMember, year);
+        // Find member by handle to get ID
+        List<ZenikaMember> members = firestoreServices.getAllMembers();
+        ZenikaMember member = members.stream()
+                .filter(m -> m.getGitHubAccount() != null && githubMember.equals(m.getGitHubAccount().getLogin()))
+                .findFirst()
+                .orElse(null);
+
+        if (member == null) {
+            return Response.status(Response.Status.NOT_FOUND).entity("Member not found").build();
+        }
+
+        // Specific delete for this member is tricky with the new deterministic ID
+        // without a specific method,
+        // but for now we can just use the Upsert behavior of set() in saveStats.
+        // Or we could implement deleteStatsByMemberAndSourceForYear.
 
         List<CustomStatsContributionsUserByMonth> stats = gitHubServices.getContributionsForTheCurrentYear(githubMember,
                 year);
 
-        List<StatsContribution> statsMap = StatsMapper.mapGithubStatisticsToStatsContribution(githubMember, year,
+        List<StatsContribution> statsList = StatsMapper.mapGitHubStatisticsToStatsContributions(member, year,
                 stats);
 
-        if (!statsMap.isEmpty()) {
-            for (StatsContribution stat : statsMap) {
-                firestoreServices.saveStatsForAGitHubAccountForAYear(stat);
+        if (!statsList.isEmpty()) {
+            for (StatsContribution stat : statsList) {
+                firestoreServices.saveStats(stat);
             }
         }
 
         return Response.ok().build();
     }
-
 }

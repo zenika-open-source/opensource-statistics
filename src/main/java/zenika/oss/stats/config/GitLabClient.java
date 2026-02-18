@@ -9,6 +9,7 @@ import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import zenika.oss.stats.beans.gitlab.GitLabMember;
 import zenika.oss.stats.beans.gitlab.GitLabProject;
+import zenika.oss.stats.beans.gitlab.GitLabEvent;
 
 import java.util.List;
 
@@ -35,4 +36,13 @@ public interface GitLabClient {
     @ClientHeaderParam(name = "Authorization", value = "{zenika.oss.stats.config.GitLabClient.prepareToken}")
     @Path("/users/{id}/projects")
     List<GitLabProject> getProjectsForAnUser(@PathParam("id") String id);
+
+    @GET
+    @ClientHeaderParam(name = "Authorization", value = "{zenika.oss.stats.config.GitLabClient.prepareToken}")
+    @Path("/users/{id}/events")
+    List<GitLabEvent> getEventsForAnUser(@PathParam("id") String id,
+            @QueryParam("after") String after,
+            @QueryParam("before") String before,
+            @QueryParam("per_page") int perPage,
+            @QueryParam("page") int page);
 }

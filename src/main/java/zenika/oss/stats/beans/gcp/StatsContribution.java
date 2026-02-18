@@ -16,6 +16,16 @@ public class StatsContribution {
 
     public int numberOfContributionsOnGitLab;
 
+    public String source;
+
+    public String getSource() {
+        return source;
+    }
+
+    public void setSource(String source) {
+        this.source = source;
+    }
+
     public String getYear() {
         return year;
     }
