@@ -43,9 +43,9 @@ public class ProjectsTab {
             var columns = Jt.columns(2).key("projects_columns").use(projectsTab);
             Jt.subheader("User Projects (" + allProjects.size() + ")").use(columns.col(0));
 
-            if (Jt.button("🚀 Sync Personal Projects").use(columns.col(1))) {
+            if (Jt.button("🚀 Sync GitHub Personal Projects").use(columns.col(1))) {
                 try {
-                    firestoreServices.deleteAllProjects();
+                    firestoreServices.deleteAllGitHubProjects();
                     List<ZenikaMember> members = firestoreServices.getAllMembers();
                     int totalProjects = 0;
                     for (ZenikaMember member : members) {
@@ -58,19 +58,31 @@ public class ProjectsTab {
                             }
                             totalProjects += gitHubProjects.size();
                         }
+                    }
+                    Jt.success("Successfully synced " + totalProjects + " projects for " + members.size() + " members!")
+                            .use(projectsTab);
+                } catch (DatabaseException e) {
+                    Jt.error("Error syncing projects: " + e.getMessage()).use(projectsTab);
+                }
+            }
 
+            if (Jt.button("🚀 Sync GitLab Personal Projects").use(columns.col(1))) {
+                try {
+                    firestoreServices.deleteAllGitLabProjects();
+                    List<ZenikaMember> members = firestoreServices.getAllMembers();
+                    int totalProjects = 0;
+                    for (ZenikaMember member : members) {
                         // GitLab Projects
-                        /*
-                         * if (member.getGitlabAccount() != null &&
-                         * member.getGitlabAccount().getUsername() != null) {
-                         * List<GitLabProject> gitLabProjects = gitLabServices
-                         * .getPersonalProjectsForAnUser(member.getGitlabAccount().getUsername());
-                         * for (GitLabProject gitLabProject : gitLabProjects) {
-                         * firestoreServices.createProject(gitLabProject);
-                         * }
-                         * totalProjects += gitLabProjects.size();
-                         * }
-                         */
+                        if (member.getGitlabAccount() != null &&
+                                member.getGitlabAccount().getUsername() != null) {
+                            List<GitLabProject> gitLabProjects = gitLabServices
+                                    .getPersonalProjectsForAnUser(member.getGitlabAccount().getUsername());
+                            for (GitLabProject gitLabProject : gitLabProjects) {
+                                firestoreServices.createProject(gitLabProject);
+                            }
+                            totalProjects += gitLabProjects.size();
+                        }
+
                     }
                     Jt.success("Successfully synced " + totalProjects + " projects for " + members.size() + " members!")
                             .use(projectsTab);

@@ -174,6 +174,45 @@ public class FirestoreServices {
     }
 
     /**
+     * Remove all GitHub projects from the Firestore database.
+     *
+     * @throws DatabaseException exception
+     */
+    @CacheInvalidateAll(cacheName = "projects-cache")
+    public void deleteAllGitHubProjects() throws DatabaseException {
+        deleteProjectsBySource("GitHub");
+    }
+
+    /**
+     * Remove all GitLab projects from the Firestore database.
+     *
+     * @throws DatabaseException exception
+     */
+    @CacheInvalidateAll(cacheName = "projects-cache")
+    public void deleteAllGitLabProjects() throws DatabaseException {
+        deleteProjectsBySource("GitLab");
+    }
+
+    private void deleteProjectsBySource(String source) throws DatabaseException {
+        CollectionReference zProjects = firestore.collection(FirestoreCollections.PROJECTS.value);
+        Query query = zProjects.whereEqualTo("source", source);
+        ApiFuture<QuerySnapshot> querySnapshot = query.get();
+        try {
+            List<QueryDocumentSnapshot> documents = querySnapshot.get().getDocuments();
+            if (documents.isEmpty()) {
+                return;
+            }
+            WriteBatch batch = firestore.batch();
+            for (QueryDocumentSnapshot document : documents) {
+                batch.delete(document.getReference());
+            }
+            batch.commit().get();
+        } catch (InterruptedException | ExecutionException exception) {
+            throw new DatabaseException(exception);
+        }
+    }
+
+    /**
      * Remove all members
      *
      * @throws DatabaseException exception

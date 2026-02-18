@@ -81,7 +81,4 @@ public class GitLabProject extends Project {
         return getForks();
     }
 
-    public String getArchived() {
-        return String.valueOf(isArchived());
-    }
 }
