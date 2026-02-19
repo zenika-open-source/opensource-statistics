@@ -7,11 +7,11 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.github.GitHubMember;
-import zenika.oss.stats.beans.gitlab.GitLabMember;
 import zenika.oss.stats.exception.DatabaseException;
 import zenika.oss.stats.mapper.ZenikaMemberMapper;
 import zenika.oss.stats.services.FirestoreServices;
 import zenika.oss.stats.services.GitHubServices;
+import zenika.oss.stats.services.GitLabServices;
 
 import java.util.Comparator;
 import java.util.List;
@@ -28,6 +28,9 @@ public class MembersTab {
 
     @Inject
     FirestoreServices firestoreServices;
+
+    @Inject
+    GitLabServices gitLabServices;
 
     private String selectedMemberId;
     private String memberSortColumn = "Firstname";
@@ -59,7 +62,16 @@ public class MembersTab {
                     </style>
                     """).use(membersTab);
 
-            List<ZenikaMember> members = firestoreServices.getAllMembers();
+            List<ZenikaMember> allMembers = firestoreServices.getAllMembers();
+            // Create a new list to avoid modifying the cached one and ensure uniqueness
+            List<ZenikaMember> members = allMembers.stream()
+                    .filter(m -> m.getId() != null)
+                    .collect(Collectors.toMap(
+                            ZenikaMember::getId,
+                            m -> m,
+                            (existing, replacement) -> existing))
+                    .values().stream()
+                    .collect(Collectors.toList());
 
             var columns = Jt.columns(2).key("members_columns").use(membersTab);
 
@@ -177,10 +189,33 @@ public class MembersTab {
                     if (Jt.button("Save").key("btn_save_" + m.getId()).use(editRow.col(4))) {
                         m.setFirstname(newFirstname);
                         m.setName(newName);
-                        if (m.getGitlabAccount() == null) {
-                            m.setGitlabAccount(new GitLabMember());
+                        if (newGitLabHandle != null && !newGitLabHandle.isEmpty()) {
+                            // Fetch GitLab user info if:
+                            // 1. Account is new
+                            // 2. Handle has changed
+                            // 3. Current ID is missing or not numeric
+                            boolean shouldFetch = m.getGitlabAccount() == null
+                                    || !newGitLabHandle.equals(m.getGitlabAccount().getUsername())
+                                    || m.getGitlabAccount().getId() == null
+                                    || !m.getGitlabAccount().getId().matches("\\d+");
+
+                            if (shouldFetch) {
+                                // Fetch GitLab user ID (returns object with numeric ID and handle)
+                                gitLabServices.getUserInformation(newGitLabHandle).ifPresentOrElse(glUser -> {
+                                    m.setGitlabAccount(glUser);
+                                    LOG.info("Successfully fetched GitLab ID " + glUser.getId() + " for "
+                                            + newGitLabHandle);
+                                }, () -> {
+                                    LOG.warn("Could not find GitLab user for handle: " + newGitLabHandle);
+                                    // Fallback: at least save the handle if fetch fails
+                                    if (m.getGitlabAccount() == null)
+                                        m.setGitlabAccount(new zenika.oss.stats.beans.gitlab.GitLabMember());
+                                    m.getGitlabAccount().setUsername(newGitLabHandle);
+                                });
+                            }
+                        } else {
+                            m.setGitlabAccount(null);
                         }
-                        m.getGitlabAccount().setUsername(newGitLabHandle);
                         m.setCity(newCity);
                         firestoreServices.createMember(m);
                         selectedMemberId = null;

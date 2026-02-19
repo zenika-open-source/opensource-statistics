@@ -9,8 +9,8 @@
 
 One objective of this project is to highlight Zenika members for their open source contributions. 
 
-To do this, the zenika-open-source GitHub Organization is scanned and data is saved in a private Database on GCP.
-Data could be used to find and list projects maintained or forked by Zenika Members, all projects to which Zenika members contributed, etc.
+To do this, data is scanned from both **GitHub** and **GitLab** and saved in a private Database on GCP.
+Data is used to find and list projects maintained or forked by Zenika Members, as well as their open source contributions.
 
 ## 🗄️ Tech 
 
@@ -23,8 +23,8 @@ Using:
 ## 🌐 API 
 
 Some resources are available but only the first is in progress : 
-- `/github/` to get information about Zenika Open Source GitHub organization and members from GitHub
-- `/gitlab/` to get information about Zenika Open Source GitHub organization and members from GitLab 🚧 not implemented
+- `/github/` to get information about Zenika members and organization from GitHub
+- `/gitlab/` to get information about Zenika members and organization from GitLab
 - `/members/` to get information from GCP database 🚧 not implemented
 - `/contributions/` to get information about contributions from GCP database 🚧 not implemented
 - `/workflow/` to get data and save them on GCP database
@@ -42,7 +42,8 @@ An interface made with Javelit is available.
 ## 📝 Local Setup 
 
 - You need a GitHub token you can generate on [this page](https://github.com/settings/tokens).
-- Create a `.env` file based on the `.env-example` file and set the token previously created. 
+- You need a GitLab token you can generate on [this page](https://gitlab.com/-/profile/personal_access_tokens).
+- Create a `.env` file based on the `.env-example` file and set the `github.token` and `gitlab.token` variables. 
 - Create a `.gcloud-conf.json` file in the root of the project containing your Google Cloud service account key. This is required for the application to authenticate with GCP services.
 - **Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable** to point to your key file. This is crucial for authentication in your local environment.
   ```bash

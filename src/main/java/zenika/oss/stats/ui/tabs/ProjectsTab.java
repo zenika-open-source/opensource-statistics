@@ -5,11 +5,14 @@ import io.javelit.core.JtContainer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
+import zenika.oss.stats.beans.Project;
 import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.github.GitHubProject;
+import zenika.oss.stats.beans.gitlab.GitLabProject;
 import zenika.oss.stats.exception.DatabaseException;
 import zenika.oss.stats.services.FirestoreServices;
 import zenika.oss.stats.services.GitHubServices;
+import zenika.oss.stats.services.GitLabServices;
 
 import java.util.Comparator;
 import java.util.List;
@@ -24,6 +27,9 @@ public class ProjectsTab {
     GitHubServices gitHubServices;
 
     @Inject
+    GitLabServices gitLabServices;
+
+    @Inject
     FirestoreServices firestoreServices;
 
     private String projectSearchTerm = "";
@@ -32,17 +38,18 @@ public class ProjectsTab {
 
     public void render(JtContainer projectsTab) {
         try {
-            List<GitHubProject> allProjects = firestoreServices.getAllProjects();
+            List<Project> allProjects = firestoreServices.getAllProjects();
 
             var columns = Jt.columns(2).key("projects_columns").use(projectsTab);
             Jt.subheader("User Projects (" + allProjects.size() + ")").use(columns.col(0));
 
-            if (Jt.button("🚀 Sync Personal Projects").use(columns.col(1))) {
+            if (Jt.button("🚀 Sync GitHub Personal Projects").use(columns.col(1))) {
                 try {
-                    firestoreServices.deleteAllProjects();
+                    firestoreServices.deleteAllGitHubProjects();
                     List<ZenikaMember> members = firestoreServices.getAllMembers();
                     int totalProjects = 0;
                     for (ZenikaMember member : members) {
+                        // GitHub Projects
                         if (member.getGitHubAccount() != null) {
                             List<GitHubProject> gitHubProjects = gitHubServices
                                     .getPersonalProjectForAnUser(member.getGitHubAccount().getLogin());
@@ -59,27 +66,53 @@ public class ProjectsTab {
                 }
             }
 
+            if (Jt.button("🚀 Sync GitLab Personal Projects").use(columns.col(1))) {
+                try {
+                    firestoreServices.deleteAllGitLabProjects();
+                    List<ZenikaMember> members = firestoreServices.getAllMembers();
+                    int totalProjects = 0;
+                    for (ZenikaMember member : members) {
+                        // GitLab Projects
+                        if (member.getGitlabAccount() != null &&
+                                member.getGitlabAccount().getUsername() != null) {
+                            List<GitLabProject> gitLabProjects = gitLabServices
+                                    .getPersonalProjectsForAnUser(member.getGitlabAccount().getUsername());
+                            for (GitLabProject gitLabProject : gitLabProjects) {
+                                firestoreServices.createProject(gitLabProject);
+                            }
+                            totalProjects += gitLabProjects.size();
+                        }
+
+                    }
+                    Jt.success("Successfully synced " + totalProjects + " projects for " + members.size() + " members!")
+                            .use(projectsTab);
+                } catch (DatabaseException e) {
+                    Jt.error("Error syncing projects: " + e.getMessage()).use(projectsTab);
+                }
+            }
+
             if (!allProjects.isEmpty()) {
                 // Search Bar
                 var searchRow = Jt.columns(2).use(projectsTab);
                 projectSearchTerm = Jt.textInput("Search Projects").value(projectSearchTerm).use(searchRow.col(0));
 
-                List<GitHubProject> filteredProjects = allProjects.stream()
+                List<Project> filteredProjects = allProjects.stream()
                         .filter(p -> matchesProject(p, projectSearchTerm))
                         .collect(Collectors.toList());
 
                 // Sort
                 sortProjects(filteredProjects);
 
-                record ProjectDisplay(String id, String name, String fullName, String url, Long stars, Long forks) {
+                record ProjectDisplay(String id, String name, String fullName, String url, Long stars, Long forks,
+                        String source) {
                 }
                 List<ProjectDisplay> rows = filteredProjects.stream()
                         .map(p -> new ProjectDisplay(p.getId(), p.getName(), p.getFull_name(), p.getHtml_url(),
-                                p.getWatchers_count(), p.getForks()))
+                                p.getWatchers_count(), p.getForks(), p.getSource()))
                         .collect(Collectors.toList());
 
                 // Custom Header with Sort Buttons
-                var header = Jt.columns(5).key("projects_header").use(projectsTab);
+                var header = Jt.columns(6).key("projects_header").use(projectsTab);
 
                 if (Jt.button(getSortLabel("Name")).use(header.col(0))) {
                     toggleSort("Name");
@@ -92,15 +125,21 @@ public class ProjectsTab {
                 if (Jt.button(getSortLabel("Forks")).use(header.col(4))) {
                     toggleSort("Forks");
                 }
+                Jt.text("Source").use(header.col(5));
 
                 // Custom Table Rows (replacing Jt.table to match header)
                 for (ProjectDisplay p : rows) {
-                    var row = Jt.columns(5).key("project_row_" + p.id()).use(projectsTab);
+                    var row = Jt.columns(6).key("project_row_" + p.id()).use(projectsTab);
                     Jt.text(p.name()).use(row.col(0));
                     Jt.text(p.fullName()).use(row.col(1));
-                    Jt.text(p.url()).use(row.col(2));
+
+                    String linkMarkdown = "<a href=\"" + p.url() + "\" target=\"_blank\" rel=\"noopener noreferrer\">"
+                            + p.url() + "</a>";
+                    Jt.markdown(linkMarkdown).use(row.col(2));
+
                     Jt.text(String.valueOf(p.stars())).use(row.col(3));
                     Jt.text(String.valueOf(p.forks())).use(row.col(4));
+                    Jt.text(p.source() != null ? p.source() : "").use(row.col(5));
                 }
 
             } else {
@@ -113,13 +152,14 @@ public class ProjectsTab {
         }
     }
 
-    private boolean matchesProject(GitHubProject p, String term) {
+    private boolean matchesProject(Project p, String term) {
         if (term == null || term.isBlank())
             return true;
         String lowerTerm = term.toLowerCase();
         return (p.getName() != null && p.getName().toLowerCase().contains(lowerTerm)) ||
                 (p.getFull_name() != null && p.getFull_name().toLowerCase().contains(lowerTerm)) ||
-                (p.getHtml_url() != null && p.getHtml_url().toLowerCase().contains(lowerTerm));
+                (p.getHtml_url() != null && p.getHtml_url().toLowerCase().contains(lowerTerm)) ||
+                (p.getSource() != null && p.getSource().toLowerCase().contains(lowerTerm));
     }
 
     private void toggleSort(String column) {
@@ -138,8 +178,8 @@ public class ProjectsTab {
         return column;
     }
 
-    private void sortProjects(List<GitHubProject> projects) {
-        Comparator<GitHubProject> comparator = switch (projectSortColumn) {
+    private void sortProjects(List<Project> projects) {
+        Comparator<Project> comparator = switch (projectSortColumn) {
             case "Name" -> Comparator.comparing(p -> p.getName() != null ? p.getName().toLowerCase() : "");
             case "Stars" -> Comparator.comparing(p -> p.getWatchers_count() != null ? p.getWatchers_count() : 0L);
             case "Forks" -> Comparator.comparing(p -> p.getForks() != null ? p.getForks() : 0L);
