@@ -1,3 +1,8 @@
+# [v1.5.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.4.0...v1.5.0) (2026-02-19)
+
+## ✨ New Features
+- [`d89b283`](https://github.com/zenika-open-source/opensource-statistics/commit/d89b283)  Integrate GitLab 🦊 (#38) (Issues: [`#38`](https://github.com/zenika-open-source/opensource-statistics/issues/38))
+
 # [v1.4.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.3.0...v1.4.0) (2026-02-16)
 
 ## ✨ New Features
