@@ -23,6 +23,7 @@ import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -98,11 +99,17 @@ public class ContributionsTab {
                                 for (ZenikaMember zenikaMember : zMembers) {
                                         if (zenikaMember.getGitlabAccount() != null
                                                         && zenikaMember.getGitlabAccount().getUsername() != null) {
-                                                List<CustomStatsContributionsUserByMonth> glStats = gitLabServices
-                                                                .getContributionsForTheCurrentYear(
-                                                                                zenikaMember.getGitlabAccount()
-                                                                                                .getUsername(),
-                                                                                year);
+                                                String glHandle = zenikaMember.getGitlabAccount().getUsername();
+                                                String glId = zenikaMember.getGitlabAccount().getId();
+
+                                                List<CustomStatsContributionsUserByMonth> glStats;
+                                                if (glId != null && !glId.isEmpty()) {
+                                                        glStats = gitLabServices.getContributionsByUserId(glId,
+                                                                        glHandle, year);
+                                                } else {
+                                                        glStats = gitLabServices.getContributionsForTheCurrentYear(
+                                                                        glHandle, year);
+                                                }
 
                                                 if (!glStats.isEmpty()) {
                                                         List<StatsContribution> statsList = StatsMapper
@@ -128,15 +135,24 @@ public class ContributionsTab {
                 Jt.subheader("Monthly Contributions in " + yearValue).use(contributionsTab);
 
                 try {
+                        List<ZenikaMember> activeMembers = firestoreServices.getAllMembers();
+                        Set<String> activeMemberIds = activeMembers.stream()
+                                        .map(ZenikaMember::getId)
+                                        .collect(Collectors.toSet());
+
                         List<StatsContribution> allStats = firestoreServices.getStatsForYear(yearValue);
 
                         Map<Month, Integer> ghContributionsByMonth = allStats.stream()
+                                        .filter(s -> "GitHub".equals(s.getSource()))
+                                        .filter(s -> activeMemberIds.contains(s.getIdZenikaMember()))
                                         .collect(Collectors.groupingBy(
                                                         s -> Month.valueOf(s.getMonth().toUpperCase()),
                                                         Collectors.summingInt(
                                                                         StatsContribution::getNumberOfContributionsOnGitHub)));
 
                         Map<Month, Integer> glContributionsByMonth = allStats.stream()
+                                        .filter(s -> "GitLab".equals(s.getSource()))
+                                        .filter(s -> activeMemberIds.contains(s.getIdZenikaMember()))
                                         .collect(Collectors.groupingBy(
                                                         s -> Month.valueOf(s.getMonth().toUpperCase()),
                                                         Collectors.summingInt(
@@ -204,6 +220,7 @@ public class ContributionsTab {
 
                                 Map<Month, Integer> ghMemberStats = memberStats.stream()
                                                 .filter(s -> String.valueOf(yearValue).equals(s.getYear()))
+                                                .filter(s -> "GitHub".equals(s.getSource()))
                                                 .collect(Collectors.groupingBy(
                                                                 s -> Month.valueOf(s.getMonth().toUpperCase()),
                                                                 Collectors.summingInt(
@@ -211,6 +228,7 @@ public class ContributionsTab {
 
                                 Map<Month, Integer> glMemberStats = memberStats.stream()
                                                 .filter(s -> String.valueOf(yearValue).equals(s.getYear()))
+                                                .filter(s -> "GitLab".equals(s.getSource()))
                                                 .collect(Collectors.groupingBy(
                                                                 s -> Month.valueOf(s.getMonth().toUpperCase()),
                                                                 Collectors.summingInt(

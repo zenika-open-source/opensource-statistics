@@ -4,6 +4,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
@@ -45,4 +46,14 @@ public interface GitLabClient {
             @QueryParam("before") String before,
             @QueryParam("per_page") int perPage,
             @QueryParam("page") int page);
+
+    @GET
+    @ClientHeaderParam(name = "Authorization", value = "{zenika.oss.stats.config.GitLabClient.prepareToken}")
+    @Path("/merge_requests")
+    Response getMergeRequests(@QueryParam("author_id") String authorId,
+            @QueryParam("state") String state,
+            @QueryParam("updated_after") String updatedAfter,
+            @QueryParam("updated_before") String updatedBefore,
+            @QueryParam("scope") String scope,
+            @QueryParam("per_page") int perPage);
 }

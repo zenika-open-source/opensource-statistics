@@ -91,30 +91,50 @@ public class StatsTab {
         try {
             List<StatsContribution> allStats = firestoreServices.getAllStats();
 
-            Map<String, Long> contributionsByYear = allStats.stream()
-                    .filter(s -> s.getYear() != null)
+            List<ZenikaMember> activeMembers = firestoreServices.getAllMembers();
+            java.util.Set<String> activeMemberIds = activeMembers.stream()
+                    .map(ZenikaMember::getId)
+                    .collect(Collectors.toSet());
+
+            Map<String, Long> ghByYear = allStats.stream()
+                    .filter(s -> activeMemberIds.contains(s.getIdZenikaMember()))
+                    .filter(s -> s.getYear() != null && "GitHub".equals(s.getSource()))
                     .collect(Collectors.groupingBy(
                             StatsContribution::getYear,
-                            Collectors.summingLong(
-                                    s -> s.getNumberOfContributionsOnGitHub() + s.getNumberOfContributionsOnGitLab())));
+                            Collectors.summingLong(StatsContribution::getNumberOfContributionsOnGitHub)));
 
-            List<String> years = contributionsByYear.keySet().stream()
+            Map<String, Long> glByYear = allStats.stream()
+                    .filter(s -> activeMemberIds.contains(s.getIdZenikaMember()))
+                    .filter(s -> s.getYear() != null && "GitLab".equals(s.getSource()))
+                    .collect(Collectors.groupingBy(
+                            StatsContribution::getYear,
+                            Collectors.summingLong(StatsContribution::getNumberOfContributionsOnGitLab)));
+
+            List<String> years = allStats.stream()
+                    .filter(s -> activeMemberIds.contains(s.getIdZenikaMember()))
+                    .map(StatsContribution::getYear)
+                    .filter(java.util.Objects::nonNull)
+                    .distinct()
                     .sorted()
                     .collect(Collectors.toList());
 
-            List<Long> counts = years.stream()
-                    .map(contributionsByYear::get)
-                    .collect(Collectors.toList());
+            List<Long> ghCounts = years.stream().map(y -> ghByYear.getOrDefault(y, 0L)).collect(Collectors.toList());
+            List<Long> glCounts = years.stream().map(y -> glByYear.getOrDefault(y, 0L)).collect(Collectors.toList());
 
             if (!years.isEmpty()) {
                 Bar bar = new Bar()
-                        .setTooltip("item")
+                        .setTooltip("axis")
                         .setLegend()
                         .addXAxis(new CategoryAxis().setData(years.toArray(new String[0])))
                         .addYAxis(new ValueAxis())
                         .addSeries(new BarSeries()
-                                .setName("Total Contributions")
-                                .setData(counts.toArray(new Number[0])));
+                                .setName("GitHub")
+                                .setStack("total")
+                                .setData(ghCounts.toArray(new Number[0])))
+                        .addSeries(new BarSeries()
+                                .setName("GitLab")
+                                .setStack("total")
+                                .setData(glCounts.toArray(new Number[0])));
 
                 Jt.echarts(bar).use(statsTab);
             } else {
@@ -164,38 +184,46 @@ public class StatsTab {
         List<StatsContribution> stats = firestoreServices.getStatsForYear(year);
         List<ZenikaMember> members = firestoreServices.getAllMembers();
 
-        Map<String, ZenikaMember> membersByGithub = members.stream()
-                .filter(m -> m.getGitHubAccount() != null && m.getGitHubAccount().getLogin() != null)
+        Map<String, ZenikaMember> membersById = members.stream()
+                .filter(m -> m.getId() != null)
                 .collect(Collectors.toMap(
-                        m -> m.getGitHubAccount().getLogin().toLowerCase(),
+                        ZenikaMember::getId,
                         m -> m,
                         (existing, replacement) -> existing));
 
-        Map<String, Integer> contributionsByHandle = stats.stream()
-                .filter(s -> s.getGithubHandle() != null)
-                .collect(Collectors.groupingBy(
-                        s -> s.getGithubHandle().toLowerCase(),
-                        Collectors.summingInt(
-                                s -> s.getNumberOfContributionsOnGitHub() + s.getNumberOfContributionsOnGitLab())));
+        java.util.Set<String> activeMemberIds = members.stream()
+                .map(ZenikaMember::getId)
+                .collect(Collectors.toSet());
 
-        return contributionsByHandle.entrySet().stream()
+        Map<String, Integer> contributionsByMemberId = stats.stream()
+                .filter(s -> s.getIdZenikaMember() != null && activeMemberIds.contains(s.getIdZenikaMember()))
+                .collect(Collectors.groupingBy(
+                        StatsContribution::getIdZenikaMember,
+                        Collectors.summingInt(s -> {
+                            if ("GitHub".equals(s.getSource())) {
+                                return s.getNumberOfContributionsOnGitHub();
+                            } else if ("GitLab".equals(s.getSource())) {
+                                return s.getNumberOfContributionsOnGitLab();
+                            }
+                            return 0;
+                        })));
+
+        return contributionsByMemberId.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
                 .limit(3)
                 .map(e -> {
-                    String handle = e.getKey();
-                    ZenikaMember m = membersByGithub.get(handle);
+                    String memberId = e.getKey();
+                    ZenikaMember m = membersById.get(memberId);
 
-                    String name = handle;
-                    String github = handle;
+                    String name = "Unknown (" + memberId + ")";
+                    String github = "";
                     String gitlab = "";
 
                     if (m != null) {
                         String firstName = m.getFirstname() != null ? m.getFirstname() : "";
                         String lastName = m.getName() != null ? m.getName() : "";
                         String fullName = (firstName + " " + lastName).trim();
-                        if (!fullName.isEmpty()) {
-                            name = fullName;
-                        }
+                        name = fullName.isEmpty() ? m.getId() : fullName;
 
                         if (m.getGitHubAccount() != null && m.getGitHubAccount().getLogin() != null) {
                             github = m.getGitHubAccount().getLogin();

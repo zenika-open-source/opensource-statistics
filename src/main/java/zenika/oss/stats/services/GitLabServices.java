@@ -3,18 +3,17 @@ package zenika.oss.stats.services;
 import io.quarkus.logging.Log;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import zenika.oss.stats.beans.CustomStatsContributionsUserByMonth;
 import zenika.oss.stats.beans.gitlab.GitLabEvent;
 import zenika.oss.stats.beans.gitlab.GitLabMember;
 import zenika.oss.stats.beans.gitlab.GitLabProject;
-import zenika.oss.stats.beans.gitlab.graphql.GitLabGraphQLUser;
-import zenika.oss.stats.beans.gitlab.graphql.GitLabUsersNodes;
 import zenika.oss.stats.config.GitLabClient;
-import zenika.oss.stats.config.GitLabGraphQLClient;
 
 import java.time.LocalDate;
 import java.time.Month;
+import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,9 +28,6 @@ public class GitLabServices {
     @Inject
     @RestClient
     GitLabClient gitLabClient;
-
-    @Inject
-    GitLabGraphQLClient gitLabGraphQLClient;
 
     /**
      * Get basic information for a user.
@@ -70,88 +66,76 @@ public class GitLabServices {
      * @return A list of monthly contribution stats.
      */
     public List<CustomStatsContributionsUserByMonth> getContributionsForTheCurrentYear(String username, int year) {
-        try {
-            List<CustomStatsContributionsUserByMonth> result = new ArrayList<>();
-            for (Month month : Month.values()) {
-                if (year == LocalDate.now().getYear() && month.getValue() > LocalDate.now().getMonthValue()) {
-                    break;
-                }
+        return getUserInformation(username)
+                .map(user -> getContributionsByUserId(user.getId(), username, year))
+                .orElse(List.of());
+    }
 
-                String startOfMonth = String.format("%d-%02d-01T00:00:00+00:00", year, month.getValue());
-                LocalDate lastDayOfMonthDate = LocalDate.of(year, month,
-                        month.length(LocalDate.of(year, month, 1).isLeapYear()));
-                String endOfMonth = lastDayOfMonthDate.toString() + "T23:59:59+00:00";
+    /**
+     * Get contributions for a specific GitLab user ID.
+     *
+     * @param userId   The numeric GitLab user ID.
+     * @param username The username (for logging).
+     * @param year     The year.
+     * @return A list of monthly contribution stats.
+     */
+    public List<CustomStatsContributionsUserByMonth> getContributionsByUserId(String userId, String username,
+            int year) {
+        List<CustomStatsContributionsUserByMonth> result = new ArrayList<>();
 
-                GitLabGraphQLUser userResponse = gitLabGraphQLClient.userWithMRs(username, startOfMonth,
-                        endOfMonth, "merged");
+        // If userId is not numeric, it might be a username from old data. Try to
+        // resolve it.
+        String actualId = userId;
+        if (userId != null && !userId.matches("\\d+")) {
+            Log.warn("GitLab ID '" + userId + "' for " + username
+                    + " is not numeric. Attempting to resolve ID from username.");
+            Optional<GitLabMember> user = getUserInformation(username);
+            if (user.isPresent()) {
+                actualId = user.get().getId();
+                Log.info("Resolved GitLab username '" + username + "' to ID '" + actualId + "'");
+            } else {
+                Log.error("Failed to resolve GitLab ID for username '" + username + "'. Aborting contribution fetch.");
+                return List.of();
+            }
+        }
 
-                int count = 0;
-                if (userResponse != null && userResponse.getAuthoredMergeRequests() != null) {
-                    count = userResponse.getAuthoredMergeRequests().getCount();
+        for (Month month : Month.values()) {
+            if (year == LocalDate.now().getYear() && month.getValue() > LocalDate.now().getMonthValue()) {
+                break;
+            }
+
+            LocalDate startOfMonth = LocalDate.of(year, month, 1);
+            LocalDate endOfMonth = startOfMonth.withDayOfMonth(startOfMonth.lengthOfMonth());
+
+            String updatedAfter = startOfMonth.atStartOfDay().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "Z";
+            String updatedBefore = endOfMonth.atTime(23, 59, 59).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "Z";
+
+            try {
+                // Use scope=all to see MRs from all users, not just the token owner
+                // Use updated_after/before for better compatibility with older GitLab versions
+                // per_page=1 is enough since we only need the X-Total header
+                Response response = gitLabClient.getMergeRequests(actualId, "merged", updatedAfter, updatedBefore,
+                        "all", 1);
+                String totalStr = response.getHeaderString("X-Total");
+                int total = 0;
+                if (totalStr != null && !totalStr.isEmpty()) {
+                    total = Integer.parseInt(totalStr);
                 }
 
                 result.add(new CustomStatsContributionsUserByMonth(
                         month.getValue(),
                         month.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
-                        count));
+                        total));
+                Log.info("Fetching GitLab merged MRs for " + username + " (ID: " + actualId + ") in " + month + " "
+                        + year + " | " + totalStr);
+
+            } catch (Exception e) {
+                Log.error("Error fetching GitLab MRs for " + username + " in " + month, e);
+                result.add(new CustomStatsContributionsUserByMonth(
+                        month.getValue(),
+                        month.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+                        0));
             }
-            return result;
-        } catch (Exception e) {
-            Log.warn("GitLab GraphQL (MRs query) failed for user " + username + ". Falling back to REST API.", e);
-        }
-
-        return getContributionsFromRestApi(username, year);
-    }
-
-    private List<CustomStatsContributionsUserByMonth> getContributionsFromRestApi(String username, int year) {
-        Optional<GitLabMember> user = getUserInformation(username);
-        if (user.isEmpty()) {
-            return List.of();
-        }
-
-        String userId = user.get().getId();
-        String after = year + "-01-01";
-        String before = year + "-12-31";
-
-        List<GitLabEvent> allEvents = new ArrayList<>();
-        int page = 1;
-        int perPage = 100;
-
-        try {
-            while (true) {
-                List<GitLabEvent> events = gitLabClient.getEventsForAnUser(userId, after, before, perPage, page);
-                if (events == null || events.isEmpty()) {
-                    break;
-                }
-                allEvents.addAll(events);
-                if (events.size() < perPage) {
-                    break;
-                }
-                page++;
-                // Safety limit to avoid infinite loops if API behaves unexpectedly
-                if (page > 50)
-                    break;
-            }
-        } catch (Exception e) {
-            Log.error("Error fetching GitLab events for " + username, e);
-        }
-
-        Map<Month, Long> countsByMonth = allEvents.stream()
-                .filter(e -> e.getCreatedAt() != null)
-                .collect(Collectors.groupingBy(
-                        e -> LocalDate.parse(e.getCreatedAt().substring(0, 10)).getMonth(),
-                        Collectors.counting()));
-
-        List<CustomStatsContributionsUserByMonth> result = new ArrayList<>();
-        for (Month month : Month.values()) {
-            if (year == LocalDate.now().getYear() && month.getValue() > LocalDate.now().getMonthValue()) {
-                break;
-            }
-            int count = countsByMonth.getOrDefault(month, 0L).intValue();
-            result.add(new CustomStatsContributionsUserByMonth(
-                    month.getValue(),
-                    month.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
-                    count));
         }
         return result;
     }
