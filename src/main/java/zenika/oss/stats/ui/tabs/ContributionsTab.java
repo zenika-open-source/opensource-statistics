@@ -21,6 +21,7 @@ import org.icepear.echarts.components.coord.cartesian.ValueAxis;
 import java.time.Month;
 import java.time.Year;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -38,21 +39,54 @@ public class ContributionsTab {
         @Inject
         FirestoreServices firestoreServices;
 
+        private String lastSelectedMemberLabel;
+
         public void render(JtContainer contributionsTab) {
 
-                var columns = Jt.columns(2).key("contributions_columns").use(contributionsTab);
+                Jt.subheader("User Contributions History").use(contributionsTab);
 
-                Jt.subheader("User Contributions History").use(columns.col(0));
+                var controlRow = Jt.columns(4).key("contributions_controls_row").use(contributionsTab);
 
                 Integer yearValue = Jt.numberInput("Year", Integer.class)
+                                .key("year_selection")
                                 .minValue(Year.now().getValue() - 5)
                                 .maxValue(Year.now().getValue() + 1)
                                 .value(Year.now().getValue())
-                                .use(columns.col(1));
+                                .use(controlRow.col(0));
 
-                var syncCols = Jt.columns(2).key("sync_buttons_columns").use(contributionsTab);
+                String selectedMemberLabel = null;
+                Map<String, String> memberOptions = new HashMap<>();
 
-                if (Jt.button("🐙 Sync GitHub Contributions").use(syncCols.col(0))) {
+                try {
+                        List<ZenikaMember> members = firestoreServices.getAllMembers();
+                        memberOptions = members.stream()
+                                        .collect(Collectors.toMap(
+                                                        m -> m.getFirstname() + " " + m.getName() + " ("
+                                                                        + (m.getGitHubAccount() != null
+                                                                                        ? m.getGitHubAccount()
+                                                                                                        .getLogin()
+                                                                                        : (m.getGitlabAccount() != null
+                                                                                                        ? m.getGitlabAccount()
+                                                                                                                        .getUsername()
+                                                                                                        : "no account"))
+                                                                        + ")",
+                                                        m -> m.getId(),
+                                                        (existing, replacement) -> existing));
+
+                        selectedMemberLabel = Jt
+                                        .selectbox("Select a member",
+                                                        new ArrayList<>(memberOptions.keySet().stream().sorted()
+                                                                        .collect(Collectors.toList())))
+                                        .key("member_selection")
+                                        .use(controlRow.col(1));
+
+                        lastSelectedMemberLabel = selectedMemberLabel;
+                } catch (Exception e) {
+                        Jt.error("Could not load members: " + e.getMessage()).use(contributionsTab);
+                        Log.error("Error loading members", e);
+                }
+
+                if (Jt.button("🐙 Sync GitHub Contributions").use(controlRow.col(2))) {
                         try {
                                 int year = yearValue;
                                 firestoreServices.deleteStatsBySourceForYear(year, "GitHub");
@@ -89,7 +123,7 @@ public class ContributionsTab {
                         }
                 }
 
-                if (Jt.button("🦊 Sync GitLab Contributions").use(syncCols.col(1))) {
+                if (Jt.button("🦊 Sync GitLab Contributions").use(controlRow.col(3))) {
                         try {
                                 int year = yearValue;
                                 firestoreServices.deleteStatsBySourceForYear(year, "GitLab");
@@ -191,27 +225,6 @@ public class ContributionsTab {
                 Jt.subheader("Individual Member Stats for " + yearValue).use(contributionsTab);
 
                 try {
-                        List<ZenikaMember> members = firestoreServices.getAllMembers();
-                        Map<String, String> memberOptions = members.stream()
-                                        .collect(Collectors.toMap(
-                                                        m -> m.getFirstname() + " " + m.getName() + " ("
-                                                                        + (m.getGitHubAccount() != null
-                                                                                        ? m.getGitHubAccount()
-                                                                                                        .getLogin()
-                                                                                        : (m.getGitlabAccount() != null
-                                                                                                        ? m.getGitlabAccount()
-                                                                                                                        .getUsername()
-                                                                                                        : "no account"))
-                                                                        + ")",
-                                                        m -> m.getId(),
-                                                        (existing, replacement) -> existing));
-
-                        String selectedMemberLabel = Jt
-                                        .selectbox("",
-                                                        new ArrayList<>(memberOptions.keySet().stream().sorted()
-                                                                        .collect(Collectors.toList())))
-                                        .use(contributionsTab);
-
                         if (selectedMemberLabel != null) {
                                 String selectedMemberId = memberOptions.get(selectedMemberLabel);
 
