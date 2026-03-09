@@ -1,3 +1,8 @@
+# [v1.6.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.5.0...v1.6.0) (2026-03-09)
+
+## ✨ New Features
+- [`cecece7`](https://github.com/zenika-open-source/opensource-statistics/commit/cecece7)  Add Organization projects (#41) (Issues: [`#41`](https://github.com/zenika-open-source/opensource-statistics/issues/41))
+
 # [v1.5.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.4.0...v1.5.0) (2026-02-19)
 
 ## ✨ New Features
