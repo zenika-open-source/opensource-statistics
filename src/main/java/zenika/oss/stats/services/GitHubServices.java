@@ -243,4 +243,18 @@ public class GitHubServices {
     public List<GitHubMember> getZenikaOpenSourceMembers() {
         return gitHubClient.getOrganizationMembers(organizationName, NB_MEMBERS_PAR_PAGE);
     }
+
+    /**
+     * Get projects for the current organization.
+     *
+     * @param organizationName The name of the GitHub organization to fetch projects
+     *                         from.
+     * @return a List of GitHubProject
+     */
+    public List<GitHubProject> getOrganizationProjects(String organizationName) {
+        var repos = gitHubClient.getOrganizationProjects(organizationName, 100);
+        return repos.stream()
+                .filter(repo -> !repo.isFork() && !repo.isArchived())
+                .collect(Collectors.toList());
+    }
 }

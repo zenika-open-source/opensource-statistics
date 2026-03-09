@@ -59,19 +59,37 @@ public class StatsTab {
                 List<zenika.oss.stats.beans.Project> allProjects = firestoreServices.getAllProjects();
 
                 if (!allProjects.isEmpty()) {
-                    Jt.subheader("\uD83C\uDFC6 Top 3 Projects by Stars").use(statsTab);
+                    Jt.subheader("\uD83C\uDFC6 Top 3 Community Projects by Stars").use(statsTab);
 
                     record ProjectDisplay(String name, String fullName, String url, Long stars, Long forks) {
                     }
 
-                    List<ProjectDisplay> topProjects = allProjects.stream()
-                            .sorted((p1, p2) -> Long.compare(p2.getWatchers_count(), p1.getWatchers_count()))
+                    List<ProjectDisplay> topCommunityProjects = allProjects.stream()
+                            .filter(p -> !"GitHub Organization".equals(p.getSource()))
+                            .sorted((p1, p2) -> Long.compare(
+                                    p2.getWatchers_count() != null ? p2.getWatchers_count() : 0L,
+                                    p1.getWatchers_count() != null ? p1.getWatchers_count() : 0L))
                             .limit(3)
                             .map(p -> new ProjectDisplay(p.getName(), p.getFull_name(), p.getHtml_url(),
                                     p.getWatchers_count(), p.getForks()))
                             .collect(Collectors.toList());
 
-                    Jt.table(topProjects).use(statsTab);
+                    Jt.table(topCommunityProjects).key("top_community_projects_table").use(statsTab);
+
+                    List<ProjectDisplay> topOrgProjects = allProjects.stream()
+                            .filter(p -> "GitHub Organization".equals(p.getSource()))
+                            .sorted((p1, p2) -> Long.compare(
+                                    p2.getWatchers_count() != null ? p2.getWatchers_count() : 0L,
+                                    p1.getWatchers_count() != null ? p1.getWatchers_count() : 0L))
+                            .limit(3)
+                            .map(p -> new ProjectDisplay(p.getName(), p.getFull_name(), p.getHtml_url(),
+                                    p.getWatchers_count(), p.getForks()))
+                            .collect(Collectors.toList());
+
+                    if (!topOrgProjects.isEmpty()) {
+                        Jt.subheader("\uD83C\uDFC6 Top 3 Zenika Open Source Projects by Stars").use(statsTab);
+                        Jt.table(topOrgProjects).key("top_org_projects_table").use(statsTab);
+                    }
                 }
             } catch (Exception e) {
                 Jt.warning("Could not load top projects: " + e.getMessage()).use(statsTab);

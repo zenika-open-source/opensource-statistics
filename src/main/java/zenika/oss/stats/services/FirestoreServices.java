@@ -198,6 +198,16 @@ public class FirestoreServices {
         deleteProjectsBySource("GitLab");
     }
 
+    /**
+     * Remove all GitHub Organization projects from the Firestore database.
+     *
+     * @throws DatabaseException exception
+     */
+    @CacheInvalidateAll(cacheName = "projects-cache")
+    public void deleteAllGitHubOrganizationProjects() throws DatabaseException {
+        deleteProjectsBySource("GitHub Organization");
+    }
+
     private void deleteProjectsBySource(String source) throws DatabaseException {
         CollectionReference zProjects = firestore.collection(FirestoreCollections.PROJECTS.value);
         Query query = zProjects.whereEqualTo("source", source);
