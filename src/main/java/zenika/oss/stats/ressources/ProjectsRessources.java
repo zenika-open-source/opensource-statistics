@@ -28,4 +28,12 @@ public class ProjectsRessources {
         return Response.ok("\uD83D\uDEA7 Not implemented yet").build();
     }
 
+    @GET
+    @Path("/organization")
+    public Response getOrganizationProjects() throws DatabaseException {
+        return Response.ok(firestoreServices.getAllProjects().stream()
+                .filter(p -> "GitHub Organization".equals(p.getSource()))
+                .collect(java.util.stream.Collectors.toList())).build();
+    }
+
 }

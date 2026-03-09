@@ -9,12 +9,12 @@ import jakarta.inject.Inject;
 import zenika.oss.stats.ui.tabs.ContributionsTab;
 import zenika.oss.stats.ui.tabs.MembersTab;
 import zenika.oss.stats.ui.tabs.ProjectsTab;
+import zenika.oss.stats.ui.tabs.OrganizationProjectsTab;
 import zenika.oss.stats.ui.tabs.StatsTab;
 
 import java.util.List;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 
 @ApplicationScoped
 public class JavelitDashboard {
@@ -27,6 +27,9 @@ public class JavelitDashboard {
 
     @Inject
     ProjectsTab projectsTab;
+
+    @Inject
+    OrganizationProjectsTab organizationProjectsTab;
 
     @Inject
     ContributionsTab contributionsTab;
@@ -42,10 +45,12 @@ public class JavelitDashboard {
                     "This dashboard get publics datas from GitHub (and GitLab as soon)")
                     .use();
 
-            var tabs = Jt.tabs(List.of("🙋 Members", "🚀 Projects", "📊 Contributions", "📈 Stats")).use();
+            var tabs = Jt.tabs(List.of("🙋 Members", "🚀 Members Projects", "🏢 Zenika Open Source Projects",
+                    "📊 Contributions", "📈 Stats")).use();
 
             membersTab.render(tabs.tab("🙋 Members"));
-            projectsTab.render(tabs.tab("🚀 Projects"));
+            projectsTab.render(tabs.tab("🚀 Members Projects"));
+            organizationProjectsTab.render(tabs.tab("🏢 Zenika Open Source Projects"));
             contributionsTab.render(tabs.tab("📊 Contributions"));
             statsTab.render(tabs.tab("📈 Stats"));
 

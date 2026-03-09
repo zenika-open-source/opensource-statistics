@@ -6,101 +6,69 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import zenika.oss.stats.beans.Project;
-import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.github.GitHubProject;
-import zenika.oss.stats.beans.gitlab.GitLabProject;
 import zenika.oss.stats.exception.DatabaseException;
 import zenika.oss.stats.services.FirestoreServices;
 import zenika.oss.stats.services.GitHubServices;
-import zenika.oss.stats.services.GitLabServices;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
-public class ProjectsTab {
+public class OrganizationProjectsTab {
 
-    private static final Logger LOG = Logger.getLogger(ProjectsTab.class);
+    private static final Logger LOG = Logger.getLogger(OrganizationProjectsTab.class);
 
     @Inject
     GitHubServices gitHubServices;
 
     @Inject
-    GitLabServices gitLabServices;
-
-    @Inject
     FirestoreServices firestoreServices;
 
+    @ConfigProperty(name = "organization.name")
+    String organizationName;
+
     private String projectSearchTerm = "";
-    private String projectSortColumn = "Name";
-    private boolean projectSortAscending = true;
+    private String projectSortColumn = "Stars";
+    private boolean projectSortAscending = false;
 
     public void render(JtContainer projectsTab) {
         try {
             List<Project> allProjects = firestoreServices.getAllProjects();
-            List<Project> memberProjects = allProjects.stream()
-                    .filter(p -> !"GitHub Organization".equals(p.getSource()))
+            List<Project> organizationProjects = allProjects.stream()
+                    .filter(p -> "GitHub Organization".equals(p.getSource()))
                     .collect(Collectors.toList());
 
-            var columns = Jt.columns(2).key("projects_columns").use(projectsTab);
-            Jt.subheader("Members Projects (" + memberProjects.size() + ")").use(columns.col(0));
+            var columns = Jt.columns(2).key("org_projects_columns").use(projectsTab);
+            Jt.subheader("Organization Projects (" + organizationProjects.size() + ")").use(columns.col(0));
 
-            if (Jt.button("🚀 Sync GitHub Personal Projects").use(columns.col(1))) {
+            if (Jt.button("🚀 Sync " + organizationName + " Organization Projects").use(columns.col(1))) {
                 try {
-                    firestoreServices.deleteAllGitHubProjects();
-                    List<ZenikaMember> members = firestoreServices.getAllMembers();
+                    firestoreServices.deleteAllGitHubOrganizationProjects();
+                    List<GitHubProject> gitHubProjects = gitHubServices.getOrganizationProjects(organizationName);
                     int totalProjects = 0;
-                    for (ZenikaMember member : members) {
-                        // GitHub Projects
-                        if (member.getGitHubAccount() != null) {
-                            List<GitHubProject> gitHubProjects = gitHubServices
-                                    .getPersonalProjectForAnUser(member.getGitHubAccount().getLogin());
-                            for (GitHubProject project : gitHubProjects) {
-                                firestoreServices.createProject(project);
-                            }
-                            totalProjects += gitHubProjects.size();
-                        }
+                    for (GitHubProject project : gitHubProjects) {
+                        project.setSource("GitHub Organization");
+                        firestoreServices.createProject(project);
+                        totalProjects++;
                     }
-                    Jt.success("Successfully synced " + totalProjects + " projects for " + members.size() + " members!")
+                    Jt.success("Successfully synced " + totalProjects + " projects for " + organizationName
+                            + " organization!")
                             .use(projectsTab);
                 } catch (DatabaseException e) {
-                    Jt.error("Error syncing projects: " + e.getMessage()).use(projectsTab);
+                    Jt.error("Error syncing organization projects: " + e.getMessage()).use(projectsTab);
                 }
             }
 
-            if (Jt.button("🚀 Sync GitLab Personal Projects").use(columns.col(1))) {
-                try {
-                    firestoreServices.deleteAllGitLabProjects();
-                    List<ZenikaMember> members = firestoreServices.getAllMembers();
-                    int totalProjects = 0;
-                    for (ZenikaMember member : members) {
-                        // GitLab Projects
-                        if (member.getGitlabAccount() != null &&
-                                member.getGitlabAccount().getUsername() != null) {
-                            List<GitLabProject> gitLabProjects = gitLabServices
-                                    .getPersonalProjectsForAnUser(member.getGitlabAccount().getUsername());
-                            for (GitLabProject gitLabProject : gitLabProjects) {
-                                firestoreServices.createProject(gitLabProject);
-                            }
-                            totalProjects += gitLabProjects.size();
-                        }
-
-                    }
-                    Jt.success("Successfully synced " + totalProjects + " projects for " + members.size() + " members!")
-                            .use(projectsTab);
-                } catch (DatabaseException e) {
-                    Jt.error("Error syncing projects: " + e.getMessage()).use(projectsTab);
-                }
-            }
-
-            if (!memberProjects.isEmpty()) {
+            if (!organizationProjects.isEmpty()) {
                 // Search Bar
-                var searchRow = Jt.columns(2).key("members_projects_search").use(projectsTab);
-                projectSearchTerm = Jt.textInput("Search Projects").key("members_projects_search_input")
+                var searchRow = Jt.columns(2).key("org_projects_search").use(projectsTab);
+                projectSearchTerm = Jt.textInput("Search Projects").key("org_projects_search_input")
                         .value(projectSearchTerm).use(searchRow.col(0));
 
-                List<Project> filteredProjects = memberProjects.stream()
+                List<Project> filteredProjects = organizationProjects.stream()
                         .filter(p -> matchesProject(p, projectSearchTerm))
                         .collect(Collectors.toList());
 
@@ -116,24 +84,24 @@ public class ProjectsTab {
                         .collect(Collectors.toList());
 
                 // Custom Header with Sort Buttons
-                var header = Jt.columns(6).key("projects_header").use(projectsTab);
+                var header = Jt.columns(6).key("org_projects_header").use(projectsTab);
 
-                if (Jt.button(getSortLabel("Name")).key("members_sort_name").use(header.col(0))) {
+                if (Jt.button(getSortLabel("Name")).key("org_sort_name").use(header.col(0))) {
                     toggleSort("Name");
                 }
                 Jt.text("Full Name").use(header.col(1));
                 Jt.text("URL").use(header.col(2));
-                if (Jt.button(getSortLabel("Stars")).key("members_sort_stars").use(header.col(3))) {
+                if (Jt.button(getSortLabel("Stars")).key("org_sort_stars").use(header.col(3))) {
                     toggleSort("Stars");
                 }
-                if (Jt.button(getSortLabel("Forks")).key("members_sort_forks").use(header.col(4))) {
+                if (Jt.button(getSortLabel("Forks")).key("org_sort_forks").use(header.col(4))) {
                     toggleSort("Forks");
                 }
                 Jt.text("Source").use(header.col(5));
 
-                // Custom Table Rows (replacing Jt.table to match header)
+                // Custom Table Rows
                 for (ProjectDisplay p : rows) {
-                    var row = Jt.columns(6).key("project_row_" + p.id()).use(projectsTab);
+                    var row = Jt.columns(6).key("org_project_row_" + p.id()).use(projectsTab);
                     Jt.text(p.name()).use(row.col(0));
                     Jt.text(p.fullName()).use(row.col(1));
 

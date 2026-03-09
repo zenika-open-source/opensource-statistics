@@ -44,4 +44,10 @@ public interface GitHubClient {
     @ClientHeaderParam(name = "Authorization", value = "{zenika.oss.stats.config.GitHubClient.prepareToken}")
     @Path("/users/{login}/repos")
     List<GitHubProject> getReposForAnUser(@PathParam("login") String login);
+
+    @GET
+    @ClientHeaderParam(name = "Authorization", value = "{zenika.oss.stats.config.GitHubClient.prepareToken}")
+    @Path("/orgs/{organizationName}/repos")
+    List<GitHubProject> getOrganizationProjects(@PathParam("organizationName") String organizationName,
+            @QueryParam("per_page") int perPage);
 }
