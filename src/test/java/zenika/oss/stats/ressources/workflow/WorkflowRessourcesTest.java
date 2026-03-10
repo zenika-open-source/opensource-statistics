@@ -1,18 +1,19 @@
 package zenika.oss.stats.ressources.workflow;
 
-import io.quarkus.test.InjectMock;
-import io.quarkus.test.junit.QuarkusTest;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-import zenika.oss.stats.beans.github.GitHubMember;
-import zenika.oss.stats.mapper.StatsMapper;
-import zenika.oss.stats.services.FirestoreServices;
-import zenika.oss.stats.services.GitHubServices;
+import static io.restassured.RestAssured.given;
 
 import java.util.List;
 
-import static io.restassured.RestAssured.given;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
+
+import io.quarkus.test.InjectMock;
+import io.quarkus.test.junit.QuarkusTest;
+import zenika.oss.stats.beans.ZenikaMember;
+import zenika.oss.stats.beans.github.GitHubMember;
+import zenika.oss.stats.services.FirestoreServices;
+import zenika.oss.stats.services.GitHubServices;
 
 @QuarkusTest
 public class WorkflowRessourcesTest {
@@ -24,13 +25,17 @@ public class WorkflowRessourcesTest {
     FirestoreServices firestoreServices;
 
     @BeforeEach
-    public void setup() {
+    public void setup() throws Exception {
         GitHubMember member = new GitHubMember();
         member.id = "test";
         member.login = "login-test";
 
         List<GitHubMember> members = List.of(member);
         Mockito.when(gitHubServices.getZenikaOpenSourceMembers()).thenReturn(members);
+
+        ZenikaMember zMember = new ZenikaMember();
+        zMember.setGitHubAccount(member);
+        Mockito.when(firestoreServices.getAllMembers()).thenReturn(List.of(zMember));
     }
 
     @Test
@@ -73,7 +78,7 @@ public class WorkflowRessourcesTest {
     void test_saveStatsForAGitHubAccountForAYear() {
 
         given().when()
-                .post("/v1/workflow/stats/save/my-user/2024")
+                .post("/v1/workflow/stats/save/login-test/2024")
                 .then()
                 .statusCode(200);
     }
