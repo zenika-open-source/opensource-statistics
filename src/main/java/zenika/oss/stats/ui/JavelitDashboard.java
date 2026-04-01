@@ -42,7 +42,7 @@ public class JavelitDashboard {
             Jt.header("📊 Opensource Statistics Dashbord").use();
             Jt.subheader("Welcome to the Zenika Open Source contributions dashboard").use();
             Jt.markdown(
-                    "This dashboard get publics datas from GitHub (and GitLab as soon)")
+                    "This dashboard get publics datas from GitHub")
                     .use();
 
             var tabs = Jt.tabs(List.of("🙋 Members", "🚀 Members Projects", "🏢 Zenika Open Source Projects",

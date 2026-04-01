@@ -12,7 +12,7 @@ One objective of this project is to highlight Zenika members for their open sour
 To do this, data is scanned from both **GitHub** and **GitLab** and saved in a private Database on GCP.
 Data is used to find and list projects maintained or forked by Zenika Members, as well as their open source contributions.
 
-## 🗄️ Tech 
+## 🗄️ Tech Stack
 
 Using:
 - [Quarkus](https://quarkus.io/)
