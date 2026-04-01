@@ -1,3 +1,8 @@
+# [v1.7.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.6.0...v1.7.0) (2026-04-01)
+
+## ✨ New Features
+- [`e281c37`](https://github.com/zenika-open-source/opensource-statistics/commit/e281c37)  44 update information for only news person (#45) (Issues: [`#45`](https://github.com/zenika-open-source/opensource-statistics/issues/45))
+
 # [v1.6.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.5.0...v1.6.0) (2026-03-09)
 
 ## ✨ New Features
