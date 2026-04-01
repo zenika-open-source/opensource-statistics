@@ -18,7 +18,9 @@ import zenika.oss.stats.mapper.StatsMapper;
 import zenika.oss.stats.mapper.ZenikaMemberMapper;
 import zenika.oss.stats.services.FirestoreServices;
 import zenika.oss.stats.services.GitHubServices;
+import zenika.oss.stats.services.GitLabServices;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,6 +31,9 @@ public class WorkflowRessources {
 
     @Inject
     GitHubServices gitHubServices;
+
+    @Inject
+    GitLabServices gitLabServices;
 
     @Inject
     FirestoreServices firestoreServices;
@@ -108,22 +113,55 @@ public class WorkflowRessources {
     @Produces(MediaType.TEXT_PLAIN)
     public Response saveStatsForYear(@PathParam("year") int year) throws DatabaseException {
 
-        firestoreServices.deleteStatsBySourceForYear(year, "GitHub");
+        int currentYear = LocalDate.now().getYear();
+        boolean isCurrentYear = (year == currentYear);
+
+        if (isCurrentYear) {
+            firestoreServices.deleteStatsBySourceForYear(year, "GitHub");
+            firestoreServices.deleteStatsBySourceForYear(year, "GitLab");
+        }
 
         List<ZenikaMember> zMembers = firestoreServices.getAllMembers();
 
         for (ZenikaMember zenikaMember : zMembers) {
+            // GitHub
             if (zenikaMember.getGitHubAccount() != null) {
-                System.out.print("🔎 Check information for " + zenikaMember.getGitHubAccount().getLogin());
-                List<CustomStatsContributionsUserByMonth> stats = gitHubServices
-                        .getContributionsForTheCurrentYear(zenikaMember.getGitHubAccount().getLogin(), year);
-                List<StatsContribution> statsList = StatsMapper.mapGitHubStatisticsToStatsContributions(
-                        zenikaMember, year, stats);
-                System.out.println("... ✅");
+                // For past years, skip if stats already exist
+                if (!isCurrentYear && firestoreServices.hasStatsForMemberAndYear(zenikaMember.getId(), year, "GitHub")) {
+                    System.out.println("⏭️ Skip GitHub information for " + zenikaMember.getGitHubAccount().getLogin() + " (already exists)");
+                } else {
+                    System.out.print("🔎 Check GitHub information for " + zenikaMember.getGitHubAccount().getLogin());
+                    List<CustomStatsContributionsUserByMonth> stats = gitHubServices
+                            .getContributionsForTheCurrentYear(zenikaMember.getGitHubAccount().getLogin(), year);
+                    List<StatsContribution> statsList = StatsMapper.mapGitHubStatisticsToStatsContributions(
+                            zenikaMember, year, stats);
+                    System.out.println("... ✅");
 
-                if (!statsList.isEmpty()) {
-                    for (StatsContribution stat : statsList) {
-                        firestoreServices.saveStats(stat);
+                    if (!statsList.isEmpty()) {
+                        for (StatsContribution stat : statsList) {
+                            firestoreServices.saveStats(stat);
+                        }
+                    }
+                }
+            }
+
+            // GitLab
+            if (zenikaMember.getGitlabAccount() != null) {
+                // For past years, skip if stats already exist
+                if (!isCurrentYear && firestoreServices.hasStatsForMemberAndYear(zenikaMember.getId(), year, "GitLab")) {
+                    System.out.println("⏭️ Skip GitLab information for " + zenikaMember.getGitlabAccount().getUsername() + " (already exists)");
+                } else {
+                    System.out.print("🔎 Check GitLab information for " + zenikaMember.getGitlabAccount().getUsername());
+                    List<CustomStatsContributionsUserByMonth> stats = gitLabServices
+                            .getContributionsForTheCurrentYear(zenikaMember.getGitlabAccount().getUsername(), year);
+                    List<StatsContribution> statsList = StatsMapper.mapGitLabStatisticsToStatsContributions(
+                            zenikaMember, year, stats);
+                    System.out.println("... ✅");
+
+                    if (!statsList.isEmpty()) {
+                        for (StatsContribution stat : statsList) {
+                            firestoreServices.saveStats(stat);
+                        }
                     }
                 }
             }
@@ -148,11 +186,6 @@ public class WorkflowRessources {
         if (member == null) {
             return Response.status(Response.Status.NOT_FOUND).entity("Member not found").build();
         }
-
-        // Specific delete for this member is tricky with the new deterministic ID
-        // without a specific method,
-        // but for now we can just use the Upsert behavior of set() in saveStats.
-        // Or we could implement deleteStatsByMemberAndSourceForYear.
 
         List<CustomStatsContributionsUserByMonth> stats = gitHubServices.getContributionsForTheCurrentYear(githubMember,
                 year);

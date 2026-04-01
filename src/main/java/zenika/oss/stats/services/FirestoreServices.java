@@ -33,12 +33,12 @@ public class FirestoreServices {
      */
     @CacheInvalidateAll(cacheName = "members-cache")
     public void createMember(ZenikaMember zMember) throws DatabaseException {
-        createDocument(zMember, FirestoreCollections.MEMBERS.value, zMember.getId());
+        createDocument(ZenikaMemberMapper.mapZenikaMemberToMap(zMember), FirestoreCollections.MEMBERS.getValue(), zMember.getId());
     }
 
     @CacheResult(cacheName = "members-cache")
     public List<ZenikaMember> getAllMembers() throws DatabaseException {
-        CollectionReference zmembers = firestore.collection(FirestoreCollections.MEMBERS.value);
+        CollectionReference zmembers = firestore.collection(FirestoreCollections.MEMBERS.getValue());
         ApiFuture<QuerySnapshot> querySnapshot = zmembers.get();
         try {
             return querySnapshot.get().getDocuments().stream()
@@ -58,7 +58,7 @@ public class FirestoreServices {
      */
     @CacheInvalidateAll(cacheName = "contributions-cache")
     public void deleteStatsForAGitHubAccountForAYear(String githubMember, int year) throws DatabaseException {
-        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
+        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.getValue());
         Query query = zStats.whereEqualTo("githubHandle", githubMember).whereEqualTo("year", String.valueOf(year));
         ApiFuture<QuerySnapshot> querySnapshot = query.get();
         try {
@@ -93,7 +93,7 @@ public class FirestoreServices {
                     statsContribution.getIdZenikaMember(),
                     statsContribution.getSource());
 
-            firestore.collection(FirestoreCollections.STATS.value)
+            firestore.collection(FirestoreCollections.STATS.getValue())
                     .document(documentId)
                     .set(statsContribution)
                     .get();
@@ -111,7 +111,7 @@ public class FirestoreServices {
      */
     @CacheInvalidateAll(cacheName = "contributions-cache")
     public void deleteStatsBySourceForYear(int year, String source) throws DatabaseException {
-        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
+        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.getValue());
         Query query = zStats.whereEqualTo("year", String.valueOf(year)).whereEqualTo("source", source);
         deleteDocumentsByQuery(query);
     }
@@ -147,7 +147,7 @@ public class FirestoreServices {
      */
     @CacheInvalidateAll(cacheName = "projects-cache")
     public void createProject(Project project) throws DatabaseException {
-        createDocument(project, FirestoreCollections.PROJECTS.value, project.getId());
+        createDocument(project, FirestoreCollections.PROJECTS.getValue(), project.getId());
     }
 
     /**
@@ -157,7 +157,7 @@ public class FirestoreServices {
      */
     @CacheResult(cacheName = "projects-cache")
     public List<Project> getAllProjects() throws DatabaseException {
-        CollectionReference zProjects = firestore.collection(FirestoreCollections.PROJECTS.value);
+        CollectionReference zProjects = firestore.collection(FirestoreCollections.PROJECTS.getValue());
         ApiFuture<QuerySnapshot> querySnapshot = zProjects.get();
         try {
             return querySnapshot.get().getDocuments().stream()
@@ -209,7 +209,7 @@ public class FirestoreServices {
     }
 
     private void deleteProjectsBySource(String source) throws DatabaseException {
-        CollectionReference zProjects = firestore.collection(FirestoreCollections.PROJECTS.value);
+        CollectionReference zProjects = firestore.collection(FirestoreCollections.PROJECTS.getValue());
         Query query = zProjects.whereEqualTo("source", source);
         ApiFuture<QuerySnapshot> querySnapshot = query.get();
         try {
@@ -246,7 +246,7 @@ public class FirestoreServices {
     @CacheInvalidateAll(cacheName = "members-cache")
     public void deleteMember(String memberId) throws DatabaseException {
         try {
-            firestore.collection(FirestoreCollections.MEMBERS.value)
+            firestore.collection(FirestoreCollections.MEMBERS.getValue())
                     .document(memberId)
                     .delete()
                     .get();
@@ -280,10 +280,10 @@ public class FirestoreServices {
      * @throws DatabaseException exception
      */
     public <T> void deleteAllDocuments(FirestoreCollections collectionType) throws DatabaseException {
-        if (collectionType.value == null) {
+        if (collectionType.getValue() == null) {
             throw new IllegalArgumentException("Collection name cannot be null");
         }
-        CollectionReference collection = firestore.collection(collectionType.value);
+        CollectionReference collection = firestore.collection(collectionType.getValue());
         ApiFuture<QuerySnapshot> querySnapshot = collection.get();
         try {
             List<QueryDocumentSnapshot> documents = querySnapshot.get().getDocuments();
@@ -302,7 +302,7 @@ public class FirestoreServices {
 
     @CacheResult(cacheName = "contributions-cache")
     public List<StatsContribution> getStatsForYear(int year) throws DatabaseException {
-        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
+        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.getValue());
         Query query = zStats.whereEqualTo("year", String.valueOf(year));
         ApiFuture<QuerySnapshot> querySnapshot = query.get();
         try {
@@ -317,7 +317,7 @@ public class FirestoreServices {
     @CacheResult(cacheName = "contributions-cache")
     public List<StatsContribution> getContributionsForAMemberOrderByYear(String memberId) throws DatabaseException {
         List<StatsContribution> stats = null;
-        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
+        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.getValue());
         Query query = zStats.whereEqualTo("githubHandle", memberId);
         ApiFuture<QuerySnapshot> querySnapshot = query.get();
         try {
@@ -337,7 +337,7 @@ public class FirestoreServices {
     @CacheResult(cacheName = "contributions-cache")
     public List<StatsContribution> getContributionsForZenikaMember(String zenikaMemberId) throws DatabaseException {
         List<StatsContribution> stats = null;
-        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
+        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.getValue());
         Query query = zStats.whereEqualTo("idZenikaMember", zenikaMemberId);
         ApiFuture<QuerySnapshot> querySnapshot = query.get();
         try {
@@ -357,7 +357,7 @@ public class FirestoreServices {
     public List<StatsContribution> getContributionsForAYearAndMonthOrderByMonth(int year, String month)
             throws DatabaseException {
         List<StatsContribution> stats = null;
-        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
+        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.getValue());
         Query query = zStats.whereEqualTo("year", String.valueOf(year)).whereEqualTo("month", month);
         ApiFuture<QuerySnapshot> querySnapshot = query.get();
         try {
@@ -374,7 +374,7 @@ public class FirestoreServices {
 
     @CacheResult(cacheName = "contributions-cache")
     public List<StatsContribution> getAllStats() throws DatabaseException {
-        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.value);
+        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.getValue());
         ApiFuture<QuerySnapshot> querySnapshot = zStats.get();
         try {
             return querySnapshot.get().getDocuments().stream()
@@ -382,6 +382,28 @@ public class FirestoreServices {
                     .collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException exception) {
             throw new DatabaseException(exception);
+        }
+    }
+
+    /**
+     * Check if a member has any statistics records for a specific year and source.
+     *
+     * @param memberId the internal Zenika member ID.
+     * @param year     the year to check.
+     * @param source   the source (GitHub or GitLab).
+     * @return true if at least one record exists.
+     * @throws DatabaseException if the database query fails.
+     */
+    public boolean hasStatsForMemberAndYear(String memberId, int year, String source) throws DatabaseException {
+        CollectionReference zStats = firestore.collection(FirestoreCollections.STATS.getValue());
+        Query query = zStats.whereEqualTo("idZenikaMember", memberId)
+                .whereEqualTo("year", String.valueOf(year))
+                .whereEqualTo("source", source)
+                .limit(1);
+        try {
+            return !query.get().get().getDocuments().isEmpty();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new DatabaseException(e);
         }
     }
 }

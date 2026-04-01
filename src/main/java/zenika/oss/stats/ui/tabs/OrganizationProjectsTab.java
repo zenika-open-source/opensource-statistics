@@ -115,7 +115,7 @@ public class OrganizationProjectsTab {
                 }
 
             } else {
-                Jt.text("no data available").use(projectsTab);
+                Jt.text("No data available").use(projectsTab);
             }
 
         } catch (Exception e) {

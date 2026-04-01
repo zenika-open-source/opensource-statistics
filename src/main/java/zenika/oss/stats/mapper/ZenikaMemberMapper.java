@@ -5,6 +5,8 @@ import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.github.GitHubMember;
 import zenika.oss.stats.beans.gitlab.GitLabMember;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class ZenikaMemberMapper {
@@ -27,6 +29,24 @@ public class ZenikaMemberMapper {
 
         return zenikaMember;
 
+    }
+
+    /**
+     * Map a ZenikaMember to a Firestore Map.
+     * 
+     * @param member : the member to map.
+     * @return a map for Firestore.
+     */
+    public static Map<String, Object> mapZenikaMemberToMap(ZenikaMember member) {
+        Map<String, Object> map = new HashMap<>();
+
+        map.put("firstname", member.getFirstname());
+        map.put("name", member.getName());
+        map.put("city", member.getCity());
+        map.put("gitHubAccount", member.getGitHubAccount());
+        map.put("gitlabAccount", member.getGitlabAccount());
+
+        return map;
     }
 
     /**

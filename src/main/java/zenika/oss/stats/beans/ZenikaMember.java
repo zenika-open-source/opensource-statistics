@@ -3,6 +3,7 @@ package zenika.oss.stats.beans;
 import zenika.oss.stats.beans.github.GitHubMember;
 import zenika.oss.stats.beans.gitlab.GitLabMember;
 
+
 public class ZenikaMember {
 
     private String id;

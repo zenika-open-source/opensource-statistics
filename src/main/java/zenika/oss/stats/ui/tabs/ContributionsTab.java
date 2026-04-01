@@ -39,13 +39,11 @@ public class ContributionsTab {
         @Inject
         FirestoreServices firestoreServices;
 
-        private String lastSelectedMemberLabel;
-
         public void render(JtContainer contributionsTab) {
 
                 Jt.subheader("User Contributions History").use(contributionsTab);
 
-                var controlRow = Jt.columns(4).key("contributions_controls_row").use(contributionsTab);
+                var controlRow = Jt.columns(2).key("contributions_controls_row").use(contributionsTab);
 
                 Integer yearValue = Jt.numberInput("Year", Integer.class)
                                 .key("year_selection")
@@ -54,115 +52,89 @@ public class ContributionsTab {
                                 .value(Year.now().getValue())
                                 .use(controlRow.col(0));
 
-                String selectedMemberLabel = null;
-                Map<String, String> memberOptions = new HashMap<>();
-
-                try {
-                        List<ZenikaMember> members = firestoreServices.getAllMembers();
-                        memberOptions = members.stream()
-                                        .collect(Collectors.toMap(
-                                                        m -> m.getFirstname() + " " + m.getName() + " ("
-                                                                        + (m.getGitHubAccount() != null
-                                                                                        ? m.getGitHubAccount()
-                                                                                                        .getLogin()
-                                                                                        : (m.getGitlabAccount() != null
-                                                                                                        ? m.getGitlabAccount()
-                                                                                                                        .getUsername()
-                                                                                                        : "no account"))
-                                                                        + ")",
-                                                        m -> m.getId(),
-                                                        (existing, replacement) -> existing));
-
-                        selectedMemberLabel = Jt
-                                        .selectbox("Select a member",
-                                                        new ArrayList<>(memberOptions.keySet().stream().sorted()
-                                                                        .collect(Collectors.toList())))
-                                        .key("member_selection")
-                                        .use(controlRow.col(1));
-
-                        lastSelectedMemberLabel = selectedMemberLabel;
-                } catch (Exception e) {
-                        Jt.error("Could not load members: " + e.getMessage()).use(contributionsTab);
-                        Log.error("Error loading members", e);
-                }
-
-                if (Jt.button("🐙 Sync GitHub Contributions").use(controlRow.col(2))) {
+                if (Jt.button("🔄 Sync Contributions").use(controlRow.col(1))) {
                         try {
                                 int year = yearValue;
-                                firestoreServices.deleteStatsBySourceForYear(year, "GitHub");
-                                List<ZenikaMember> zMembers = firestoreServices.getAllMembers();
+                                int currentYear = Year.now().getValue();
+                                boolean isCurrentYear = (year == currentYear);
 
-                                int syncedCount = 0;
+                                if (isCurrentYear) {
+                                        firestoreServices.deleteStatsBySourceForYear(year, "GitHub");
+                                        firestoreServices.deleteStatsBySourceForYear(year, "GitLab");
+                                }
+
+                                List<ZenikaMember> zMembers = firestoreServices.getAllMembers();
+                                int ghSyncedCount = 0;
+                                int glSyncedCount = 0;
+
                                 for (ZenikaMember zenikaMember : zMembers) {
+                                        // GitHub Sync
                                         if (zenikaMember.getGitHubAccount() != null
                                                         && zenikaMember.getGitHubAccount().getLogin() != null) {
-                                                List<CustomStatsContributionsUserByMonth> ghStats = gitHubServices
-                                                                .getContributionsForTheCurrentYear(
-                                                                                zenikaMember.getGitHubAccount()
-                                                                                                .getLogin(),
-                                                                                year);
+                                                // For past years, skip if stats already exist
+                                                if (!isCurrentYear && firestoreServices.hasStatsForMemberAndYear(
+                                                                zenikaMember.getId(), year, "GitHub")) {
+                                                        // Already exists, skip
+                                                } else {
+                                                        List<CustomStatsContributionsUserByMonth> ghStats = gitHubServices
+                                                                        .getContributionsForTheCurrentYear(
+                                                                                        zenikaMember.getGitHubAccount()
+                                                                                                        .getLogin(),
+                                                                                        year);
 
-                                                if (!ghStats.isEmpty()) {
-                                                        List<StatsContribution> statsList = StatsMapper
-                                                                        .mapGitHubStatisticsToStatsContributions(
-                                                                                        zenikaMember, year, ghStats);
-                                                        for (StatsContribution stat : statsList) {
-                                                                firestoreServices.saveStats(stat);
+                                                        if (!ghStats.isEmpty()) {
+                                                                List<StatsContribution> statsList = StatsMapper
+                                                                                .mapGitHubStatisticsToStatsContributions(
+                                                                                                zenikaMember, year, ghStats);
+                                                                for (StatsContribution stat : statsList) {
+                                                                        firestoreServices.saveStats(stat);
+                                                                }
+                                                                ghSyncedCount++;
                                                         }
-                                                        syncedCount++;
                                                 }
                                         }
-                                }
-                                Jt.success("✅ Successfully synced GitHub contributions for " + syncedCount
-                                                + " members in " + year + "!")
-                                                .use(contributionsTab);
-                        } catch (Exception e) {
-                                Jt.error("❌ Error syncing GitHub contributions: " + e.getMessage())
-                                                .use(contributionsTab);
-                                Log.error("Error syncing GitHub contributions", e);
-                        }
-                }
 
-                if (Jt.button("🦊 Sync GitLab Contributions").use(controlRow.col(3))) {
-                        try {
-                                int year = yearValue;
-                                firestoreServices.deleteStatsBySourceForYear(year, "GitLab");
-                                List<ZenikaMember> zMembers = firestoreServices.getAllMembers();
-
-                                int syncedCount = 0;
-                                for (ZenikaMember zenikaMember : zMembers) {
+                                        // GitLab Sync
                                         if (zenikaMember.getGitlabAccount() != null
                                                         && zenikaMember.getGitlabAccount().getUsername() != null) {
-                                                String glHandle = zenikaMember.getGitlabAccount().getUsername();
-                                                String glId = zenikaMember.getGitlabAccount().getId();
-
-                                                List<CustomStatsContributionsUserByMonth> glStats;
-                                                if (glId != null && !glId.isEmpty()) {
-                                                        glStats = gitLabServices.getContributionsByUserId(glId,
-                                                                        glHandle, year);
+                                                // For past years, skip if stats already exist
+                                                if (!isCurrentYear && firestoreServices.hasStatsForMemberAndYear(
+                                                                zenikaMember.getId(), year, "GitLab")) {
+                                                        // Already exists, skip
                                                 } else {
-                                                        glStats = gitLabServices.getContributionsForTheCurrentYear(
-                                                                        glHandle, year);
-                                                }
+                                                        String glHandle = zenikaMember.getGitlabAccount().getUsername();
+                                                        String glId = zenikaMember.getGitlabAccount().getId();
 
-                                                if (!glStats.isEmpty()) {
-                                                        List<StatsContribution> statsList = StatsMapper
-                                                                        .mapGitLabStatisticsToStatsContributions(
-                                                                                        zenikaMember, year, glStats);
-                                                        for (StatsContribution stat : statsList) {
-                                                                firestoreServices.saveStats(stat);
+                                                        List<CustomStatsContributionsUserByMonth> glStats;
+                                                        if (glId != null && !glId.isEmpty()) {
+                                                                glStats = gitLabServices.getContributionsByUserId(glId,
+                                                                                glHandle, year);
+                                                        } else {
+                                                                glStats = gitLabServices.getContributionsForTheCurrentYear(
+                                                                                glHandle, year);
                                                         }
-                                                        syncedCount++;
+
+                                                        if (!glStats.isEmpty()) {
+                                                                List<StatsContribution> statsList = StatsMapper
+                                                                                .mapGitLabStatisticsToStatsContributions(
+                                                                                                zenikaMember, year, glStats);
+                                                                for (StatsContribution stat : statsList) {
+                                                                        firestoreServices.saveStats(stat);
+                                                                }
+                                                                glSyncedCount++;
+                                                        }
                                                 }
                                         }
                                 }
-                                Jt.success("✅ Successfully synced GitLab contributions for " + syncedCount
-                                                + " members in " + year + "!")
+
+                                Jt.success("✅ Successfully synced contributions in " + year + " (GitHub: " + ghSyncedCount
+                                                + ", GitLab: " + glSyncedCount + ")")
                                                 .use(contributionsTab);
+
                         } catch (Exception e) {
-                                Jt.error("❌ Error syncing GitLab contributions: " + e.getMessage())
+                                Jt.error("❌ Error syncing contributions: " + e.getMessage())
                                                 .use(contributionsTab);
-                                Log.error("Error syncing GitLab contributions", e);
+                                Log.error("Error syncing contributions", e);
                         }
                 }
 
@@ -223,6 +195,37 @@ public class ContributionsTab {
                 }
 
                 Jt.subheader("Individual Member Stats for " + yearValue).use(contributionsTab);
+
+                String selectedMemberLabel = null;
+                Map<String, String> memberOptions = new HashMap<>();
+
+                try {
+                        var individualRow = Jt.columns(2).key("individual_controls_row").use(contributionsTab);
+                        List<ZenikaMember> members = firestoreServices.getAllMembers();
+                        memberOptions = members.stream()
+                                        .collect(Collectors.toMap(
+                                                        m -> m.getFirstname() + " " + m.getName() + " ("
+                                                                        + (m.getGitHubAccount() != null
+                                                                                        ? m.getGitHubAccount()
+                                                                                                        .getLogin()
+                                                                                        : (m.getGitlabAccount() != null
+                                                                                                        ? m.getGitlabAccount()
+                                                                                                                        .getUsername()
+                                                                                                        : "no account"))
+                                                                        + ")",
+                                                        m -> m.getId(),
+                                                        (existing, replacement) -> existing));
+
+                        selectedMemberLabel = Jt
+                                        .selectbox("Select a member",
+                                                        new ArrayList<>(memberOptions.keySet().stream().sorted()
+                                                                        .collect(Collectors.toList())))
+                                        .key("member_selection")
+                                        .use(individualRow.col(0));
+                } catch (Exception e) {
+                        Jt.error("Could not load members: " + e.getMessage()).use(contributionsTab);
+                        Log.error("Error loading members", e);
+                }
 
                 try {
                         if (selectedMemberLabel != null) {

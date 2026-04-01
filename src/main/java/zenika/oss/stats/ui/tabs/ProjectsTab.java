@@ -46,11 +46,14 @@ public class ProjectsTab {
             var columns = Jt.columns(2).key("projects_columns").use(projectsTab);
             Jt.subheader("Members Projects (" + memberProjects.size() + ")").use(columns.col(0));
 
-            if (Jt.button("🚀 Sync GitHub Personal Projects").use(columns.col(1))) {
+            if (Jt.button("🚀 Sync Personal Projects").use(columns.col(1))) {
                 try {
                     firestoreServices.deleteAllGitHubProjects();
+                    firestoreServices.deleteAllGitLabProjects();
                     List<ZenikaMember> members = firestoreServices.getAllMembers();
-                    int totalProjects = 0;
+                    int totalGitHubProjects = 0;
+                    int totalGitLabProjects = 0;
+
                     for (ZenikaMember member : members) {
                         // GitHub Projects
                         if (member.getGitHubAccount() != null) {
@@ -59,22 +62,9 @@ public class ProjectsTab {
                             for (GitHubProject project : gitHubProjects) {
                                 firestoreServices.createProject(project);
                             }
-                            totalProjects += gitHubProjects.size();
+                            totalGitHubProjects += gitHubProjects.size();
                         }
-                    }
-                    Jt.success("Successfully synced " + totalProjects + " projects for " + members.size() + " members!")
-                            .use(projectsTab);
-                } catch (DatabaseException e) {
-                    Jt.error("Error syncing projects: " + e.getMessage()).use(projectsTab);
-                }
-            }
 
-            if (Jt.button("🚀 Sync GitLab Personal Projects").use(columns.col(1))) {
-                try {
-                    firestoreServices.deleteAllGitLabProjects();
-                    List<ZenikaMember> members = firestoreServices.getAllMembers();
-                    int totalProjects = 0;
-                    for (ZenikaMember member : members) {
                         // GitLab Projects
                         if (member.getGitlabAccount() != null &&
                                 member.getGitlabAccount().getUsername() != null) {
@@ -83,11 +73,10 @@ public class ProjectsTab {
                             for (GitLabProject gitLabProject : gitLabProjects) {
                                 firestoreServices.createProject(gitLabProject);
                             }
-                            totalProjects += gitLabProjects.size();
+                            totalGitLabProjects += gitLabProjects.size();
                         }
-
                     }
-                    Jt.success("Successfully synced " + totalProjects + " projects for " + members.size() + " members!")
+                    Jt.success("Successfully synced " + (totalGitHubProjects + totalGitLabProjects) + " projects (GitHub: " + totalGitHubProjects + ", GitLab: " + totalGitLabProjects + ") for " + members.size() + " members!")
                             .use(projectsTab);
                 } catch (DatabaseException e) {
                     Jt.error("Error syncing projects: " + e.getMessage()).use(projectsTab);

@@ -1,14 +1,23 @@
 package zenika.oss.stats.config;
 
+import org.eclipse.microprofile.config.ConfigProvider;
+
 public enum FirestoreCollections {
     PROJECTS("projects"),
     MEMBERS("members"),
     STATS("stats"),
     ;
 
-    public final String value;
+    private final String baseName;
 
-    FirestoreCollections(String value) {
-        this.value = value;
+    FirestoreCollections(String baseName) {
+        this.baseName = baseName;
+    }
+
+    public String getValue() {
+        String prefix = ConfigProvider.getConfig()
+                .getOptionalValue("firestore.collection.prefix", String.class)
+                .orElse("");
+        return prefix + baseName;
     }
 }
