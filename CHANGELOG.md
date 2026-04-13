@@ -1,3 +1,8 @@
+# [v1.7.1](https://github.com/zenika-open-source/opensource-statistics/compare/v1.7.0...v1.7.1) (2026-04-13)
+
+## 🐛 Bug Fixes
+- [`57207a4`](https://github.com/zenika-open-source/opensource-statistics/commit/57207a4)  Fix number of projects recuperation (#47) (Issues: [`#47`](https://github.com/zenika-open-source/opensource-statistics/issues/47))
+
 # [v1.7.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.6.0...v1.7.0) (2026-04-01)
 
 ## ✨ New Features
@@ -37,4 +42,3 @@
 
 ## 🐛 Bug Fixes
 - [`ccd40d1`](https://github.com/zenika-open-source/opensource-statistics/commit/ccd40d1)  Fix/semantic release release note (#32) (Issues: [`#32`](https://github.com/zenika-open-source/opensource-statistics/issues/32))
-
