@@ -38,8 +38,3 @@
 ## 🐛 Bug Fixes
 - [`ccd40d1`](https://github.com/zenika-open-source/opensource-statistics/commit/ccd40d1)  Fix/semantic release release note (#32) (Issues: [`#32`](https://github.com/zenika-open-source/opensource-statistics/issues/32))
 
-default
-
-default
-
-default
