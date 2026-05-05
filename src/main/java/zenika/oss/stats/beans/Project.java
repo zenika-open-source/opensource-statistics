@@ -14,6 +14,7 @@ public class Project {
     private Long watchers_count;
     private Long forks;
     private String source;
+    private String created_at;
 
     public String getId() {
         return id;
@@ -93,6 +94,14 @@ public class Project {
 
     public void setSource(String source) {
         this.source = source;
+    }
+
+    public String getCreated_at() {
+        return created_at;
+    }
+
+    public void setCreated_at(String created_at) {
+        this.created_at = created_at;
     }
 
     // Modern aliases if needed

@@ -30,6 +30,9 @@ public class OrganizationProjectsTab {
     @ConfigProperty(name = "organization.name")
     String organizationName;
 
+    @ConfigProperty(name = "oss.stats.sync.buttons.enabled", defaultValue = "false")
+    boolean syncButtonsEnabled;
+
     private String projectSearchTerm = "";
     private String projectSortColumn = "Stars";
     private boolean projectSortAscending = false;
@@ -44,21 +47,24 @@ public class OrganizationProjectsTab {
             var columns = Jt.columns(2).key("org_projects_columns").use(projectsTab);
             Jt.subheader("Organization Projects (" + organizationProjects.size() + ")").use(columns.col(0));
 
-            if (Jt.button("🚀 Sync " + organizationName + " Organization Projects").use(columns.col(1))) {
-                try {
-                    firestoreServices.deleteAllGitHubOrganizationProjects();
-                    List<GitHubProject> gitHubProjects = gitHubServices.getOrganizationProjects(organizationName);
-                    int totalProjects = 0;
-                    for (GitHubProject project : gitHubProjects) {
-                        project.setSource("GitHub Organization");
-                        firestoreServices.createProject(project);
-                        totalProjects++;
+            if (syncButtonsEnabled) {
+                if (Jt.button("🚀 Sync " + organizationName + " Organization Projects").use(columns.col(1))) {
+                    try {
+                        firestoreServices.deleteAllGitHubOrganizationProjects();
+                        List<GitHubProject> gitHubProjects = gitHubServices.getOrganizationProjects(organizationName);
+                        int totalProjects = 0;
+                        for (GitHubProject project : gitHubProjects) {
+                            project.setSource("GitHub Organization");
+                            firestoreServices.createProject(project);
+                            totalProjects++;
+                        }
+                        Jt.success("Successfully synced " + totalProjects + " projects for " + organizationName
+                                + " organization!")
+                                .use(projectsTab);
+                    } catch (DatabaseException e) {
+                        Jt.error("Database error during sync: " + e.getMessage()).use(projectsTab);
+                        LOG.error("Failed to sync organization projects", e);
                     }
-                    Jt.success("Successfully synced " + totalProjects + " projects for " + organizationName
-                            + " organization!")
-                            .use(projectsTab);
-                } catch (DatabaseException e) {
-                    Jt.error("Error syncing organization projects: " + e.getMessage()).use(projectsTab);
                 }
             }
 

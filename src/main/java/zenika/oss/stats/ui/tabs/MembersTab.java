@@ -4,6 +4,7 @@ import io.javelit.core.Jt;
 import io.javelit.core.JtContainer;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 import zenika.oss.stats.beans.ZenikaMember;
 import zenika.oss.stats.beans.github.GitHubMember;
@@ -32,6 +33,9 @@ public class MembersTab {
     @Inject
     GitLabServices gitLabServices;
 
+    @ConfigProperty(name = "oss.stats.sync.buttons.enabled", defaultValue = "false")
+    boolean syncButtonsEnabled;
+
     private String selectedMemberId;
     private String memberSortColumn = "Firstname";
     private boolean memberSortAscending = true;
@@ -53,52 +57,54 @@ public class MembersTab {
 
             Jt.subheader("Zenika Members (" + members.size() + ")").use(columns.col(0));
 
-            if (Jt.button("🔄 Sync Members from GitHub").use(columns.col(1))) {
-                try {
-                    // Load current state from Firestore and GitHub
-                    List<ZenikaMember> existingMembers = firestoreServices.getAllMembers();
-                    List<GitHubMember> gitHubMembers = gitHubServices.getZenikaOpenSourceMembers();
+            if (syncButtonsEnabled) {
+                if (Jt.button("🔄 Sync Members from GitHub").use(columns.col(1))) {
+                    try {
+                        // Load current state from Firestore and GitHub
+                        List<ZenikaMember> existingMembers = firestoreServices.getAllMembers();
+                        List<GitHubMember> gitHubMembers = gitHubServices.getZenikaOpenSourceMembers();
 
-                    Set<String> currentGitHubLogins = gitHubMembers.stream()
-                            .map(GitHubMember::getLogin)
-                            .collect(Collectors.toSet());
+                        Set<String> currentGitHubLogins = gitHubMembers.stream()
+                                .map(GitHubMember::getLogin)
+                                .collect(Collectors.toSet());
 
-                    int added = 0;
-                    int updated = 0;
-                    int removed = 0;
+                        int added = 0;
+                        int updated = 0;
+                        int removed = 0;
 
-                    // Upsert: add/update members based on GitHub organization
-                    for (GitHubMember gitHubMember : gitHubMembers) {
-                        ZenikaMember existing = existingMembers.stream()
-                                .filter(m -> m.getGitHubAccount() != null
-                                        && gitHubMember.getLogin().equals(m.getGitHubAccount().getLogin()))
-                                .findFirst()
-                                .orElse(null);
+                        // Upsert: add/update members based on GitHub organization
+                        for (GitHubMember gitHubMember : gitHubMembers) {
+                            ZenikaMember existing = existingMembers.stream()
+                                    .filter(m -> m.getGitHubAccount() != null
+                                            && gitHubMember.getLogin().equals(m.getGitHubAccount().getLogin()))
+                                    .findFirst()
+                                    .orElse(null);
 
-                        if (existing == null) {
-                            firestoreServices.createMember(
-                                    ZenikaMemberMapper.mapGitHubMemberToZenikaMember(gitHubMember));
-                            added++;
-                        } else {
-                            existing.setGitHubAccount(gitHubMember);
-                            firestoreServices.createMember(existing);
-                            updated++;
+                            if (existing == null) {
+                                firestoreServices.createMember(
+                                        ZenikaMemberMapper.mapGitHubMemberToZenikaMember(gitHubMember));
+                                added++;
+                            } else {
+                                existing.setGitHubAccount(gitHubMember);
+                                firestoreServices.createMember(existing);
+                                updated++;
+                            }
                         }
-                    }
 
-                    // Remove members that are no longer in the GitHub organization
-                    for (ZenikaMember member : existingMembers) {
-                        if (member.getGitHubAccount() != null
-                                && !currentGitHubLogins.contains(member.getGitHubAccount().getLogin())) {
-                            firestoreServices.deleteMember(member.getId());
-                            removed++;
+                        // Remove members that are no longer in the GitHub organization
+                        for (ZenikaMember member : existingMembers) {
+                            if (member.getGitHubAccount() != null
+                                    && !currentGitHubLogins.contains(member.getGitHubAccount().getLogin())) {
+                                firestoreServices.deleteMember(member.getId());
+                                removed++;
+                            }
                         }
-                    }
 
-                    Jt.success("✅ Synchronization completed: " + added + " added, " + updated + " updated, " + removed
-                            + " removed.").use(membersTab);
-                } catch (DatabaseException e) {
-                    Jt.error("Error syncing members: " + e.getMessage()).use(membersTab);
+                        Jt.success("✅ Synchronization completed: " + added + " added, " + updated + " updated, " + removed
+                                + " removed.").use(membersTab);
+                    } catch (DatabaseException e) {
+                        Jt.error("Error syncing members: " + e.getMessage()).use(membersTab);
+                    }
                 }
             }
 

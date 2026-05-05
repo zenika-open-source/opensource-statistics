@@ -19,6 +19,7 @@ public class ZenikaProjectMapper {
         project.setFork(Boolean.TRUE.equals(queryDocumentSnapshot.getBoolean("fork")));
         project.setArchived(Boolean.TRUE.equals(queryDocumentSnapshot.getBoolean("archived")));
         project.setVisibility(queryDocumentSnapshot.getString("visibility"));
+        project.setCreated_at(queryDocumentSnapshot.getString("created_at"));
 
         return project;
     }
@@ -48,5 +49,6 @@ public class ZenikaProjectMapper {
         target.setFork(source.isFork());
         target.setArchived(source.isArchived());
         target.setVisibility(source.getVisibility());
+        target.setCreated_at(source.getCreated_at());
     }
 }
