@@ -38,30 +38,6 @@ public class MembersTab {
 
     public void render(JtContainer membersTab) {
         try {
-            // Inject CSS for red buttons and vertical alignment
-            Jt.markdown("""
-                    <style>
-                    button[id^="btn_save_"], button[id^="btn_cancel_"] {
-                        background-color: #d32f2f !important;
-                        color: white !important;
-                        border: none;
-                        padding: 8px 16px;
-                        border-radius: 4px;
-                        cursor: pointer;
-                        transition: background-color 0.3s;
-                    }
-                    button[id^="btn_save_"]:hover, button[id^="btn_cancel_"]:hover {
-                        background-color: #b71c1c !important;
-                    }
-                    button[id^="btn_save_"]:active, button[id^="btn_cancel_"]:active {
-                        background-color: #a93226 !important;
-                    }
-                    div[id^="edit_row_"] {
-                        align-items: center !important;
-                    }
-                    </style>
-                    """).use(membersTab);
-
             List<ZenikaMember> allMembers = firestoreServices.getAllMembers();
             // Create a new list to avoid modifying the cached one and ensure uniqueness
             List<ZenikaMember> members = allMembers.stream()
@@ -131,107 +107,138 @@ public class MembersTab {
             // Sort
             sortMembers(members);
 
-            var header = Jt.columns(6).key("member_header").use(membersTab);
-
-            if (Jt.button(getMemberSortLabel("Firstname")).use(header.col(0))) {
-                toggleMemberSort("Firstname");
-            }
-            if (Jt.button(getMemberSortLabel("Lastname")).use(header.col(1))) {
-                toggleMemberSort("Lastname");
-            }
-            Jt.text("GitHub").use(header.col(2));
-            Jt.text("GitLab").use(header.col(3));
-            if (Jt.button(getMemberSortLabel("City")).use(header.col(4))) {
-                toggleMemberSort("City");
-            }
-            Jt.text("Actions").use(header.col(5));
-
-            for (ZenikaMember m : members) {
-                var row = Jt.columns(6).key("member_row_" + m.getId()).use(membersTab);
-                Jt.text(m.getFirstname() != null ? m.getFirstname() : "").use(row.col(0));
-                Jt.text(m.getName() != null ? m.getName() : "").use(row.col(1));
-
-                if (m.getGitHubAccount() != null && m.getGitHubAccount().getLogin() != null) {
-                    String githubLogin = m.getGitHubAccount().getLogin();
-                    String githubLinkMarkdown = "<a href=\"https://github.com/" + githubLogin
-                            + "\" target=\"_blank\" rel=\"noopener noreferrer\">"
-                            + githubLogin + "</a>";
-                    Jt.markdown(githubLinkMarkdown).use(row.col(2));
-                } else {
-                    Jt.text("").use(row.col(2));
-                }
-
-                if (m.getGitlabAccount() != null && m.getGitlabAccount().getUsername() != null) {
-                    String gitlabUsername = m.getGitlabAccount().getUsername();
-                    String gitlabLinkMarkdown = "<a href=\"https://gitlab.com/" + gitlabUsername
-                            + "\" target=\"_blank\" rel=\"noopener noreferrer\">"
-                            + gitlabUsername + "</a>";
-                    Jt.markdown(gitlabLinkMarkdown).use(row.col(3));
-                } else {
-                    Jt.text("").use(row.col(3));
-                }
-                Jt.text(m.getCity() != null ? m.getCity() : "").use(row.col(4));
-                if (Jt.button("📝").key("btn_edit_" + m.getId()).use(row.col(5))) {
-                    selectedMemberId = m.getId();
-                }
-
-                if (m.getId().equals(selectedMemberId)) {
-                    var editRow = Jt.columns(6).key("edit_row_" + m.getId()).use(membersTab);
-
-                    String newFirstname = Jt.textInput("Firstname").value(m.getFirstname())
-                            .use(editRow.col(0));
-                    String newName = Jt.textInput("Name").value(m.getName()).use(editRow.col(1));
-                    String newGitLabHandle = Jt.textInput("GitLab")
-                            .value(m.getGitlabAccount() != null ? m.getGitlabAccount().getUsername() : "")
-                            .use(editRow.col(2));
-                    String newCity = Jt.textInput("City").value(m.getCity()).use(editRow.col(3));
-
-                    if (Jt.button("Save").key("btn_save_" + m.getId()).use(editRow.col(4))) {
-                        m.setFirstname(newFirstname);
-                        m.setName(newName);
-                        if (newGitLabHandle != null && !newGitLabHandle.isEmpty()) {
-                            // Fetch GitLab user info if:
-                            // 1. Account is new
-                            // 2. Handle has changed
-                            // 3. Current ID is missing or not numeric
-                            boolean shouldFetch = m.getGitlabAccount() == null
-                                    || !newGitLabHandle.equals(m.getGitlabAccount().getUsername())
-                                    || m.getGitlabAccount().getId() == null
-                                    || !m.getGitlabAccount().getId().matches("\\d+");
-
-                            if (shouldFetch) {
-                                // Fetch GitLab user ID (returns object with numeric ID and handle)
-                                gitLabServices.getUserInformation(newGitLabHandle).ifPresentOrElse(glUser -> {
-                                    m.setGitlabAccount(glUser);
-                                    LOG.info("Successfully fetched GitLab ID " + glUser.getId() + " for "
-                                            + newGitLabHandle);
-                                }, () -> {
-                                    LOG.warn("Could not find GitLab user for handle: " + newGitLabHandle);
-                                    // Fallback: at least save the handle if fetch fails
-                                    if (m.getGitlabAccount() == null)
-                                        m.setGitlabAccount(new zenika.oss.stats.beans.gitlab.GitLabMember());
-                                    m.getGitlabAccount().setUsername(newGitLabHandle);
-                                });
-                            }
-                        } else {
-                            m.setGitlabAccount(null);
+            if (selectedMemberId == null) {
+                // Inject CSS to perfectly match native Jt.table
+                Jt.markdown("""
+                        <style>
+                        [id$="_header"] {
+                            background-color: #f9fafb !important;
+                            font-weight: bold !important;
+                            border: 1px solid #e5e7eb !important;
+                            border-bottom: 2px solid #e5e7eb !important;
+                            padding: 12px 15px !important;
                         }
-                        m.setCity(newCity);
-                        firestoreServices.createMember(m);
-                        selectedMemberId = null;
-                        Jt.success("✅ Successfully updated").use(membersTab);
-                        Jt.markdown("<style>#edit_row_" + m.getId() + " { display: none !important; }</style>")
-                                .use(membersTab);
+                        [id$="_header"] button {
+                            font-weight: bold !important;
+                            background: transparent !important;
+                            border: none !important;
+                            padding: 0 !important;
+                            font-size: 1rem !important;
+                            cursor: pointer;
+                        }
+                        [id*="_row_"] {
+                            border-bottom: 1px solid #e5e7eb !important;
+                            border-left: 1px solid #e5e7eb !important;
+                            border-right: 1px solid #e5e7eb !important;
+                            padding: 10px 15px !important;
+                            background-color: white !important;
+                            align-items: center !important;
+                        }
+                        [id*="_row_"]:hover {
+                            background-color: #f9fafb !important;
+                        }
+                        </style>
+                        """).use(membersTab);
+
+                var header = Jt.columns(6).key("member_header").use(membersTab);
+
+                if (Jt.button(getMemberSortLabel("Firstname")).use(header.col(0))) {
+                    toggleMemberSort("Firstname");
+                }
+                if (Jt.button(getMemberSortLabel("Lastname")).use(header.col(1))) {
+                    toggleMemberSort("Lastname");
+                }
+                Jt.text("GitHub").use(header.col(2));
+                Jt.text("GitLab").use(header.col(3));
+                if (Jt.button(getMemberSortLabel("City")).use(header.col(4))) {
+                    toggleMemberSort("City");
+                }
+                Jt.text("Actions").use(header.col(5));
+
+                for (ZenikaMember m : members) {
+                    var row = Jt.columns(6).key("member_row_" + m.getId()).use(membersTab);
+                    Jt.text(m.getFirstname() != null ? m.getFirstname() : "").use(row.col(0));
+                    Jt.text(m.getName() != null ? m.getName() : "").use(row.col(1));
+                    Jt.text(m.getGitHubAccount() != null && m.getGitHubAccount().getLogin() != null
+                            ? m.getGitHubAccount().getLogin()
+                            : "").use(row.col(2));
+                    Jt.text(m.getGitlabAccount() != null && m.getGitlabAccount().getUsername() != null
+                            ? m.getGitlabAccount().getUsername()
+                            : "").use(row.col(3));
+                    Jt.text(m.getCity() != null ? m.getCity() : "").use(row.col(4));
+
+                    if (Jt.button("📝 Edit").key("btn_edit_" + m.getId()).use(row.col(5))) {
+                        selectedMemberId = m.getId();
                     }
-                    if (Jt.button("Cancel").key("btn_cancel_" + m.getId()).use(editRow.col(5))) {
+                }
+            } else {
+                // Show ONLY the Edit Form
+                ZenikaMember memberToEdit = members.stream()
+                        .filter(m -> m.getId().equals(selectedMemberId))
+                        .findFirst().orElse(null);
+
+                if (memberToEdit != null) {
+                    String editName = (memberToEdit.getFirstname() != null ? memberToEdit.getFirstname() : "") + " " +
+                            (memberToEdit.getName() != null ? memberToEdit.getName() : "");
+                    Jt.subheader("Editing: " + editName.trim()).use(membersTab);
+
+                    var editRow = Jt.columns(4).use(membersTab);
+
+                    String newFirstname = Jt.textInput("Firstname")
+                            .value(memberToEdit.getFirstname() != null ? memberToEdit.getFirstname() : "")
+                            .use(editRow.col(0));
+                    String newName = Jt.textInput("Name")
+                            .value(memberToEdit.getName() != null ? memberToEdit.getName() : "").use(editRow.col(1));
+                    String newGitLab = Jt.textInput("GitLab")
+                            .value(memberToEdit.getGitlabAccount() != null
+                                    && memberToEdit.getGitlabAccount().getUsername() != null
+                                            ? memberToEdit.getGitlabAccount().getUsername()
+                                            : "")
+                            .use(editRow.col(2));
+                    String newCity = Jt.textInput("City")
+                            .value(memberToEdit.getCity() != null ? memberToEdit.getCity() : "").use(editRow.col(3));
+
+                    var actionsRow = Jt.columns(2).use(membersTab);
+                    if (Jt.button("Save Changes").use(actionsRow.col(0))) {
+                        memberToEdit.setFirstname(newFirstname);
+                        memberToEdit.setName(newName);
+                        memberToEdit.setCity(newCity);
+                        if (newGitLab != null && !newGitLab.equals(
+                                memberToEdit.getGitlabAccount() != null ? memberToEdit.getGitlabAccount().getUsername()
+                                        : "")) {
+                            gitLabServices.getUserInformation(newGitLab).ifPresentOrElse(memberToEdit::setGitlabAccount,
+                                    () -> {
+                                        if (memberToEdit.getGitlabAccount() == null)
+                                            memberToEdit
+                                                    .setGitlabAccount(new zenika.oss.stats.beans.gitlab.GitLabMember());
+                                        memberToEdit.getGitlabAccount().setUsername(newGitLab);
+                                    });
+                        }
+                        firestoreServices.createMember(memberToEdit);
+                        Jt.success("Member updated!").use(membersTab);
                         selectedMemberId = null;
-                        Jt.markdown("<style>#edit_row_" + m.getId() + " { display: none !important; }</style>")
-                                .use(membersTab);
+                        Jt.rerun();
                     }
+                    if (Jt.button("Cancel").use(actionsRow.col(1))) {
+                        selectedMemberId = null;
+                        Jt.rerun();
+                    }
+                    Jt.markdown("</div>").use(membersTab);
+                } else {
+                    selectedMemberId = null;
+                    Jt.rerun();
                 }
             }
 
         } catch (Exception e) {
+            if (e.getClass().getName().contains("BreakAndReloadAppException") ||
+                    (e.getCause() != null
+                            && e.getCause().getClass().getName().contains("BreakAndReloadAppException"))) {
+                if (e instanceof RuntimeException) {
+                    throw (RuntimeException) e;
+                }
+                throw new RuntimeException(e);
+            }
             Jt.warning("Could not load current members: " + e.getMessage()).use(membersTab);
             LOG.error("Could not load current members", e);
         }

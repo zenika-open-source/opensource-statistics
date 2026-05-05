@@ -75,44 +75,16 @@ public class OrganizationProjectsTab {
                 // Sort
                 sortProjects(filteredProjects);
 
-                record ProjectDisplay(String id, String name, String fullName, String url, Long stars, Long forks,
-                        String source) {
+                record ProjectDisplay(String Name, String Full_Name, String URL, Long Stars, Long Forks,
+                        String Source) {
                 }
+                
                 List<ProjectDisplay> rows = filteredProjects.stream()
-                        .map(p -> new ProjectDisplay(p.getId(), p.getName(), p.getFull_name(), p.getHtml_url(),
+                        .map(p -> new ProjectDisplay(p.getName(), p.getFull_name(), p.getHtml_url(),
                                 p.getWatchers_count(), p.getForks(), p.getSource()))
                         .collect(Collectors.toList());
 
-                // Custom Header with Sort Buttons
-                var header = Jt.columns(6).key("org_projects_header").use(projectsTab);
-
-                if (Jt.button(getSortLabel("Name")).key("org_sort_name").use(header.col(0))) {
-                    toggleSort("Name");
-                }
-                Jt.text("Full Name").use(header.col(1));
-                Jt.text("URL").use(header.col(2));
-                if (Jt.button(getSortLabel("Stars")).key("org_sort_stars").use(header.col(3))) {
-                    toggleSort("Stars");
-                }
-                if (Jt.button(getSortLabel("Forks")).key("org_sort_forks").use(header.col(4))) {
-                    toggleSort("Forks");
-                }
-                Jt.text("Source").use(header.col(5));
-
-                // Custom Table Rows
-                for (ProjectDisplay p : rows) {
-                    var row = Jt.columns(6).key("org_project_row_" + p.id()).use(projectsTab);
-                    Jt.text(p.name()).use(row.col(0));
-                    Jt.text(p.fullName()).use(row.col(1));
-
-                    String linkMarkdown = "<a href=\"" + p.url() + "\" target=\"_blank\" rel=\"noopener noreferrer\">"
-                            + p.url() + "</a>";
-                    Jt.markdown(linkMarkdown).use(row.col(2));
-
-                    Jt.text(String.valueOf(p.stars())).use(row.col(3));
-                    Jt.text(String.valueOf(p.forks())).use(row.col(4));
-                    Jt.text(p.source() != null ? p.source() : "").use(row.col(5));
-                }
+                Jt.table(rows).key("org_projects_table").use(projectsTab);
 
             } else {
                 Jt.text("No data available").use(projectsTab);

@@ -61,7 +61,7 @@ public class StatsTab {
                 if (!allProjects.isEmpty()) {
                     Jt.subheader("\uD83C\uDFC6 Top 3 Community Projects by Stars").use(statsTab);
 
-                    record ProjectDisplay(String name, String fullName, String url, Long stars, Long forks) {
+                    record ProjectDisplay(String Name, String Full_Name, String URL, Long Stars, Long Forks) {
                     }
 
                     List<ProjectDisplay> topCommunityProjects = allProjects.stream()
@@ -257,6 +257,6 @@ public class StatsTab {
                 .collect(Collectors.toList());
     }
 
-    record ContributorDisplay(String name, String github, String gitlab, Integer contributions) {
+    record ContributorDisplay(String Name, String GitHub, String GitLab, Integer Contributions) {
     }
 }
