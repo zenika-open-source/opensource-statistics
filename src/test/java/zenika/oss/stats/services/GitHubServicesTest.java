@@ -6,6 +6,7 @@ import zenika.oss.stats.beans.github.GitHubOrganization;
 import zenika.oss.stats.beans.github.GitHubProject;
 import zenika.oss.stats.config.GitHubClient;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -99,7 +100,7 @@ class GitHubServicesTest {
                 new GitHubProject()
         );
 
-        when(gitHubClient.getReposForAnUser(login)).thenReturn(expectedProjects);
+        when(gitHubClient.getReposForAnUser(login, 100, 1)).thenReturn(expectedProjects);
 
         List<GitHubProject> result = gitHubServices.getPersonalProjectForAnUser(login);
 
@@ -107,12 +108,60 @@ class GitHubServicesTest {
         assertEquals(2, result.size());
         assertEquals(expectedProjects, result);
 
-        verify(gitHubClient, times(1)).getReposForAnUser(login);
+        verify(gitHubClient, times(1)).getReposForAnUser(login, 100, 1);
     }
 
-    //@Test
-    void test_getContributionsData(){
+    @Test
+    void test_getForkedProjectForAnUser() {
+        String login = "testUser";
+        GitHubProject fork = new GitHubProject();
+        fork.setFork(true);
+        List<GitHubProject> expectedProjects = Arrays.asList(fork);
 
+        when(gitHubClient.getReposForAnUser(login, 100, 1)).thenReturn(expectedProjects);
+
+        List<GitHubProject> result = gitHubServices.getForkedProjectForAnUser(login);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(gitHubClient, times(1)).getReposForAnUser(login, 100, 1);
+    }
+
+    @Test
+    void test_getOrganizationMembers_MultiPage() {
+        String org = "testOrg";
+        List<GitHubMember> page1 = new ArrayList<>();
+        for (int i = 0; i < 100; i++) {
+            page1.add(new GitHubMember());
+        }
+        List<GitHubMember> page2 = Arrays.asList(new GitHubMember());
+
+        when(gitHubClient.getOrganizationMembers(org, 100, 1)).thenReturn(page1);
+        when(gitHubClient.getOrganizationMembers(org, 100, 2)).thenReturn(page2);
+
+        List<GitHubMember> result = gitHubServices.getOrganizationMembers(org);
+
+        assertNotNull(result);
+        assertEquals(101, result.size());
+        verify(gitHubClient, times(1)).getOrganizationMembers(org, 100, 1);
+        verify(gitHubClient, times(1)).getOrganizationMembers(org, 100, 2);
+    }
+
+    @Test
+    void test_getOrganizationProjects() {
+        String org = "testOrg";
+        GitHubProject project = new GitHubProject();
+        project.setFork(false);
+        project.setArchived(false);
+        List<GitHubProject> expectedProjects = Arrays.asList(project);
+
+        when(gitHubClient.getOrganizationProjects(org, 100, 1)).thenReturn(expectedProjects);
+
+        List<GitHubProject> result = gitHubServices.getOrganizationProjects(org);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(gitHubClient, times(1)).getOrganizationProjects(org, 100, 1);
     }
     
     

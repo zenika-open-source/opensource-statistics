@@ -33,7 +33,8 @@ public interface GitHubClient {
     @ClientHeaderParam(name = "Authorization", value = "{zenika.oss.stats.config.GitHubClient.prepareToken}")
     @Path("/orgs/{organizationName}/members")
     List<GitHubMember> getOrganizationMembers(@PathParam("organizationName") String organizationName,
-            @QueryParam("per_page") int page);
+            @QueryParam("per_page") int perPage,
+            @QueryParam("page") int page);
 
     @GET
     @ClientHeaderParam(name = "Authorization", value = "{zenika.oss.stats.config.GitHubClient.prepareToken}")
@@ -43,11 +44,14 @@ public interface GitHubClient {
     @GET
     @ClientHeaderParam(name = "Authorization", value = "{zenika.oss.stats.config.GitHubClient.prepareToken}")
     @Path("/users/{login}/repos")
-    List<GitHubProject> getReposForAnUser(@PathParam("login") String login);
+    List<GitHubProject> getReposForAnUser(@PathParam("login") String login,
+            @QueryParam("per_page") int perPage,
+            @QueryParam("page") int page);
 
     @GET
     @ClientHeaderParam(name = "Authorization", value = "{zenika.oss.stats.config.GitHubClient.prepareToken}")
     @Path("/orgs/{organizationName}/repos")
     List<GitHubProject> getOrganizationProjects(@PathParam("organizationName") String organizationName,
-            @QueryParam("per_page") int perPage);
+            @QueryParam("per_page") int perPage,
+            @QueryParam("page") int page);
 }

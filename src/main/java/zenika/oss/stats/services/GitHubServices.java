@@ -89,7 +89,7 @@ public class GitHubServices {
      */
     public List<GitHubMember> getOrganizationMembers(String organizationName) {
 
-        return gitHubClient.getOrganizationMembers(organizationName, NB_MEMBERS_PAR_PAGE);
+        return fetchAll((perPage, page) -> gitHubClient.getOrganizationMembers(organizationName, perPage, page));
     }
 
     /**
@@ -111,7 +111,7 @@ public class GitHubServices {
      */
     public List<GitHubProject> getPersonalProjectForAnUser(final String login) {
 
-        var repos = gitHubClient.getReposForAnUser(login);
+        var repos = fetchAll((perPage, page) -> gitHubClient.getReposForAnUser(login, perPage, page));
         return repos.stream()
                 .filter(repo -> !repo.isFork() && !repo.isArchived())
                 .collect(Collectors.toList());
@@ -125,7 +125,7 @@ public class GitHubServices {
      */
     public List<GitHubProject> getForkedProjectForAnUser(final String login) {
 
-        var repos = gitHubClient.getReposForAnUser(login);
+        var repos = fetchAll((perPage, page) -> gitHubClient.getReposForAnUser(login, perPage, page));
         return repos.stream()
                 .filter(GitHubProject::isFork)
                 .collect(Collectors.toList());
@@ -241,7 +241,7 @@ public class GitHubServices {
     }
 
     public List<GitHubMember> getZenikaOpenSourceMembers() {
-        return gitHubClient.getOrganizationMembers(organizationName, NB_MEMBERS_PAR_PAGE);
+        return fetchAll((perPage, page) -> gitHubClient.getOrganizationMembers(organizationName, perPage, page));
     }
 
     /**
@@ -252,9 +252,28 @@ public class GitHubServices {
      * @return a List of GitHubProject
      */
     public List<GitHubProject> getOrganizationProjects(String organizationName) {
-        var repos = gitHubClient.getOrganizationProjects(organizationName, 100);
+        var repos = fetchAll((perPage, page) -> gitHubClient.getOrganizationProjects(organizationName, perPage, page));
         return repos.stream()
                 .filter(repo -> !repo.isFork() && !repo.isArchived())
                 .collect(Collectors.toList());
+    }
+
+    @FunctionalInterface
+    private interface PaginatedFetcher<T> {
+        List<T> fetch(int perPage, int page);
+    }
+
+    private <T> List<T> fetchAll(PaginatedFetcher<T> fetcher) {
+        List<T> allItems = new ArrayList<>();
+        int page = 1;
+        List<T> currentItems;
+        do {
+            currentItems = fetcher.fetch(NB_MEMBERS_PAR_PAGE, page++);
+            if (currentItems == null || currentItems.isEmpty()) {
+                break;
+            }
+            allItems.addAll(currentItems);
+        } while (currentItems.size() == NB_MEMBERS_PAR_PAGE);
+        return allItems;
     }
 }
