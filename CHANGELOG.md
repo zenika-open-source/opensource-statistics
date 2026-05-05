@@ -1,3 +1,8 @@
+# [v1.8.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.7.1...v1.8.0) (2026-05-05)
+
+## ✨ New Features
+- [`b833e5a`](https://github.com/zenika-open-source/opensource-statistics/commit/b833e5a)  🎨 Review tabs UI, Add top 5️⃣ projects and hide synchro buttons (#48) (Issues: [`#48`](https://github.com/zenika-open-source/opensource-statistics/issues/48))
+
 # [v1.7.1](https://github.com/zenika-open-source/opensource-statistics/compare/v1.7.0...v1.7.1) (2026-04-13)
 
 ## 🐛 Bug Fixes
@@ -78,4 +83,3 @@
 - [`ad37816`](https://github.com/jeanphi-baconnais/opensource-statistics/commit/ad37816)  Remove deploy command on semantic release (#31) (Issues: [`#31`](https://github.com/jeanphi-baconnais/opensource-statistics/issues/31))
 - [`ccd40d1`](https://github.com/jeanphi-baconnais/opensource-statistics/commit/ccd40d1)  Fix/semantic release release note (#32) (Issues: [`#32`](https://github.com/jeanphi-baconnais/opensource-statistics/issues/32))
 - [`d9f69f4`](https://github.com/jeanphi-baconnais/opensource-statistics/commit/d9f69f4)  Fix Docker configuration + add doc + remove gitpod configuration (#33) (Issues: [`#33`](https://github.com/jeanphi-baconnais/opensource-statistics/issues/33))
-
