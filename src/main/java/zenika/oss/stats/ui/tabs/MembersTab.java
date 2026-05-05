@@ -146,7 +146,8 @@ public class MembersTab {
                         </style>
                         """).use(membersTab);
 
-                var header = Jt.columns(6).key("member_header").use(membersTab);
+                int numCols = syncButtonsEnabled ? 6 : 5;
+                var header = Jt.columns(numCols).key("member_header").use(membersTab);
 
                 if (Jt.button(getMemberSortLabel("Firstname")).use(header.col(0))) {
                     toggleMemberSort("Firstname");
@@ -159,10 +160,12 @@ public class MembersTab {
                 if (Jt.button(getMemberSortLabel("City")).use(header.col(4))) {
                     toggleMemberSort("City");
                 }
-                Jt.text("Actions").use(header.col(5));
+                if (syncButtonsEnabled) {
+                    Jt.text("Actions").use(header.col(5));
+                }
 
                 for (ZenikaMember m : members) {
-                    var row = Jt.columns(6).key("member_row_" + m.getId()).use(membersTab);
+                    var row = Jt.columns(numCols).key("member_row_" + m.getId()).use(membersTab);
                     Jt.text(m.getFirstname() != null ? m.getFirstname() : "").use(row.col(0));
                     Jt.text(m.getName() != null ? m.getName() : "").use(row.col(1));
                     Jt.text(m.getGitHubAccount() != null && m.getGitHubAccount().getLogin() != null
@@ -173,8 +176,10 @@ public class MembersTab {
                             : "").use(row.col(3));
                     Jt.text(m.getCity() != null ? m.getCity() : "").use(row.col(4));
 
-                    if (Jt.button("📝 Edit").key("btn_edit_" + m.getId()).use(row.col(5))) {
-                        selectedMemberId = m.getId();
+                    if (syncButtonsEnabled) {
+                        if (Jt.button("📝 Edit").key("btn_edit_" + m.getId()).use(row.col(5))) {
+                            selectedMemberId = m.getId();
+                        }
                     }
                 }
             } else {
