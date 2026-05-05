@@ -12,6 +12,7 @@ import zenika.oss.stats.mapper.StatsMapper;
 import zenika.oss.stats.services.FirestoreServices;
 import zenika.oss.stats.services.GitHubServices;
 import zenika.oss.stats.services.GitLabServices;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import org.icepear.echarts.Bar;
 import org.icepear.echarts.charts.bar.BarSeries;
@@ -39,6 +40,9 @@ public class ContributionsTab {
         @Inject
         FirestoreServices firestoreServices;
 
+        @ConfigProperty(name = "oss.stats.sync.buttons.enabled", defaultValue = "false")
+        boolean syncButtonsEnabled;
+
         public void render(JtContainer contributionsTab) {
 
                 Jt.subheader("User Contributions History").use(contributionsTab);
@@ -52,11 +56,12 @@ public class ContributionsTab {
                                 .value(Year.now().getValue())
                                 .use(controlRow.col(0));
 
-                if (Jt.button("🔄 Sync Contributions").use(controlRow.col(1))) {
-                        try {
-                                int year = yearValue;
-                                int currentYear = Year.now().getValue();
-                                boolean isCurrentYear = (year == currentYear);
+                if (syncButtonsEnabled) {
+                        if (Jt.button("🔄 Sync Contributions").use(controlRow.col(1))) {
+                                try {
+                                        int year = yearValue;
+                                        int currentYear = Year.now().getValue();
+                                        boolean isCurrentYear = (year == currentYear);
 
                                 if (isCurrentYear) {
                                         firestoreServices.deleteStatsBySourceForYear(year, "GitHub");
@@ -136,6 +141,7 @@ public class ContributionsTab {
                                                 .use(contributionsTab);
                                 Log.error("Error syncing contributions", e);
                         }
+                }
                 }
 
                 Jt.subheader("Monthly Contributions in " + yearValue).use(contributionsTab);

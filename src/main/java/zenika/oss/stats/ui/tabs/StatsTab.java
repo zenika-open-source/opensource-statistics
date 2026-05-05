@@ -61,7 +61,7 @@ public class StatsTab {
                 if (!allProjects.isEmpty()) {
                     Jt.subheader("\uD83C\uDFC6 Top 3 Community Projects by Stars").use(statsTab);
 
-                    record ProjectDisplay(String name, String fullName, String url, Long stars, Long forks) {
+                    record ProjectDisplay(String Name, String Full_Name, String URL, Long Stars, Long Forks) {
                     }
 
                     List<ProjectDisplay> topCommunityProjects = allProjects.stream()
@@ -89,6 +89,25 @@ public class StatsTab {
                     if (!topOrgProjects.isEmpty()) {
                         Jt.subheader("\uD83C\uDFC6 Top 3 Zenika Open Source Projects by Stars").use(statsTab);
                         Jt.table(topOrgProjects).key("top_org_projects_table").use(statsTab);
+                    }
+
+                    record LatestProjectDisplay(String Name, String URL, String Created_At) {
+                    }
+
+                    List<LatestProjectDisplay> latestOrgProjects = allProjects.stream()
+                            .filter(p -> "GitHub Organization".equals(p.getSource()))
+                            .filter(p -> p.getCreated_at() != null && !p.getCreated_at().isEmpty())
+                            .sorted((p1, p2) -> p2.getCreated_at().compareTo(p1.getCreated_at()))
+                            .limit(5)
+                            .map(p -> new LatestProjectDisplay(
+                                    p.getName() != null ? p.getName() : "", 
+                                    p.getHtml_url() != null ? p.getHtml_url() : "", 
+                                    p.getCreated_at().split("T")[0]))
+                            .collect(Collectors.toList());
+
+                    if (!latestOrgProjects.isEmpty()) {
+                        Jt.subheader("\uD83C\uDD95 Top 5 Latest Created Projects").use(statsTab);
+                        Jt.table(latestOrgProjects).key("latest_org_projects_table").use(statsTab);
                     }
                 }
             } catch (Exception e) {
@@ -257,6 +276,6 @@ public class StatsTab {
                 .collect(Collectors.toList());
     }
 
-    record ContributorDisplay(String name, String github, String gitlab, Integer contributions) {
+    record ContributorDisplay(String Name, String GitHub, String GitLab, Integer Contributions) {
     }
 }
