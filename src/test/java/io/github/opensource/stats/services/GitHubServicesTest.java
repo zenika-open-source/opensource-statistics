@@ -20,6 +20,9 @@ import org.slf4j.LoggerFactory;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -62,7 +65,6 @@ class GitHubServicesTest {
         verify(gitHubClient, times(1)).getOrgnizationByName(organizationName);
     }
 
-
     @Test
     void test_getOrganizationInformation_Null() {
         when(gitHubClient.getOrgnizationByName(null)).thenReturn(null);
@@ -96,10 +98,9 @@ class GitHubServicesTest {
         String login = "testUser";
         List<GitHubProject> expectedProjects = Arrays.asList(
                 new GitHubProject(),
-                new GitHubProject()
-        );
+                new GitHubProject());
 
-        when(gitHubClient.getReposForAnUser(login)).thenReturn(expectedProjects);
+        when(gitHubClient.getReposForAnUser(eq(login), anyInt(), anyInt())).thenReturn(expectedProjects);
 
         List<GitHubProject> result = gitHubServices.getPersonalProjectForAnUser(login);
 
@@ -107,87 +108,104 @@ class GitHubServicesTest {
         assertEquals(2, result.size());
         assertEquals(expectedProjects, result);
 
-        verify(gitHubClient, times(1)).getReposForAnUser(login);
+        verify(gitHubClient, times(1)).getReposForAnUser(eq(login), anyInt(), anyInt());
     }
 
-    //@Test
-    void test_getContributionsData(){
+    // @Test
+    void test_getContributionsData() {
 
     }
-    
-    
+
     /*
-    @Test
-    void testGetContributionsForTheCurrentYearAndAllTheOrganizationMembers() throws ExecutionException, InterruptedException {
-        // Arrange
-        String organizationName = "testOrg";
-        GitHubMember user1 = new GitHubMember();
-        user1.login = "user1";
-        GitHubMember user2 = new GitHubMember();
-        user2.login = "user2";
-        
-        
-        List<GitHubMember> members = Arrays.asList(user1, user2);
-                
-        List<CustomStatsContributionsUserByMonth> user1Contributions = Arrays.asList(
-                new CustomStatsContributionsUserByMonth(1, "January", 10),
-                new CustomStatsContributionsUserByMonth(2, "February", 15)
-        );
-
-        List<CustomStatsContributionsUserByMonth> user2Contributions = Arrays.asList(
-                new CustomStatsContributionsUserByMonth(1, "January", 5),
-                new CustomStatsContributionsUserByMonth(2, "February", 8)
-        );
-        
-        Response response = Mockito.mock(Response.class);
-
-        UserStatsNumberContributions stats = new UserStatsNumberContributions();
-        stats.setContributionsCollection(new ContributionsCollectionNumber());
-        stats.getContributionsCollection().setPullRequestContributions(new PullRequestContributions());
-        stats.getContributionsCollection().getPullRequestContributions().setTotalCount(10);
-        
-        when(response.getObject(UserStatsNumberContributions.class, "user")).thenReturn(stats);
-        when(dynamicGraphQLClient.executeSync(anyString(), anyMap())).thenReturn(response);
-        
-        when(gitHubServices.getOrganizationMembers(organizationName)).thenReturn(members);
-        when(gitHubServices.getContributionsForTheCurrentYear("user1", Year.now().getValue())).thenReturn(user1Contributions);
-        when(gitHubServices.getContributionsForTheCurrentYear("user2", Year.now().getValue())).thenReturn(user2Contributions);
-
-        // Act
-        List<CustomStatsUser> result = gitHubServices.getContributionsForTheCurrentYearAndAllTheOrganizationMembers(organizationName);
-
-        // Assert
-        assertNotNull(result);
-        assertEquals(2, result.size());
-
-        CustomStatsUser user1Stats = result.get(0);
-        assertEquals("user1", user1Stats.getLogin());
-        assertEquals(user1Contributions, user1Stats.getContributionsUserByMonths());
-
-        CustomStatsUser user2Stats = result.get(1);
-        assertEquals("user2", user2Stats.getLogin());
-        assertEquals(user2Contributions, user2Stats.getContributionsUserByMonths());
-
-        verify(gitHubServices, times(1)).getOrganizationMembers(organizationName);
-        verify(gitHubServices, times(1)).getContributionsForTheCurrentYear("user1", Year.now().getValue());
-        verify(gitHubServices, times(1)).getContributionsForTheCurrentYear("user2", Year.now().getValue());
-    }
-
-    @Test
-    void testGetContributionsForTheCurrentYearAndAllTheOrganizationMembersWithEmptyOrganization() {
-        // Arrange
-        String organizationName = "emptyOrg";
-        when(gitHubServices.getOrganizationMembers(organizationName)).thenReturn(Collections.emptyList());
-
-        // Act
-        List<CustomStatsUser> result = gitHubServices.getContributionsForTheCurrentYearAndAllTheOrganizationMembers(organizationName);
-
-        // Assert
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        verify(gitHubServices, times(1)).getOrganizationMembers(organizationName);
-        verify(gitHubServices, never()).getContributionsForTheCurrentYear(anyString(), anyInt());
-    }
-    
-    */
+     * @Test
+     * void testGetContributionsForTheCurrentYearAndAllTheOrganizationMembers()
+     * throws ExecutionException, InterruptedException {
+     * // Arrange
+     * String organizationName = "testOrg";
+     * GitHubMember user1 = new GitHubMember();
+     * user1.login = "user1";
+     * GitHubMember user2 = new GitHubMember();
+     * user2.login = "user2";
+     * 
+     * 
+     * List<GitHubMember> members = Arrays.asList(user1, user2);
+     * 
+     * List<CustomStatsContributionsUserByMonth> user1Contributions = Arrays.asList(
+     * new CustomStatsContributionsUserByMonth(1, "January", 10),
+     * new CustomStatsContributionsUserByMonth(2, "February", 15)
+     * );
+     * 
+     * List<CustomStatsContributionsUserByMonth> user2Contributions = Arrays.asList(
+     * new CustomStatsContributionsUserByMonth(1, "January", 5),
+     * new CustomStatsContributionsUserByMonth(2, "February", 8)
+     * );
+     * 
+     * Response response = Mockito.mock(Response.class);
+     * 
+     * UserStatsNumberContributions stats = new UserStatsNumberContributions();
+     * stats.setContributionsCollection(new ContributionsCollectionNumber());
+     * stats.getContributionsCollection().setPullRequestContributions(new
+     * PullRequestContributions());
+     * stats.getContributionsCollection().getPullRequestContributions().
+     * setTotalCount(10);
+     * 
+     * when(response.getObject(UserStatsNumberContributions.class,
+     * "user")).thenReturn(stats);
+     * when(dynamicGraphQLClient.executeSync(anyString(),
+     * anyMap())).thenReturn(response);
+     * 
+     * when(gitHubServices.getOrganizationMembers(organizationName)).thenReturn(
+     * members);
+     * when(gitHubServices.getContributionsForTheCurrentYear("user1",
+     * Year.now().getValue())).thenReturn(user1Contributions);
+     * when(gitHubServices.getContributionsForTheCurrentYear("user2",
+     * Year.now().getValue())).thenReturn(user2Contributions);
+     * 
+     * // Act
+     * List<CustomStatsUser> result =
+     * gitHubServices.getContributionsForTheCurrentYearAndAllTheOrganizationMembers(
+     * organizationName);
+     * 
+     * // Assert
+     * assertNotNull(result);
+     * assertEquals(2, result.size());
+     * 
+     * CustomStatsUser user1Stats = result.get(0);
+     * assertEquals("user1", user1Stats.getLogin());
+     * assertEquals(user1Contributions, user1Stats.getContributionsUserByMonths());
+     * 
+     * CustomStatsUser user2Stats = result.get(1);
+     * assertEquals("user2", user2Stats.getLogin());
+     * assertEquals(user2Contributions, user2Stats.getContributionsUserByMonths());
+     * 
+     * verify(gitHubServices, times(1)).getOrganizationMembers(organizationName);
+     * verify(gitHubServices, times(1)).getContributionsForTheCurrentYear("user1",
+     * Year.now().getValue());
+     * verify(gitHubServices, times(1)).getContributionsForTheCurrentYear("user2",
+     * Year.now().getValue());
+     * }
+     * 
+     * @Test
+     * void
+     * testGetContributionsForTheCurrentYearAndAllTheOrganizationMembersWithEmptyOrganization
+     * () {
+     * // Arrange
+     * String organizationName = "emptyOrg";
+     * when(gitHubServices.getOrganizationMembers(organizationName)).thenReturn(
+     * Collections.emptyList());
+     * 
+     * // Act
+     * List<CustomStatsUser> result =
+     * gitHubServices.getContributionsForTheCurrentYearAndAllTheOrganizationMembers(
+     * organizationName);
+     * 
+     * // Assert
+     * assertNotNull(result);
+     * assertTrue(result.isEmpty());
+     * verify(gitHubServices, times(1)).getOrganizationMembers(organizationName);
+     * verify(gitHubServices,
+     * never()).getContributionsForTheCurrentYear(anyString(), anyInt());
+     * }
+     * 
+     */
 }
