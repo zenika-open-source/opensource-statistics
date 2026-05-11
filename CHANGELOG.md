@@ -1,3 +1,8 @@
+# [v1.9.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.8.0...v1.9.0) (2026-05-11)
+
+## ✨ New Features
+- [`2779996`](https://github.com/zenika-open-source/opensource-statistics/commit/2779996)  Prepare project for open source and add some adjustements (#55) (Issues: [`#55`](https://github.com/zenika-open-source/opensource-statistics/issues/55))
+
 # [v1.8.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.7.1...v1.8.0) (2026-05-05)
 
 ## ✨ New Features
