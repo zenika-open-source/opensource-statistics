@@ -1,4 +1,4 @@
-# Opensource-statistiques 📊
+# Opensource Statistics 📊
 
 ![GitHub Release](https://img.shields.io/github/v/release/zenika-open-source/opensource-statistics)
 ![Quarkus](https://img.shields.io/badge/Quarkus-3.31.2-4695EB?logo=quarkus)
@@ -7,10 +7,12 @@
 
 🚧 This project is in progress ... 
 
-One objective of this project is to highlight Zenika members for their open source contributions. 
+The objective of this project is to highlight an organization's members for their open source contributions. 
 
-To do this, data is scanned from both **GitHub** and **GitLab** and saved in a private Database on GCP.
-Data is used to find and list projects maintained or forked by Zenika Members, as well as their open source contributions.
+To do this, data is scanned from both **GitHub** and **GitLab** and saved in a database (e.g., GCP Firestore).
+Data is used to find and list projects maintained or forked by organization members, as well as their open source contributions.
+
+The tracked organization is configurable in the application settings.
 
 ## 🗄️ Tech Stack
 
@@ -23,11 +25,11 @@ Using:
 ## 🌐 API 
 
 Some resources are available but only the first is in progress : 
-- `/github/` to get information about Zenika members and organization from GitHub
-- `/gitlab/` to get information about Zenika members and organization from GitLab
-- `/members/` to get information from GCP database 🚧 not implemented
-- `/contributions/` to get information about contributions from GCP database 🚧 not implemented
-- `/workflow/` to get data and save them on GCP database
+- `/github/` to get information about organization members and organization from GitHub
+- `/gitlab/` to get information about organization members and organization from GitLab
+- `/members/` to get information from database 🚧 not implemented
+- `/contributions/` to get information about contributions from database 🚧 not implemented
+- `/workflow/` to get data and save them on database
 
 ## 🎨 UI 
 
