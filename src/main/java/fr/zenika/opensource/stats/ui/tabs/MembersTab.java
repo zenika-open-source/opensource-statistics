@@ -224,7 +224,7 @@ public class MembersTab {
                                         if (memberToEdit.getGitlabAccount() == null)
                                             memberToEdit
                                                     .setGitlabAccount(
-                                                            new io.github.opensource.stats.beans.gitlab.GitLabMember());
+                                                            new fr.zenika.opensource.stats.beans.gitlab.GitLabMember());
                                         memberToEdit.getGitlabAccount().setUsername(newGitLab);
                                     });
                         }

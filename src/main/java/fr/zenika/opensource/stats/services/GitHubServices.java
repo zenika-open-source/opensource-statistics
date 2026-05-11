@@ -241,7 +241,7 @@ public class GitHubServices {
     }
 
     public List<GitHubMember> getOrganizationMembersFromConfig() {
-        return gitHubClient.getOrganizationMembers(organizationName, NB_MEMBERS_PAR_PAGE);
+        return gitHubClient.getOrganizationMembers(organizationName, NB_MEMBERS_PAR_PAGE, 1);
     }
 
     /**

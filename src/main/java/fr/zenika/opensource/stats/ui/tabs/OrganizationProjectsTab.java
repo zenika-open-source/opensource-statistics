@@ -43,6 +43,7 @@ public class OrganizationProjectsTab {
     public void render(JtContainer projectsTab) {
         try {
             List<Project> allProjects = firestoreServices.getAllProjects();
+
             List<Project> organizationProjects = allProjects.stream()
                     .filter(p -> "GitHub Organization".equals(p.getSource()))
                     .collect(Collectors.toList());

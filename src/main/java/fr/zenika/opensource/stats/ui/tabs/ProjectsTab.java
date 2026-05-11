@@ -13,14 +13,6 @@ import fr.zenika.opensource.stats.services.GitLabServices;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
-import io.github.opensource.stats.beans.Project;
-import io.github.opensource.stats.beans.Member;
-import io.github.opensource.stats.beans.github.GitHubProject;
-import io.github.opensource.stats.beans.gitlab.GitLabProject;
-import io.github.opensource.stats.exception.DatabaseException;
-import io.github.opensource.stats.services.FirestoreServices;
-import io.github.opensource.stats.services.GitHubServices;
-import io.github.opensource.stats.services.GitLabServices;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.util.Comparator;

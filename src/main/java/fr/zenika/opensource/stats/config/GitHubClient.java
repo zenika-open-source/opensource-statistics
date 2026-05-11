@@ -26,31 +26,31 @@ public interface GitHubClient {
     }
 
     @GET
-    @ClientHeaderParam(name = "Authorization", value = "{io.github.opensource.stats.config.GitHubClient.prepareToken}")
+    @ClientHeaderParam(name = "Authorization", value = "{fr.zenika.opensource.stats.config.GitHubClient.prepareToken}")
     @Path("/orgs/{organizationName}")
     GitHubOrganization getOrgnizationByName(@PathParam("organizationName") String organizationName);
 
     @GET
-    @ClientHeaderParam(name = "Authorization", value = "{io.github.opensource.stats.config.GitHubClient.prepareToken}")
+    @ClientHeaderParam(name = "Authorization", value = "{fr.zenika.opensource.stats.config.GitHubClient.prepareToken}")
     @Path("/orgs/{organizationName}/members")
     List<GitHubMember> getOrganizationMembers(@PathParam("organizationName") String organizationName,
             @QueryParam("per_page") int perPage,
             @QueryParam("page") int page);
 
     @GET
-    @ClientHeaderParam(name = "Authorization", value = "{io.github.opensource.stats.config.GitHubClient.prepareToken}")
+    @ClientHeaderParam(name = "Authorization", value = "{fr.zenika.opensource.stats.config.GitHubClient.prepareToken}")
     @Path("/user/{login}")
     GitHubMember getUserInformation(@PathParam("login") String login);
 
     @GET
-    @ClientHeaderParam(name = "Authorization", value = "{io.github.opensource.stats.config.GitHubClient.prepareToken}")
+    @ClientHeaderParam(name = "Authorization", value = "{fr.zenika.opensource.stats.config.GitHubClient.prepareToken}")
     @Path("/users/{login}/repos")
     List<GitHubProject> getReposForAnUser(@PathParam("login") String login,
             @QueryParam("per_page") int perPage,
             @QueryParam("page") int page);
 
     @GET
-    @ClientHeaderParam(name = "Authorization", value = "{io.github.opensource.stats.config.GitHubClient.prepareToken}")
+    @ClientHeaderParam(name = "Authorization", value = "{fr.zenika.opensource.stats.config.GitHubClient.prepareToken}")
     @Path("/orgs/{organizationName}/repos")
     List<GitHubProject> getOrganizationProjects(@PathParam("organizationName") String organizationName,
             @QueryParam("per_page") int perPage,

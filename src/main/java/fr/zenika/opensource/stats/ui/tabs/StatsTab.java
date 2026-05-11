@@ -3,6 +3,7 @@ package fr.zenika.opensource.stats.ui.tabs;
 import io.javelit.core.Jt;
 import io.javelit.core.JtContainer;
 import fr.zenika.opensource.stats.beans.Member;
+import fr.zenika.opensource.stats.beans.Project;
 import fr.zenika.opensource.stats.beans.gcp.StatsContribution;
 import fr.zenika.opensource.stats.services.FirestoreServices;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -14,9 +15,10 @@ import org.icepear.echarts.Bar;
 import org.icepear.echarts.charts.bar.BarSeries;
 import org.icepear.echarts.components.coord.cartesian.CategoryAxis;
 import org.icepear.echarts.components.coord.cartesian.ValueAxis;
+import io.quarkus.logging.Log;
 
 import java.time.Year;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -58,12 +60,47 @@ public class StatsTab {
                 Jt.text("no data available").use(statsTab);
             }
 
-            // Top 3 Projects Section
+            // Top 10 Latest Created Projects (Diagnostic Mode)
             try {
-                List<fr.zenika.opensource.stats.beans.Project> allProjects = firestoreServices.getAllProjects();
+                List<Project> allProjects = firestoreServices.getAllProjects();
+
+                List<Project> orgProjects = allProjects.stream()
+                        .filter(p -> "GitHub Organization".equals(p.getSource()))
+                        .collect(Collectors.toList());
 
                 if (!allProjects.isEmpty()) {
-                    Jt.subheader("\uD83C\uDFC6 Top 3 Community Projects by Stars").use(statsTab);
+                    record LatestProjectDisplay(String Name, String URL, String Created_At) {
+                    }
+                    List<LatestProjectDisplay> latestOrgProjects = orgProjects.stream()
+                            .sorted((p1, p2) -> {
+                                String d1 = p1.getCreated_at() != null ? p1.getCreated_at() : "";
+                                String d2 = p2.getCreated_at() != null ? p2.getCreated_at() : "";
+                                return d2.compareTo(d1);
+                            })
+                            .limit(10)
+                            .map(p -> new LatestProjectDisplay(
+                                    p.getName() != null ? p.getName() : "Unknown",
+                                    p.getHtml_url() != null ? p.getHtml_url() : "",
+                                    (p.getCreated_at() != null && p.getCreated_at().contains("T"))
+                                            ? p.getCreated_at().split("T")[0]
+                                            : "N/A"))
+                            .collect(Collectors.toList());
+
+                    if (!latestOrgProjects.isEmpty()) {
+                        Jt.subheader("🆕 Top 10 Newest Organization Projects").use(statsTab);
+                        Jt.table(latestOrgProjects).key("latest_org_projects_table").use(statsTab);
+                    }
+                }
+            } catch (Exception e) {
+                Log.error("Could not load latest projects", e);
+            }
+
+            // Top 5 Projects Section
+            try {
+                List<Project> allProjects = firestoreServices.getAllProjects();
+
+                if (!allProjects.isEmpty()) {
+                    Jt.subheader("\uD83C\uDFC6 Top 5 Community Projects by Stars").use(statsTab);
 
                     record ProjectDisplay(String Name, String Full_Name, String URL, Long Stars, Long Forks) {
                     }
@@ -73,7 +110,7 @@ public class StatsTab {
                             .sorted((p1, p2) -> Long.compare(
                                     p2.getWatchers_count() != null ? p2.getWatchers_count() : 0L,
                                     p1.getWatchers_count() != null ? p1.getWatchers_count() : 0L))
-                            .limit(3)
+                            .limit(5)
                             .map(p -> new ProjectDisplay(p.getName(), p.getFull_name(), p.getHtml_url(),
                                     p.getWatchers_count(), p.getForks()))
                             .collect(Collectors.toList());
@@ -85,41 +122,22 @@ public class StatsTab {
                             .sorted((p1, p2) -> Long.compare(
                                     p2.getWatchers_count() != null ? p2.getWatchers_count() : 0L,
                                     p1.getWatchers_count() != null ? p1.getWatchers_count() : 0L))
-                            .limit(3)
+                            .limit(5)
                             .map(p -> new ProjectDisplay(p.getName(), p.getFull_name(), p.getHtml_url(),
                                     p.getWatchers_count(), p.getForks()))
                             .collect(Collectors.toList());
 
                     if (!topOrgProjects.isEmpty()) {
-                        Jt.subheader("🏆 Top 3 " + organizationDisplayName + " Open Source Projects by Stars")
+                        Jt.subheader("🏆 Top 5 " + organizationDisplayName + " Open Source Projects by Stars")
                                 .use(statsTab);
                         Jt.table(topOrgProjects).key("top_org_projects_table").use(statsTab);
-                    }
-
-                    record LatestProjectDisplay(String Name, String URL, String Created_At) {
-                    }
-
-                    List<LatestProjectDisplay> latestOrgProjects = allProjects.stream()
-                            .filter(p -> "GitHub Organization".equals(p.getSource()))
-                            .filter(p -> p.getCreated_at() != null && !p.getCreated_at().isEmpty())
-                            .sorted((p1, p2) -> p2.getCreated_at().compareTo(p1.getCreated_at()))
-                            .limit(5)
-                            .map(p -> new LatestProjectDisplay(
-                                    p.getName() != null ? p.getName() : "", 
-                                    p.getHtml_url() != null ? p.getHtml_url() : "", 
-                                    p.getCreated_at().split("T")[0]))
-                            .collect(Collectors.toList());
-
-                    if (!latestOrgProjects.isEmpty()) {
-                        Jt.subheader("\uD83C\uDD95 Top 5 Latest Created Projects").use(statsTab);
-                        Jt.table(latestOrgProjects).key("latest_org_projects_table").use(statsTab);
                     }
                 }
             } catch (Exception e) {
                 Jt.warning("Could not load top projects: " + e.getMessage()).use(statsTab);
             }
 
-            // Top 3 Contributors Section
+            // Yearly Contributions & Top Contributors
             renderYearlyContributions(statsTab);
             renderTopContributors(statsTab);
 
@@ -191,7 +209,7 @@ public class StatsTab {
         int currentYear = Year.now().getValue();
         int previousYear = currentYear - 1;
 
-        Jt.subheader("\uD83E\uDD47 Top 3 Contributors by number of contributions").use(statsTab);
+        Jt.subheader("\uD83E\uDD47 Top 5 Contributors by number of contributions").use(statsTab);
 
         var columns = Jt.columns(2).key("top_contributors_columns").use(statsTab);
 
@@ -252,7 +270,7 @@ public class StatsTab {
 
         return contributionsByMemberId.entrySet().stream()
                 .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
-                .limit(3)
+                .limit(5)
                 .map(e -> {
                     String memberId = e.getKey();
                     Member m = membersById.get(memberId);

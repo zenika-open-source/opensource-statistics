@@ -42,22 +42,52 @@ public class JavelitDashboard {
 
     void onStart(@Observes StartupEvent ev) {
         Server.builder(() -> {
-            Jt.header("📊 " + organizationDisplayName + " Opensource Statistics Dashboard").use();
-            Jt.subheader("Welcome to the " + organizationDisplayName + " Open Source contributions dashboard").use();
-            Jt.markdown(
-                    "This dashboard get publics datas from GitHub")
-                    .use();
+            try {
+                Jt.header("📊 " + organizationDisplayName + " Dashboard").use();
 
-            var tabs = Jt.tabs(List.of("🙋 Members", "🚀 Members Projects",
-                    "🏢 " + organizationDisplayName + " Open Source Projects",
-                    "📊 Contributions", "📈 Stats")).use();
+                var tabs = Jt.tabs(List.of("🙋 Members", "🚀 Members Projects",
+                        "🏢 Projects",
+                        "📊 Contributions", "📈 Stats")).use();
 
-            membersTab.render(tabs.tab("🙋 Members"));
-            projectsTab.render(tabs.tab("🚀 Members Projects"));
-            organizationProjectsTab.render(tabs.tab("🏢 " + organizationDisplayName + " Open Source Projects"));
-            contributionsTab.render(tabs.tab("📊 Contributions"));
-            statsTab.render(tabs.tab("📈 Stats"));
+                try {
+                    membersTab.render(tabs.tab("🙋 Members"));
+                } catch (Exception e) {
+                    Jt.error("Error loading members: " + e.getMessage()).use(tabs.tab("🙋 Members"));
+                    e.printStackTrace();
+                }
 
+                try {
+                    projectsTab.render(tabs.tab("🚀 Members Projects"));
+                } catch (Exception e) {
+                    Jt.error("Error loading projects: " + e.getMessage()).use(tabs.tab("🚀 Members Projects"));
+                    e.printStackTrace();
+                }
+
+                try {
+                    organizationProjectsTab.render(tabs.tab("🏢 Projects"));
+                } catch (Exception e) {
+                    Jt.error("Error loading organization projects: " + e.getMessage()).use(tabs.tab("🏢 Projects"));
+                    e.printStackTrace();
+                }
+
+                try {
+                    contributionsTab.render(tabs.tab("📊 Contributions"));
+                } catch (Exception e) {
+                    Jt.error("Error loading contributions: " + e.getMessage()).use(tabs.tab("📊 Contributions"));
+                    e.printStackTrace();
+                }
+
+                try {
+                    statsTab.render(tabs.tab("📈 Stats"));
+                } catch (Exception e) {
+                    Jt.error("Error loading stats: " + e.getMessage()).use(tabs.tab("📈 Stats"));
+                    e.printStackTrace();
+                }
+
+            } catch (Exception e) {
+                Jt.error("Critical Dashboard Error: " + e.getMessage()).use();
+                e.printStackTrace();
+            }
         }, port).build().start();
     }
 }

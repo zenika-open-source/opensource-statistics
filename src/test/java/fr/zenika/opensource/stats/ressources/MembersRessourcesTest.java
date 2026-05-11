@@ -5,7 +5,7 @@ import io.quarkus.test.junit.QuarkusTest;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import zenika.oss.stats.services.FirestoreServices;
+import fr.zenika.opensource.stats.services.FirestoreServices;
 
 import java.util.Collections;
 
