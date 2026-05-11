@@ -43,7 +43,7 @@ public interface GitHubClient {
     @GET
     @ClientHeaderParam(name = "Authorization", value = "{io.github.opensource.stats.config.GitHubClient.prepareToken}")
     @Path("/users/{login}/repos")
-    List<GitHubProject> getReposForAnUser(@PathParam("login") String login);
+    List<GitHubProject> getReposForAnUser(@PathParam("login") String login, @QueryParam("page") int page, @QueryParam("per_page") int perPage);
 
     @GET
     @ClientHeaderParam(name = "Authorization", value = "{io.github.opensource.stats.config.GitHubClient.prepareToken}")

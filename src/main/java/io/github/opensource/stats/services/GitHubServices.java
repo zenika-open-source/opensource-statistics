@@ -110,9 +110,16 @@ public class GitHubServices {
      * @return a list of public projects created by the user.
      */
     public List<GitHubProject> getPersonalProjectForAnUser(final String login) {
+        List<GitHubProject> allRepos = new ArrayList<>();
+        int page = 1;
+        List<GitHubProject> reposPage;
+        do {
+            reposPage = gitHubClient.getReposForAnUser(login, page, 100);
+            allRepos.addAll(reposPage);
+            page++;
+        } while (reposPage.size() == 100);
 
-        var repos = gitHubClient.getReposForAnUser(login);
-        return repos.stream()
+        return allRepos.stream()
                 .filter(repo -> !repo.isFork() && !repo.isArchived())
                 .collect(Collectors.toList());
     }
@@ -124,9 +131,16 @@ public class GitHubServices {
      * @return a list of public projects created by the user.
      */
     public List<GitHubProject> getForkedProjectForAnUser(final String login) {
+        List<GitHubProject> allRepos = new ArrayList<>();
+        int page = 1;
+        List<GitHubProject> reposPage;
+        do {
+            reposPage = gitHubClient.getReposForAnUser(login, page, 100);
+            allRepos.addAll(reposPage);
+            page++;
+        } while (reposPage.size() == 100);
 
-        var repos = gitHubClient.getReposForAnUser(login);
-        return repos.stream()
+        return allRepos.stream()
                 .filter(GitHubProject::isFork)
                 .collect(Collectors.toList());
     }
