@@ -1,5 +1,7 @@
 package fr.zenika.opensource.stats.ressources.workflow;
 
+import io.quarkus.logging.Log;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
@@ -12,6 +14,7 @@ import jakarta.ws.rs.core.Response;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 import fr.zenika.opensource.stats.beans.CustomStatsContributionsUserByMonth;
@@ -39,6 +42,26 @@ public class WorkflowRessources {
     @Inject
     FirestoreServices firestoreServices;
 
+    private Set<String> existingMemberLogins = new HashSet<>();
+    private Set<String> existingGitLabUsernames = new HashSet<>();
+
+    @PostConstruct
+    void init() {
+        try {
+            List<Member> existingMembers = firestoreServices.getAllMembers();
+            existingMemberLogins = existingMembers.stream()
+                    .filter(m -> m.getGitHubAccount() != null)
+                    .map(m -> m.getGitHubAccount().getLogin())
+                    .collect(Collectors.toSet());
+            existingGitLabUsernames = existingMembers.stream()
+                    .filter(m -> m.getGitlabAccount() != null)
+                    .map(m -> m.getGitlabAccount().getUsername())
+                    .collect(Collectors.toSet());
+        } catch (Exception e) {
+            Log.error("❌ Failed to initialize existing member logins at startup", e);
+        }
+    }
+
     @POST
     @Path("members/save")
     @Produces(MediaType.TEXT_PLAIN)
@@ -46,6 +69,17 @@ public class WorkflowRessources {
 
         // Load current state
         List<Member> existingMembers = firestoreServices.getAllMembers();
+        
+        // Save the logins/usernames of already present members before upserting new ones
+        existingMemberLogins = existingMembers.stream()
+                .filter(m -> m.getGitHubAccount() != null)
+                .map(m -> m.getGitHubAccount().getLogin())
+                .collect(Collectors.toSet());
+        existingGitLabUsernames = existingMembers.stream()
+                .filter(m -> m.getGitlabAccount() != null)
+                .map(m -> m.getGitlabAccount().getUsername())
+                .collect(Collectors.toSet());
+
         List<GitHubMember> gitHubMembers = gitHubServices.getOrganizationMembersFromConfig();
 
         // Build a set of current GitHub logins in the organization
@@ -115,29 +149,27 @@ public class WorkflowRessources {
     public Response saveStatsForYear(@PathParam("year") int year) throws DatabaseException {
 
         int currentYear = LocalDate.now().getYear();
-        boolean isCurrentYear = (year == currentYear);
-
-        if (isCurrentYear) {
-            firestoreServices.deleteStatsBySourceForYear(year, "GitHub");
-            firestoreServices.deleteStatsBySourceForYear(year, "GitLab");
-        }
 
         List<Member> zMembers = firestoreServices.getAllMembers();
 
         for (Member member : zMembers) {
             // GitHub
             if (member.getGitHubAccount() != null) {
-                // For past years, skip if stats already exist
-                if (!isCurrentYear && firestoreServices.hasStatsForMemberAndYear(member.getId(), year, "GitHub")) {
-                    System.out.println("⏭️ Skip GitHub information for " + member.getGitHubAccount().getLogin()
-                            + " (already exists)");
+                // For past years, skip if the person was already present in the organization.
+                // Sync only for new members to save API quota and preserve existing history.
+                boolean isPastYear = (year < currentYear);
+                boolean isExistingMember = existingMemberLogins.contains(member.getGitHubAccount().getLogin());
+                boolean shouldSkip = isPastYear && isExistingMember;
+                
+                if (shouldSkip) {
+                    Log.info("⏭️ Skip GitHub information for " + member.getGitHubAccount().getLogin() + " (already exists in organization)");
                 } else {
-                    System.out.print("🔎 Check GitHub information for " + member.getGitHubAccount().getLogin());
+                    Log.info("🔎 Check GitHub information for " + member.getGitHubAccount().getLogin() + " (" + year + ")");
                     List<CustomStatsContributionsUserByMonth> stats = gitHubServices
                             .getContributionsForTheCurrentYear(member.getGitHubAccount().getLogin(), year);
                     List<StatsContribution> statsList = StatsMapper.mapGitHubStatisticsToStatsContributions(
                             member, year, stats);
-                    System.out.println("... ✅");
+                    Log.info("✅ GitHub contributions synced for " + member.getGitHubAccount().getLogin() + " (" + year + ")");
 
                     if (!statsList.isEmpty()) {
                         for (StatsContribution stat : statsList) {
@@ -149,17 +181,21 @@ public class WorkflowRessources {
 
             // GitLab
             if (member.getGitlabAccount() != null) {
-                // For past years, skip if stats already exist
-                if (!isCurrentYear && firestoreServices.hasStatsForMemberAndYear(member.getId(), year, "GitLab")) {
-                    System.out.println("⏭️ Skip GitLab information for " + member.getGitlabAccount().getUsername()
-                            + " (already exists)");
+                // For past years, skip if the person was already present in the organization.
+                // Sync only for new members to save API quota and preserve existing history.
+                boolean isPastYear = (year < currentYear);
+                boolean isExistingMember = existingGitLabUsernames.contains(member.getGitlabAccount().getUsername());
+                boolean shouldSkip = isPastYear && isExistingMember;
+                
+                if (shouldSkip) {
+                    Log.info("⏭️ Skip GitLab information for " + member.getGitlabAccount().getUsername() + " (already exists in organization)");
                 } else {
-                    System.out.print("🔎 Check GitLab information for " + member.getGitlabAccount().getUsername());
+                    Log.info("🔎 Check GitLab information for " + member.getGitlabAccount().getUsername() + " (" + year + ")");
                     List<CustomStatsContributionsUserByMonth> stats = gitLabServices
                             .getContributionsForTheCurrentYear(member.getGitlabAccount().getUsername(), year);
                     List<StatsContribution> statsList = StatsMapper.mapGitLabStatisticsToStatsContributions(
                             member, year, stats);
-                    System.out.println("... ✅");
+                    Log.info("✅ GitLab contributions synced for " + member.getGitlabAccount().getUsername() + " (" + year + ")");
 
                     if (!statsList.isEmpty()) {
                         for (StatsContribution stat : statsList) {

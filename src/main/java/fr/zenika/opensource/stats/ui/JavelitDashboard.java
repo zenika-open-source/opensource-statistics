@@ -3,6 +3,7 @@ package fr.zenika.opensource.stats.ui;
 import io.javelit.core.Jt;
 import io.javelit.core.Server;
 import io.quarkus.runtime.StartupEvent;
+import fr.zenika.opensource.stats.services.FirestoreServices;
 import fr.zenika.opensource.stats.ui.tabs.ContributionsTab;
 import fr.zenika.opensource.stats.ui.tabs.MembersTab;
 import fr.zenika.opensource.stats.ui.tabs.OrganizationProjectsTab;
@@ -26,6 +27,9 @@ public class JavelitDashboard {
     String organizationDisplayName;
 
     @Inject
+    FirestoreServices firestoreServices;
+
+    @Inject
     MembersTab membersTab;
 
     @Inject
@@ -43,7 +47,23 @@ public class JavelitDashboard {
     void onStart(@Observes StartupEvent ev) {
         Server.builder(() -> {
             try {
-                Jt.header("📊 " + organizationDisplayName + " Dashboard").use();
+                String lastSyncText = "";
+                try {
+                    String lastSync = firestoreServices.getLastExecutionDate();
+                    if (lastSync != null) {
+                        lastSyncText = "Last sync: " + lastSync;
+                    }
+                } catch (Exception e) {
+                    // Ignore UI sync loading errors to avoid crashing dashboard
+                }
+
+                var headerCols = Jt.columns(2).key("header_cols").use();
+                Jt.header("📊 " + organizationDisplayName + " Dashboard").use(headerCols.col(0));
+                if (!lastSyncText.isEmpty()) {
+                    Jt.markdown("<div style='text-align: right; padding-top: 25px; color: gray; font-size: 0.9em;'>" + lastSyncText + "</div>")
+                            .use(headerCols.col(1));
+                }
+
 
                 var tabs = Jt.tabs(List.of("🙋 Members", "🚀 Members Projects",
                         "🏢 Projects",

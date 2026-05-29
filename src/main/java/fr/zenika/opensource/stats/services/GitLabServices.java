@@ -9,6 +9,7 @@ import fr.zenika.opensource.stats.config.GitLabClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import java.time.LocalDate;
@@ -29,6 +30,14 @@ public class GitLabServices {
     @RestClient
     GitLabClient gitLabClient;
 
+    @Inject
+    @ConfigProperty(name = "gitlab.token")
+    Optional<String> gitlabToken;
+
+    private String getAuthHeader() {
+        return "Bearer " + gitlabToken.orElse("");
+    }
+
     /**
      * Get basic information for a user.
      *
@@ -36,7 +45,7 @@ public class GitLabServices {
      * @return An Optional containing the user information if found.
      */
     public Optional<GitLabMember> getUserInformation(String username) {
-        List<GitLabMember> users = gitLabClient.getUserInformations(username);
+        List<GitLabMember> users = gitLabClient.getUserInformations(getAuthHeader(), username);
         if (users != null && !users.isEmpty()) {
             return Optional.of(users.get(0));
         }
@@ -51,7 +60,7 @@ public class GitLabServices {
      */
     public List<GitLabProject> getPersonalProjectsForAnUser(String username) {
         return getUserInformation(username)
-                .map(user -> gitLabClient.getProjectsForAnUser(user.getId()))
+                .map(user -> gitLabClient.getProjectsForAnUser(getAuthHeader(), user.getId()))
                 .map(projects -> projects.stream()
                         .filter(project -> !project.isFork())
                         .collect(Collectors.toList()))
@@ -114,7 +123,7 @@ public class GitLabServices {
                 // Use scope=all to see MRs from all users, not just the token owner
                 // Use updated_after/before for better compatibility with older GitLab versions
                 // per_page=1 is enough since we only need the X-Total header
-                Response response = gitLabClient.getMergeRequests(actualId, "merged", updatedAfter, updatedBefore,
+                Response response = gitLabClient.getMergeRequests(getAuthHeader(), actualId, "merged", updatedAfter, updatedBefore,
                         "all", 1);
                 String totalStr = response.getHeaderString("X-Total");
                 int total = 0;

@@ -64,6 +64,10 @@ public class GitHubServices {
                 .build();
     }
 
+    private String getAuthHeader() {
+        return "Bearer " + githubToken.orElse("");
+    }
+
     /**
      * Get information for the current organization.
      *
@@ -73,7 +77,7 @@ public class GitHubServices {
      */
     public GitHubOrganization getOrganizationInformation(String organizationName) {
 
-        return gitHubClient.getOrgnizationByName(organizationName);
+        return gitHubClient.getOrgnizationByName(getAuthHeader(), organizationName);
     }
 
     /**
@@ -89,7 +93,7 @@ public class GitHubServices {
      */
     public List<GitHubMember> getOrganizationMembers(String organizationName) {
 
-        return fetchAll((perPage, page) -> gitHubClient.getOrganizationMembers(organizationName, perPage, page));
+        return fetchAll((perPage, page) -> gitHubClient.getOrganizationMembers(getAuthHeader(), organizationName, perPage, page));
     }
 
     /**
@@ -100,7 +104,7 @@ public class GitHubServices {
      */
     public GitHubMember getUserInformation(final String id) {
 
-        return gitHubClient.getUserInformation(id);
+        return gitHubClient.getUserInformation(getAuthHeader(), id);
     }
 
     /**
@@ -111,7 +115,7 @@ public class GitHubServices {
      */
     public List<GitHubProject> getPersonalProjectForAnUser(final String login) {
 
-        var repos = fetchAll((perPage, page) -> gitHubClient.getReposForAnUser(login, perPage, page));
+        var repos = fetchAll((perPage, page) -> gitHubClient.getReposForAnUser(getAuthHeader(), login, perPage, page));
         return repos.stream()
                 .filter(repo -> !repo.isFork() && !repo.isArchived())
                 .collect(Collectors.toList());
@@ -125,7 +129,7 @@ public class GitHubServices {
      */
     public List<GitHubProject> getForkedProjectForAnUser(final String login) {
 
-        var repos = fetchAll((perPage, page) -> gitHubClient.getReposForAnUser(login, perPage, page));
+        var repos = fetchAll((perPage, page) -> gitHubClient.getReposForAnUser(getAuthHeader(), login, perPage, page));
         return repos.stream()
                 .filter(GitHubProject::isFork)
                 .collect(Collectors.toList());
@@ -241,7 +245,7 @@ public class GitHubServices {
     }
 
     public List<GitHubMember> getOrganizationMembersFromConfig() {
-        return gitHubClient.getOrganizationMembers(organizationName, NB_MEMBERS_PAR_PAGE, 1);
+        return gitHubClient.getOrganizationMembers(getAuthHeader(), organizationName, NB_MEMBERS_PAR_PAGE, 1);
     }
 
     /**
@@ -252,7 +256,7 @@ public class GitHubServices {
      * @return a List of GitHubProject
      */
     public List<GitHubProject> getOrganizationProjects(String organizationName) {
-        var repos = fetchAll((perPage, page) -> gitHubClient.getOrganizationProjects(organizationName, perPage, page));
+        var repos = fetchAll((perPage, page) -> gitHubClient.getOrganizationProjects(getAuthHeader(), organizationName, perPage, page));
         return repos.stream()
                 .filter(repo -> !repo.isFork() && !repo.isArchived())
                 .collect(Collectors.toList());

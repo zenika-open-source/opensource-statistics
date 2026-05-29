@@ -1,12 +1,17 @@
 package fr.zenika.opensource.stats.config;
 
-import org.eclipse.microprofile.config.ConfigProvider;
-
 public enum FirestoreCollections {
     PROJECTS("projects"),
     MEMBERS("members"),
     STATS("stats"),
+    PARAMS("params"),
     ;
+
+    private static volatile String prefix = "";
+
+    public static void setPrefix(String prefix) {
+        FirestoreCollections.prefix = prefix == null ? "" : prefix;
+    }
 
     private final String baseName;
 
@@ -15,9 +20,6 @@ public enum FirestoreCollections {
     }
 
     public String getValue() {
-        String prefix = ConfigProvider.getConfig()
-                .getOptionalValue("firestore.collection.prefix", String.class)
-                .orElse("");
         return prefix + baseName;
     }
 }
