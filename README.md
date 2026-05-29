@@ -54,6 +54,12 @@ An interface made with Javelit is available.
 - Run the application with `quarkus dev` if you have the Quarkus CLI installed on your environment, or `mvn quarkus:dev` command.
 - You can use Quarkus dev service for Firestore enabling this variable `quarkus.google.cloud.firestore.devservice.enabled` in application.properties file.
 
+## ☕ Build
+
+```bash
+./mvnw package
+```
+
 ## 🐳 Docker
 
 Start by building the image:
