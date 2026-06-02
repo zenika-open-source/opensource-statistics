@@ -1,3 +1,8 @@
+# [v1.10.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.9.0...v1.10.0) (2026-06-02)
+
+## ✨ New Features
+- [`88fc388`](https://github.com/zenika-open-source/opensource-statistics/commit/88fc388)  Add Scheduler to refresh data (#58) (Issues: [`#58`](https://github.com/zenika-open-source/opensource-statistics/issues/58))
+
 # [v1.9.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.8.0...v1.9.0) (2026-05-11)
 
 ## ✨ New Features
