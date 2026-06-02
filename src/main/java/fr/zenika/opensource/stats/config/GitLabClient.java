@@ -1,12 +1,11 @@
 package fr.zenika.opensource.stats.config;
 
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
-import org.eclipse.microprofile.config.ConfigProvider;
-import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 import fr.zenika.opensource.stats.beans.gitlab.GitLabEvent;
@@ -19,39 +18,39 @@ import java.util.List;
 @Path("/")
 public interface GitLabClient {
 
-    default String prepareToken() {
-        String token = ConfigProvider.getConfig().getOptionalValue("gitlab.token", String.class).orElse("");
-        return "Bearer " + token;
-    }
-
     @GET
-    @ClientHeaderParam(name = "Authorization", value = "{fr.zenika.opensource.stats.config.GitLabClient.prepareToken}")
     @Path("/users")
-    List<GitLabMember> getUserInformations(@QueryParam("username") String username);
+    List<GitLabMember> getUserInformations(
+            @HeaderParam("Authorization") String authHeader,
+            @QueryParam("username") String username);
 
     @GET
-    @ClientHeaderParam(name = "Authorization", value = "{fr.zenika.opensource.stats.config.GitLabClient.prepareToken}")
     @Path("/users/{id}")
-    GitLabMember getUserInformationById(@PathParam("id") String id);
+    GitLabMember getUserInformationById(
+            @HeaderParam("Authorization") String authHeader,
+            @PathParam("id") String id);
 
     @GET
-    @ClientHeaderParam(name = "Authorization", value = "{fr.zenika.opensource.stats.config.GitLabClient.prepareToken}")
     @Path("/users/{id}/projects")
-    List<GitLabProject> getProjectsForAnUser(@PathParam("id") String id);
+    List<GitLabProject> getProjectsForAnUser(
+            @HeaderParam("Authorization") String authHeader,
+            @PathParam("id") String id);
 
     @GET
-    @ClientHeaderParam(name = "Authorization", value = "{fr.zenika.opensource.stats.config.GitLabClient.prepareToken}")
     @Path("/users/{id}/events")
-    List<GitLabEvent> getEventsForAnUser(@PathParam("id") String id,
+    List<GitLabEvent> getEventsForAnUser(
+            @HeaderParam("Authorization") String authHeader,
+            @PathParam("id") String id,
             @QueryParam("after") String after,
             @QueryParam("before") String before,
             @QueryParam("per_page") int perPage,
             @QueryParam("page") int page);
 
     @GET
-    @ClientHeaderParam(name = "Authorization", value = "{fr.zenika.opensource.stats.config.GitLabClient.prepareToken}")
     @Path("/merge_requests")
-    Response getMergeRequests(@QueryParam("author_id") String authorId,
+    Response getMergeRequests(
+            @HeaderParam("Authorization") String authHeader,
+            @QueryParam("author_id") String authorId,
             @QueryParam("state") String state,
             @QueryParam("updated_after") String updatedAfter,
             @QueryParam("updated_before") String updatedBefore,

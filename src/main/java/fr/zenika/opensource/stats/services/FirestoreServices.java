@@ -13,6 +13,8 @@ import fr.zenika.opensource.stats.mapper.MemberMapper;
 import fr.zenika.opensource.stats.mapper.ProjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.annotation.PostConstruct;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.time.Month;
 import java.util.Comparator;
@@ -25,6 +27,15 @@ public class FirestoreServices {
 
     @Inject
     Firestore firestore;
+
+    @Inject
+    @ConfigProperty(name = "firestore.collection.prefix")
+    java.util.Optional<String> collectionPrefix;
+
+    @PostConstruct
+    void init() {
+        FirestoreCollections.setPrefix(collectionPrefix.orElse(""));
+    }
 
     /**
      * Create one member in the databse.
@@ -402,6 +413,29 @@ public class FirestoreServices {
                 .limit(1);
         try {
             return !query.get().get().getDocuments().isEmpty();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new DatabaseException(e);
+        }
+    }
+
+    @CacheInvalidateAll(cacheName = "params-cache")
+    public void saveLastExecutionDate(String executionDate) throws DatabaseException {
+        java.util.Map<String, Object> data = new java.util.HashMap<>();
+        data.put("executionDate", executionDate);
+        createDocument(data, FirestoreCollections.PARAMS.getValue(), "last_execution");
+    }
+
+    @CacheResult(cacheName = "params-cache")
+    public String getLastExecutionDate() throws DatabaseException {
+        try {
+            DocumentSnapshot document = firestore.collection(FirestoreCollections.PARAMS.getValue())
+                    .document("last_execution")
+                    .get()
+                    .get();
+            if (document.exists()) {
+                return document.getString("executionDate");
+            }
+            return null;
         } catch (InterruptedException | ExecutionException e) {
             throw new DatabaseException(e);
         }
