@@ -2,7 +2,7 @@ name: Plumber compliance
 
 on:
   push:
-    branches: [main, poc/integrate-plumber]
+    branches: [main]
   pull_request: null
 
 permissions:
