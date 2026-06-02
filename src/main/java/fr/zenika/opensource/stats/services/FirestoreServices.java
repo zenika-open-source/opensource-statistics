@@ -29,12 +29,12 @@ public class FirestoreServices {
     Firestore firestore;
 
     @Inject
-    @ConfigProperty(name = "firestore.collection.prefix", defaultValue = "")
-    String collectionPrefix;
+    @ConfigProperty(name = "firestore.collection.prefix")
+    java.util.Optional<String> collectionPrefix;
 
     @PostConstruct
     void init() {
-        FirestoreCollections.setPrefix(collectionPrefix);
+        FirestoreCollections.setPrefix(collectionPrefix.orElse(""));
     }
 
     /**

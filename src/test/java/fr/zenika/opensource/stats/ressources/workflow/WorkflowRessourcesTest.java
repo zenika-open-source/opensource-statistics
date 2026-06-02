@@ -76,10 +76,20 @@ public class WorkflowRessourcesTest {
 
     @Test
     void test_saveStatsForAGitHubAccountForAYear() {
-
-        given().when()
-                .post("/v1/workflow/stats/save/login-test/2024")
-                .then()
-                .statusCode(200);
-    }
-}
+ 
+         given().when()
+                 .post("/v1/workflow/stats/save/login-test/2024")
+                 .then()
+                 .statusCode(200);
+     }
+ 
+     @Test
+     void test_saveOrganizationProjects() {
+         Mockito.when(gitHubServices.getOrganizationProjects(Mockito.any())).thenReturn(List.of());
+ 
+         given().when()
+                 .post("/v1/workflow/organization-projects/save")
+                 .then()
+                 .statusCode(200);
+     }
+ }

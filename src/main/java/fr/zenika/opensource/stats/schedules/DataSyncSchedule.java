@@ -21,7 +21,7 @@ public class DataSyncSchedule {
     @Inject
     FirestoreServices firestoreServices;
 
-    @Scheduled(cron = "{datasync.cron}")
+    @Scheduled(cron = "{datasync.cron}", timeZone = "{datasync.timezone}")
     @RunOnVirtualThread
     public void syncData() {
         Log.info("🔄 Starting scheduled data synchronization...");
@@ -72,8 +72,19 @@ public class DataSyncSchedule {
                     }
                 }, virtualExecutor);
 
-                // Wait for both parallel tasks to complete (blocking here blocks the virtual thread, not the OS thread!)
-                CompletableFuture.allOf(projectsFuture, contributionsFuture).join();
+                CompletableFuture<Void> orgProjectsFuture = CompletableFuture.runAsync(() -> {
+                    Log.info("🏢 Syncing organization projects in parallel...");
+                    try {
+                        workflowRessources.saveOrganizationProjects();
+                        Log.info("✅ Organization projects synced successfully.");
+                    } catch (Exception e) {
+                        Log.error("❌ Error syncing organization projects in scheduled task", e);
+                        throw new RuntimeException(e);
+                    }
+                }, virtualExecutor);
+
+                // Wait for all parallel tasks to complete (blocking here blocks the virtual thread, not the OS thread!)
+                CompletableFuture.allOf(projectsFuture, contributionsFuture, orgProjectsFuture).join();
             }
 
             // 3. Save the execution date in the "params" collection

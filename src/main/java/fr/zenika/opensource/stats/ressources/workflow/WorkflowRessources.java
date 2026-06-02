@@ -1,7 +1,6 @@
 package fr.zenika.opensource.stats.ressources.workflow;
 
 import io.quarkus.logging.Log;
-import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.POST;
@@ -12,6 +11,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
 import java.time.LocalDate;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
@@ -42,25 +42,12 @@ public class WorkflowRessources {
     @Inject
     FirestoreServices firestoreServices;
 
+    @ConfigProperty(name = "organization.name")
+    String organizationName;
+
     private Set<String> existingMemberLogins = new HashSet<>();
     private Set<String> existingGitLabUsernames = new HashSet<>();
 
-    @PostConstruct
-    void init() {
-        try {
-            List<Member> existingMembers = firestoreServices.getAllMembers();
-            existingMemberLogins = existingMembers.stream()
-                    .filter(m -> m.getGitHubAccount() != null)
-                    .map(m -> m.getGitHubAccount().getLogin())
-                    .collect(Collectors.toSet());
-            existingGitLabUsernames = existingMembers.stream()
-                    .filter(m -> m.getGitlabAccount() != null)
-                    .map(m -> m.getGitlabAccount().getUsername())
-                    .collect(Collectors.toSet());
-        } catch (Exception e) {
-            Log.error("❌ Failed to initialize existing member logins at startup", e);
-        }
-    }
 
     @POST
     @Path("members/save")
@@ -128,7 +115,7 @@ public class WorkflowRessources {
     @Produces(MediaType.TEXT_PLAIN)
     public Response savePersonalProjects() throws DatabaseException {
 
-        firestoreServices.deleteAllProjects();
+        firestoreServices.deleteAllGitHubProjects();
 
         List<Member> members = firestoreServices.getAllMembers();
 
@@ -144,6 +131,19 @@ public class WorkflowRessources {
     }
 
     @POST
+    @Path("organization-projects/save")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response saveOrganizationProjects() throws DatabaseException {
+        firestoreServices.deleteAllGitHubOrganizationProjects();
+        List<GitHubProject> gitHubProjects = gitHubServices.getOrganizationProjects(organizationName);
+        for (GitHubProject project : gitHubProjects) {
+            project.setSource("GitHub Organization");
+            firestoreServices.createProject(project);
+        }
+        return Response.ok().build();
+    }
+
+    @POST
     @Path("stats/save/{year}")
     @Produces(MediaType.TEXT_PLAIN)
     public Response saveStatsForYear(@PathParam("year") int year) throws DatabaseException {
@@ -151,6 +151,17 @@ public class WorkflowRessources {
         int currentYear = LocalDate.now().getYear();
 
         List<Member> zMembers = firestoreServices.getAllMembers();
+
+        if (existingMemberLogins.isEmpty() && existingGitLabUsernames.isEmpty()) {
+            existingMemberLogins = zMembers.stream()
+                    .filter(m -> m.getGitHubAccount() != null)
+                    .map(m -> m.getGitHubAccount().getLogin())
+                    .collect(Collectors.toSet());
+            existingGitLabUsernames = zMembers.stream()
+                    .filter(m -> m.getGitlabAccount() != null)
+                    .map(m -> m.getGitlabAccount().getUsername())
+                    .collect(Collectors.toSet());
+        }
 
         for (Member member : zMembers) {
             // GitHub
