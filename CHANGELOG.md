@@ -1,3 +1,8 @@
+# [v1.10.1](https://github.com/zenika-open-source/opensource-statistics/compare/v1.10.0...v1.10.1) (2026-06-23)
+
+## 🐛 Bug Fixes
+- [`b633686`](https://github.com/zenika-open-source/opensource-statistics/commit/b633686)  Fix Cron to be executed Monday (#70) (Issues: [`#70`](https://github.com/zenika-open-source/opensource-statistics/issues/70))
+
 # [v1.10.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.9.0...v1.10.0) (2026-06-02)
 
 ## ✨ New Features
