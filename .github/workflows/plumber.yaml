@@ -1,0 +1,25 @@
+name: Plumber compliance
+
+on:
+  push:
+    branches: [main]
+  pull_request: null
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  plumber:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: getplumber/plumber@8ac17ed6234be680f0f339aeea27883a7f42ce92
+        with:
+          threshold: "80"
+          config-file: .plumber.yaml
+          controls: actionsMustBePinnedByCommitSha,branchMustBeProtected
+          score: "true"
+          soft-fail: "true"
+          upload-sarif: "true"
+          upload-artifacts: "true"

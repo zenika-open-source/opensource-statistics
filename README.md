@@ -39,7 +39,13 @@ An interface made with Javelit is available.
 ![zenika-open-source-dashboard](./docs/images/zenika-open-source-dashboard.png)
 
 
-> 🎯 The last resource will be removed after implementing all features and will be replaced by schedules. 
+## 🕒 Scheduled Synchronization
+
+The application automatically synchronizes data from GitHub and GitLab using scheduled tasks configured in Quarkus:
+
+- **Data Synchronization Schedule (`DataSyncSchedule.java`)**:
+  - **Configuration**: `datasync.cron` property in `application.properties` (defaults to every Monday at 8:00 AM: `0 0 8 ? * MON`).
+  - **Development Mode**: Configured to run every 10 minutes (`0 */10 * ? * *`).
 
 ## 📝 Local Setup 
 
@@ -53,6 +59,12 @@ An interface made with Javelit is available.
   ```
 - Run the application with `quarkus dev` if you have the Quarkus CLI installed on your environment, or `mvn quarkus:dev` command.
 - You can use Quarkus dev service for Firestore enabling this variable `quarkus.google.cloud.firestore.devservice.enabled` in application.properties file.
+
+## ☕ Build
+
+```bash
+./mvnw package
+```
 
 ## 🐳 Docker
 

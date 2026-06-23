@@ -1,10 +1,10 @@
 package fr.zenika.opensource.stats.config;
 
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.HeaderParam;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.QueryParam;
-import org.eclipse.microprofile.config.ConfigProvider;
 import org.eclipse.microprofile.rest.client.annotation.ClientHeaderParam;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
@@ -20,39 +20,39 @@ import java.util.List;
 @Path("/")
 public interface GitHubClient {
 
-    default String prepareToken() {
-        String token = ConfigProvider.getConfig().getOptionalValue("github.token", String.class).orElse("");
-        return "Bearer " + token;
-    }
-
     @GET
-    @ClientHeaderParam(name = "Authorization", value = "{fr.zenika.opensource.stats.config.GitHubClient.prepareToken}")
     @Path("/orgs/{organizationName}")
-    GitHubOrganization getOrgnizationByName(@PathParam("organizationName") String organizationName);
+    GitHubOrganization getOrgnizationByName(
+            @HeaderParam("Authorization") String authHeader,
+            @PathParam("organizationName") String organizationName);
 
     @GET
-    @ClientHeaderParam(name = "Authorization", value = "{fr.zenika.opensource.stats.config.GitHubClient.prepareToken}")
     @Path("/orgs/{organizationName}/members")
-    List<GitHubMember> getOrganizationMembers(@PathParam("organizationName") String organizationName,
+    List<GitHubMember> getOrganizationMembers(
+            @HeaderParam("Authorization") String authHeader,
+            @PathParam("organizationName") String organizationName,
             @QueryParam("per_page") int perPage,
             @QueryParam("page") int page);
 
     @GET
-    @ClientHeaderParam(name = "Authorization", value = "{fr.zenika.opensource.stats.config.GitHubClient.prepareToken}")
     @Path("/user/{login}")
-    GitHubMember getUserInformation(@PathParam("login") String login);
+    GitHubMember getUserInformation(
+            @HeaderParam("Authorization") String authHeader,
+            @PathParam("login") String login);
 
     @GET
-    @ClientHeaderParam(name = "Authorization", value = "{fr.zenika.opensource.stats.config.GitHubClient.prepareToken}")
     @Path("/users/{login}/repos")
-    List<GitHubProject> getReposForAnUser(@PathParam("login") String login,
+    List<GitHubProject> getReposForAnUser(
+            @HeaderParam("Authorization") String authHeader,
+            @PathParam("login") String login,
             @QueryParam("per_page") int perPage,
             @QueryParam("page") int page);
 
     @GET
-    @ClientHeaderParam(name = "Authorization", value = "{fr.zenika.opensource.stats.config.GitHubClient.prepareToken}")
     @Path("/orgs/{organizationName}/repos")
-    List<GitHubProject> getOrganizationProjects(@PathParam("organizationName") String organizationName,
+    List<GitHubProject> getOrganizationProjects(
+            @HeaderParam("Authorization") String authHeader,
+            @PathParam("organizationName") String organizationName,
             @QueryParam("per_page") int perPage,
             @QueryParam("page") int page);
 }

@@ -61,12 +61,6 @@ public class ContributionsTab {
                                 try {
                                         int year = yearValue;
                                         int currentYear = Year.now().getValue();
-                                        boolean isCurrentYear = (year == currentYear);
-
-                                        if (isCurrentYear) {
-                                                firestoreServices.deleteStatsBySourceForYear(year, "GitHub");
-                                                firestoreServices.deleteStatsBySourceForYear(year, "GitLab");
-                                        }
 
                                         List<Member> zMembers = firestoreServices.getAllMembers();
                                         int ghSyncedCount = 0;
@@ -76,11 +70,12 @@ public class ContributionsTab {
                                                 // GitHub Sync
                                                 if (member.getGitHubAccount() != null
                                                                 && member.getGitHubAccount().getLogin() != null) {
-                                                        // For past years, skip if stats already exist
-                                                        if (!isCurrentYear
+                                                        // For past years (older than previous year), skip if stats already exist
+                                                        boolean shouldSkip = (year < currentYear - 1)
                                                                         && firestoreServices.hasStatsForMemberAndYear(
                                                                                         member.getId(), year,
-                                                                                        "GitHub")) {
+                                                                                        "GitHub");
+                                                        if (shouldSkip) {
                                                                 // Already exists, skip
                                                         } else {
                                                                 List<CustomStatsContributionsUserByMonth> ghStats = gitHubServices
@@ -106,11 +101,12 @@ public class ContributionsTab {
                                                 if (member.getGitlabAccount() != null
                                                                 && member.getGitlabAccount()
                                                                                 .getUsername() != null) {
-                                                        // For past years, skip if stats already exist
-                                                        if (!isCurrentYear
+                                                        // For past years (older than previous year), skip if stats already exist
+                                                        boolean shouldSkip = (year < currentYear - 1)
                                                                         && firestoreServices.hasStatsForMemberAndYear(
                                                                                         member.getId(), year,
-                                                                                        "GitLab")) {
+                                                                                        "GitLab");
+                                                        if (shouldSkip) {
                                                                 // Already exists, skip
                                                         } else {
                                                                 String glHandle = member.getGitlabAccount()
