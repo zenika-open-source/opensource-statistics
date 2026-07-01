@@ -8,18 +8,20 @@ on:
 permissions:
   contents: read
   security-events: write
+  id-token: write   # required to publish the Plumber Score
 
 jobs:
   plumber:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v6
-      - uses: getplumber/plumber@8ac17ed6234be680f0f339aeea27883a7f42ce92
+      - uses: getplumber/plumber@5302ddc7d9f1c9edb3f617bff04a09be452bcfe2 # v0.3.79
         with:
           threshold: "80"
           config-file: .plumber.yaml
           controls: actionsMustBePinnedByCommitSha,branchMustBeProtected
           score: "true"
+          score-push: "true"
           soft-fail: "true"
           upload-sarif: "true"
           upload-artifacts: "true"

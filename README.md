@@ -4,6 +4,7 @@
 ![Quarkus](https://img.shields.io/badge/Quarkus-3.31.2-4695EB?logo=quarkus)
 ![Java](https://img.shields.io/badge/Java-25-ED8B00?logo=openjdk&logoColor=white)
 ![Javelit](https://img.shields.io/badge/Javelit-0.86.0-70FF9A)
+[![Plumber Score](https://score.getplumber.io/github.com/zenika-open-source/opensource-statistics.svg)](https://score.getplumber.io/github.com/zenika-open-source/opensource-statistics)
 
 🚧 This project is in progress ... 
 
