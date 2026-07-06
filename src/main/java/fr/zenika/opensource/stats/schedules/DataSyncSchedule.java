@@ -86,14 +86,18 @@ public class DataSyncSchedule {
                 // Wait for all parallel tasks to complete (blocking here blocks the virtual thread, not the OS thread!)
                 CompletableFuture.allOf(projectsFuture, contributionsFuture, orgProjectsFuture).join();
             }
-
-            // 3. Save the execution date in the "params" collection
-            String executionDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-            firestoreServices.saveLastExecutionDate(executionDate);
-            Log.info("💾 Data synchronization completed successfully at " + executionDate);
-
+            Log.info("💾 Data synchronization completed successfully.");
         } catch (Exception e) {
             Log.error("❌ Error during scheduled data synchronization", e);
+        } finally {
+            try {
+                // 3. Save the execution date in the "params" collection
+                String executionDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+                firestoreServices.saveLastExecutionDate(executionDate);
+                Log.info("💾 Last execution date updated to " + executionDate);
+            } catch (Exception dbEx) {
+                Log.error("❌ Failed to save last execution date", dbEx);
+            }
         }
     }
 }
