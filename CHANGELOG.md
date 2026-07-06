@@ -1,3 +1,8 @@
+# [v1.10.2](https://github.com/zenika-open-source/opensource-statistics/compare/v1.10.1...v1.10.2) (2026-07-06)
+
+## 🐛 Bug Fixes
+- [`48adbf6`](https://github.com/zenika-open-source/opensource-statistics/commit/48adbf6)  Fix update date (#76) (Issues: [`#76`](https://github.com/zenika-open-source/opensource-statistics/issues/76))
+
 # [v1.10.1](https://github.com/zenika-open-source/opensource-statistics/compare/v1.10.0...v1.10.1) (2026-06-23)
 
 ## 🐛 Bug Fixes
