@@ -1,3 +1,8 @@
+# [v1.10.3](https://github.com/zenika-open-source/opensource-statistics/compare/v1.10.2...v1.10.3) (2026-07-15)
+
+## 🐛 Bug Fixes
+- [`43c182d`](https://github.com/zenika-open-source/opensource-statistics/commit/43c182d)  Review and fix schedule (#78) (Issues: [`#78`](https://github.com/zenika-open-source/opensource-statistics/issues/78))
+
 # v1.0.0 (2026-07-15)
 
 ## ✨ New Features
