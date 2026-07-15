@@ -28,6 +28,11 @@ import fr.zenika.opensource.stats.mapper.StatsMapper;
 import fr.zenika.opensource.stats.services.FirestoreServices;
 import fr.zenika.opensource.stats.services.GitHubServices;
 import fr.zenika.opensource.stats.services.GitLabServices;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+
 
 @ApplicationScoped
 @Path("/v1/workflow/")
@@ -35,6 +40,7 @@ public class WorkflowRessources {
 
     @Inject
     GitHubServices gitHubServices;
+
 
     @Inject
     GitLabServices gitLabServices;
@@ -250,5 +256,91 @@ public class WorkflowRessources {
         }
 
         return Response.ok().build();
+    }
+
+    public void syncData() {
+        Log.info("🔄 Starting data synchronization...");
+        try {
+            // 1. Sync members first (GitHub organization members)
+            Log.info("👥 Syncing organization members...");
+            saveMembers();
+            Log.info("✅ Organization members synced successfully.");
+
+            // 2. Run parallel tasks using Virtual Threads:
+            try (var virtualExecutor = Executors.newVirtualThreadPerTaskExecutor()) {
+                CompletableFuture<Void> projectsFuture = CompletableFuture.runAsync(() -> {
+                    Log.info("📂 Syncing members projects in parallel...");
+                    try {
+                        savePersonalProjects();
+                        Log.info("✅ Members projects synced successfully.");
+                    } catch (Throwable e) {
+                        Log.error("❌ Error syncing members projects: " + e.getMessage(), e);
+                        throw new RuntimeException(e);
+                    }
+                }, virtualExecutor);
+
+                CompletableFuture<Void> contributionsFuture = CompletableFuture.runAsync(() -> {
+                    Log.info("📊 Syncing member contributions in parallel...");
+                    try {
+                        int currentYear = java.time.Year.now().getValue();
+                        
+                        // Sync current year
+                        Log.info("📅 Syncing contributions for current year: " + currentYear);
+                        saveStatsForYear(currentYear);
+                        
+                        // Sync past 5 years
+                        for (int i = 1; i <= 5; i++) {
+                            int pastYear = currentYear - i;
+                            Log.info("📅 Syncing contributions for past year: " + pastYear);
+                            saveStatsForYear(pastYear);
+                        }
+                        Log.info("✅ Member contributions synced successfully.");
+                    } catch (Exception e) {
+                        Log.error("❌ Error syncing member contributions", e);
+                        throw new RuntimeException(e);
+                    }
+                }, virtualExecutor);
+
+                CompletableFuture<Void> orgProjectsFuture = CompletableFuture.runAsync(() -> {
+                    Log.info("🏢 Syncing organization projects in parallel...");
+                    try {
+                        saveOrganizationProjects();
+                        Log.info("✅ Organization projects synced successfully.");
+                    } catch (Exception e) {
+                        Log.error("❌ Error syncing organization projects", e);
+                        throw new RuntimeException(e);
+                    }
+                }, virtualExecutor);
+
+                // Wait for all parallel tasks to complete (blocking here blocks the virtual thread, not the OS thread!)
+                CompletableFuture.allOf(projectsFuture, contributionsFuture, orgProjectsFuture).join();
+            }
+            Log.info("💾 Data synchronization completed successfully.");
+        } catch (Exception e) {
+            Log.error("❌ Error during data synchronization", e);
+        } finally {
+            try {
+                // 3. Save the execution date in the "params" collection
+                String executionDate = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+                firestoreServices.saveLastExecutionDate(executionDate);
+                Log.info("💾 Last execution date updated to " + executionDate);
+            } catch (Exception dbEx) {
+                Log.error("❌ Failed to save last execution date", dbEx);
+            }
+        }
+    }
+
+    @POST
+    @Path("sync")
+    @Produces(MediaType.TEXT_PLAIN)
+    public Response triggerSync() {
+        Log.info("Synchronization triggered via HTTP endpoint");
+        try {
+            this.syncData();
+            return Response.ok("Synchronization completed successfully").build();
+        } catch (Exception e) {
+            Log.error("Error during HTTP triggered synchronization", e);
+            return Response.serverError().entity("Synchronization failed: " + e.getMessage()).build();
+        }
     }
 }

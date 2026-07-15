@@ -92,4 +92,12 @@ public class WorkflowRessourcesTest {
                  .then()
                  .statusCode(200);
      }
+
+     @Test
+     void test_triggerSync() {
+         given().when()
+                 .post("/v1/workflow/sync")
+                 .then()
+                 .statusCode(200);
+     }
  }

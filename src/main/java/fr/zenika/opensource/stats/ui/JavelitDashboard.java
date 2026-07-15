@@ -4,6 +4,10 @@ import io.javelit.core.Jt;
 import io.javelit.core.Server;
 import io.quarkus.runtime.StartupEvent;
 import fr.zenika.opensource.stats.services.FirestoreServices;
+import fr.zenika.opensource.stats.ressources.workflow.WorkflowRessources;
+import io.quarkus.logging.Log;
+import java.util.concurrent.CompletableFuture;
+
 import fr.zenika.opensource.stats.ui.tabs.ContributionsTab;
 import fr.zenika.opensource.stats.ui.tabs.MembersTab;
 import fr.zenika.opensource.stats.ui.tabs.OrganizationProjectsTab;
@@ -30,6 +34,10 @@ public class JavelitDashboard {
     FirestoreServices firestoreServices;
 
     @Inject
+    WorkflowRessources workflowRessources;
+
+
+    @Inject
     MembersTab membersTab;
 
     @Inject
@@ -52,6 +60,34 @@ public class JavelitDashboard {
                     String lastSync = firestoreServices.getLastExecutionDate();
                     if (lastSync != null) {
                         lastSyncText = "Last sync: " + lastSync;
+                    }
+
+                    // Check if sync needs to run this week (Automatic startup refresh for Cloud Run scale-to-zero)
+                    boolean needSync = false;
+                    if (lastSync == null || lastSync.isEmpty()) {
+                        needSync = true;
+                    } else {
+                        try {
+                            java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss");
+                            java.time.LocalDate lastRunDate = java.time.LocalDateTime.parse(lastSync, formatter).toLocalDate();
+                            java.time.LocalDate startOfWeek = java.time.LocalDate.now().with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY));
+                            if (lastRunDate.isBefore(startOfWeek)) {
+                                needSync = true;
+                            }
+                        } catch (Exception parseEx) {
+                            needSync = true;
+                        }
+                    }
+
+                    if (needSync) {
+                        Log.info("🔄 Last sync (" + lastSync + ") is before start of this week. Triggering automatic background synchronization...");
+                        CompletableFuture.runAsync(() -> {
+                            try {
+                                workflowRessources.syncData();
+                            } catch (Exception e) {
+                                Log.error("❌ Failed to run automatic background sync on startup", e);
+                            }
+                        });
                     }
                 } catch (Exception e) {
                     // Ignore UI sync loading errors to avoid crashing dashboard
