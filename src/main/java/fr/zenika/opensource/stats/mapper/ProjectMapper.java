@@ -21,6 +21,7 @@ public class ProjectMapper {
         project.setArchived(Boolean.TRUE.equals(queryDocumentSnapshot.getBoolean("archived")));
         project.setVisibility(queryDocumentSnapshot.getString("visibility"));
         project.setCreated_at(queryDocumentSnapshot.getString("created_at"));
+        project.setLastActivityAt(queryDocumentSnapshot.getString("lastActivityAt"));
 
         return project;
     }
@@ -51,5 +52,6 @@ public class ProjectMapper {
         target.setArchived(source.isArchived());
         target.setVisibility(source.getVisibility());
         target.setCreated_at(source.getCreated_at());
+        target.setLastActivityAt(source.getLastActivityAt());
     }
 }
