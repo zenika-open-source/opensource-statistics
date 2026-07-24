@@ -15,6 +15,7 @@ public class Project {
     private Long forks;
     private String source;
     private String created_at;
+    private String lastActivityAt;
 
     public String getId() {
         return id;
@@ -102,6 +103,14 @@ public class Project {
 
     public void setCreated_at(String created_at) {
         this.created_at = created_at;
+    }
+
+    public String getLastActivityAt() {
+        return lastActivityAt;
+    }
+
+    public void setLastActivityAt(String lastActivityAt) {
+        this.lastActivityAt = lastActivityAt;
     }
 
     // Modern aliases if needed

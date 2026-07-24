@@ -15,6 +15,10 @@ import jakarta.inject.Inject;
 import org.jboss.logging.Logger;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -37,8 +41,8 @@ public class ProjectsTab {
     boolean syncButtonsEnabled;
 
     private String projectSearchTerm = "";
-    private String projectSortColumn = "Name";
-    private boolean projectSortAscending = true;
+    String projectSortColumn = "Name";
+    boolean projectSortAscending = true;
 
     public void render(JtContainer projectsTab) {
         try {
@@ -105,11 +109,12 @@ public class ProjectsTab {
                 sortProjects(filteredProjects);
 
                 record ProjectDisplay(String Name, String Full_Name, String URL, Long Stars, Long Forks,
-                        String Source) {
+                        String Source, String Activity) {
                 }
                 List<ProjectDisplay> rows = filteredProjects.stream()
                         .map(p -> new ProjectDisplay(p.getName(), p.getFull_name(), p.getHtml_url(),
-                                p.getWatchers_count(), p.getForks(), p.getSource()))
+                                p.getWatchers_count(), p.getForks(), p.getSource(),
+                                formatActivity(p.getLastActivityAt())))
                         .collect(Collectors.toList());
 
                 Jt.table(rows).key("member_projects_table").use(projectsTab);
@@ -134,6 +139,29 @@ public class ProjectsTab {
                 (p.getSource() != null && p.getSource().toLowerCase().contains(lowerTerm));
     }
 
+    private static final DateTimeFormatter ACTIVITY_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+    String formatActivity(String lastActivityAt) {
+        Instant instant = parseInstant(lastActivityAt);
+        if (instant == null) {
+            return "Unknown";
+        }
+        String date = ACTIVITY_DATE_FORMAT.format(instant.atZone(ZoneOffset.UTC));
+        long days = ChronoUnit.DAYS.between(instant, Instant.now());
+        return days <= 30 ? "🔥 " + date : date;
+    }
+
+    Instant parseInstant(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return Instant.parse(value);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     private void toggleSort(String column) {
         if (projectSortColumn.equals(column)) {
             projectSortAscending = !projectSortAscending;
@@ -150,11 +178,14 @@ public class ProjectsTab {
         return column;
     }
 
-    private void sortProjects(List<Project> projects) {
+    void sortProjects(List<Project> projects) {
         Comparator<Project> comparator = switch (projectSortColumn) {
             case "Name" -> Comparator.comparing(p -> p.getName() != null ? p.getName().toLowerCase() : "");
             case "Stars" -> Comparator.comparing(p -> p.getWatchers_count() != null ? p.getWatchers_count() : 0L);
             case "Forks" -> Comparator.comparing(p -> p.getForks() != null ? p.getForks() : 0L);
+            case "Activity" -> Comparator.comparing(
+                    p -> parseInstant(p.getLastActivityAt()),
+                    Comparator.nullsFirst(Comparator.naturalOrder()));
             default -> Comparator.comparing(p -> p.getName() != null ? p.getName().toLowerCase() : "");
         };
 
