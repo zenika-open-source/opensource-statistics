@@ -1,3 +1,8 @@
+# [v1.10.4](https://github.com/zenika-open-source/opensource-statistics/compare/v1.10.3...v1.10.4) (2026-08-05)
+
+## 🐛 Bug Fixes
+- [`c64c906`](https://github.com/zenika-open-source/opensource-statistics/commit/c64c906)  Fix member selectbox reverting to default option (#82) (Issues: [`#82`](https://github.com/zenika-open-source/opensource-statistics/issues/82))
+
 # [v1.10.3](https://github.com/zenika-open-source/opensource-statistics/compare/v1.10.2...v1.10.3) (2026-07-15)
 
 ## 🐛 Bug Fixes
