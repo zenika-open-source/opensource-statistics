@@ -1,3 +1,8 @@
+# [v1.11.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.10.4...v1.11.0) (2026-08-05)
+
+## ✨ New Features
+- [`7ace637`](https://github.com/zenika-open-source/opensource-statistics/commit/7ace637)  Add project activity column (#81) (Issues: [`#81`](https://github.com/zenika-open-source/opensource-statistics/issues/81))
+
 # [v1.10.4](https://github.com/zenika-open-source/opensource-statistics/compare/v1.10.3...v1.10.4) (2026-08-05)
 
 ## 🐛 Bug Fixes
