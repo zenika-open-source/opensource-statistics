@@ -229,10 +229,17 @@ public class ContributionsTab {
                                                         m -> m.getId(),
                                                         (existing, replacement) -> existing));
 
+                        List<String> memberLabels = memberOptions.keySet().stream().sorted()
+                                        .collect(Collectors.toList());
+
+                        Object previousSelection = Jt.componentsState().get("member_selection");
+                        int previousIndex = previousSelection != null
+                                        ? memberLabels.indexOf(previousSelection.toString())
+                                        : -1;
+
                         selectedMemberLabel = Jt
-                                        .selectbox("Select a member",
-                                                        new ArrayList<>(memberOptions.keySet().stream().sorted()
-                                                                        .collect(Collectors.toList())))
+                                        .selectbox("Select a member", new ArrayList<>(memberLabels))
+                                        .index(previousIndex >= 0 ? previousIndex : 0)
                                         .key("member_selection")
                                         .use(individualRow.col(0));
                 } catch (Exception e) {
