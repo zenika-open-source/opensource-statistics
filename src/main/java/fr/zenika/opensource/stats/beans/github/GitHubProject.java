@@ -30,6 +30,11 @@ public class GitHubProject extends Project {
         this.setForks(forksCount);
     }
 
+    @JsonProperty("pushed_at")
+    public void setGitHubPushedAt(String pushedAt) {
+        this.setLastActivityAt(pushedAt);
+    }
+
     // Compatibility for existing code using specific GitHub names if needed
     // But we should ideally update the code to use the base class methods.
 

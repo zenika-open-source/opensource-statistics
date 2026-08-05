@@ -27,6 +27,7 @@ class ProjectMapperTest {
         when(mockDocument.getString("html_url")).thenReturn("https://github.com/zenika/test-project");
         when(mockDocument.getString("visibility")).thenReturn("public");
         when(mockDocument.getLong("watchers_count")).thenReturn(42L);
+        when(mockDocument.getString("lastActivityAt")).thenReturn("2024-05-01T12:00:00Z");
 
         // Act
         GitHubProject result = ProjectMapper.mapFirestoreProjectToGitHubProject(mockDocument);
@@ -41,6 +42,7 @@ class ProjectMapperTest {
         assertEquals("https://github.com/zenika/test-project", result.getHtml_url());
         assertEquals("public", result.getVisibility());
         assertEquals(42L, result.getWatchers_count());
+        assertEquals("2024-05-01T12:00:00Z", result.getLastActivityAt());
     }
 
     @Test
@@ -57,6 +59,7 @@ class ProjectMapperTest {
         when(mockDocument.getString("html_url")).thenReturn(null);
         when(mockDocument.getString("visibility")).thenReturn(null);
         when(mockDocument.getLong("watchers_count")).thenReturn(0L);
+        when(mockDocument.getString("lastActivityAt")).thenReturn(null);
 
         // Act
         GitHubProject result = ProjectMapper.mapFirestoreProjectToGitHubProject(mockDocument);
@@ -71,6 +74,7 @@ class ProjectMapperTest {
         assertNull(result.getHtml_url());
         assertNull(result.getVisibility());
         assertEquals(0L, result.getWatchers_count());
+        assertNull(result.getLastActivityAt());
     }
 
     @Test

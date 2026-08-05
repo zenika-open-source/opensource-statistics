@@ -35,6 +35,11 @@ public class GitLabProject extends Project {
         this.setForks(forksCount);
     }
 
+    @JsonProperty("last_activity_at")
+    public void setGitLabLastActivityAt(String lastActivityAt) {
+        this.setLastActivityAt(lastActivityAt);
+    }
+
     @JsonProperty("archived")
     public void setGitLabArchived(Object archived) {
         if (archived instanceof Boolean) {
