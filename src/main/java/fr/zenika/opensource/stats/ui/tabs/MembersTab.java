@@ -36,7 +36,6 @@ public class MembersTab {
     @ConfigProperty(name = "oss.stats.sync.buttons.enabled", defaultValue = "false")
     boolean syncButtonsEnabled;
 
-    private String selectedMemberId;
     private String memberSortColumn = "Firstname";
     private boolean memberSortAscending = true;
 
@@ -115,6 +114,8 @@ public class MembersTab {
             // Sort
             sortMembers(members);
 
+            String selectedMemberId = Jt.sessionState().getString("selectedMemberId");
+
             if (selectedMemberId == null) {
                 // Inject CSS to perfectly match native Jt.table
                 Jt.markdown("""
@@ -180,7 +181,8 @@ public class MembersTab {
 
                     if (syncButtonsEnabled) {
                         if (Jt.button("📝 Edit").key("btn_edit_" + m.getId()).use(row.col(5))) {
-                            selectedMemberId = m.getId();
+                            Jt.sessionState().put("selectedMemberId", m.getId());
+                            Jt.rerun();
                         }
                     }
                 }
@@ -197,22 +199,22 @@ public class MembersTab {
 
                     var editRow = Jt.columns(4).use(membersTab);
 
-                    String newFirstname = Jt.textInput("Firstname")
+                    String newFirstname = Jt.textInput("Firstname").key("edit_firstname_" + memberToEdit.getId())
                             .value(memberToEdit.getFirstname() != null ? memberToEdit.getFirstname() : "")
                             .use(editRow.col(0));
-                    String newName = Jt.textInput("Name")
+                    String newName = Jt.textInput("Name").key("edit_name_" + memberToEdit.getId())
                             .value(memberToEdit.getName() != null ? memberToEdit.getName() : "").use(editRow.col(1));
-                    String newGitLab = Jt.textInput("GitLab")
+                    String newGitLab = Jt.textInput("GitLab").key("edit_gitlab_" + memberToEdit.getId())
                             .value(memberToEdit.getGitlabAccount() != null
                                     && memberToEdit.getGitlabAccount().getUsername() != null
                                             ? memberToEdit.getGitlabAccount().getUsername()
                                             : "")
                             .use(editRow.col(2));
-                    String newCity = Jt.textInput("City")
+                    String newCity = Jt.textInput("City").key("edit_city_" + memberToEdit.getId())
                             .value(memberToEdit.getCity() != null ? memberToEdit.getCity() : "").use(editRow.col(3));
 
                     var actionsRow = Jt.columns(2).use(membersTab);
-                    if (Jt.button("Save Changes").use(actionsRow.col(0))) {
+                    if (Jt.button("Save Changes").key("btn_save_" + memberToEdit.getId()).use(actionsRow.col(0))) {
                         memberToEdit.setFirstname(newFirstname);
                         memberToEdit.setName(newName);
                         memberToEdit.setCity(newCity);
@@ -230,16 +232,15 @@ public class MembersTab {
                         }
                         firestoreServices.createMember(memberToEdit);
                         Jt.success("Member updated!").use(membersTab);
-                        selectedMemberId = null;
+                        Jt.sessionState().remove("selectedMemberId");
                         Jt.rerun();
                     }
-                    if (Jt.button("Cancel").use(actionsRow.col(1))) {
-                        selectedMemberId = null;
+                    if (Jt.button("Cancel").key("btn_cancel_" + memberToEdit.getId()).use(actionsRow.col(1))) {
+                        Jt.sessionState().remove("selectedMemberId");
                         Jt.rerun();
                     }
-                    Jt.markdown("</div>").use(membersTab);
                 } else {
-                    selectedMemberId = null;
+                    Jt.sessionState().remove("selectedMemberId");
                     Jt.rerun();
                 }
             }
