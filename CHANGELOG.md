@@ -1,3 +1,8 @@
+# [v1.11.1](https://github.com/zenika-open-source/opensource-statistics/compare/v1.11.0...v1.11.1) (2026-09-22)
+
+## 🐛 Bug Fixes
+- [`03d49f9`](https://github.com/zenika-open-source/opensource-statistics/commit/03d49f9)  Fix member edit form rendering and session handling (#92) (Issues: [`#92`](https://github.com/zenika-open-source/opensource-statistics/issues/92))
+
 # [v1.11.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.10.4...v1.11.0) (2026-08-05)
 
 ## ✨ New Features
