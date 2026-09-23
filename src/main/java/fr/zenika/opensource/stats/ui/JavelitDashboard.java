@@ -53,6 +53,9 @@ public class JavelitDashboard {
     StatsTab statsTab;
 
     void onStart(@Observes StartupEvent ev) {
+        if (io.quarkus.runtime.LaunchMode.current() == io.quarkus.runtime.LaunchMode.TEST) {
+            return;
+        }
         Server.builder(() -> {
             try {
                 String lastSyncText = "";
@@ -108,6 +111,7 @@ public class JavelitDashboard {
                 try {
                     membersTab.render(tabs.tab("🙋 Members"));
                 } catch (Exception e) {
+                    checkBreakAndReload(e);
                     Jt.error("Error loading members: " + e.getMessage()).use(tabs.tab("🙋 Members"));
                     e.printStackTrace();
                 }
@@ -115,6 +119,7 @@ public class JavelitDashboard {
                 try {
                     projectsTab.render(tabs.tab("🚀 Members Projects"));
                 } catch (Exception e) {
+                    checkBreakAndReload(e);
                     Jt.error("Error loading projects: " + e.getMessage()).use(tabs.tab("🚀 Members Projects"));
                     e.printStackTrace();
                 }
@@ -122,6 +127,7 @@ public class JavelitDashboard {
                 try {
                     organizationProjectsTab.render(tabs.tab("🏢 Projects"));
                 } catch (Exception e) {
+                    checkBreakAndReload(e);
                     Jt.error("Error loading organization projects: " + e.getMessage()).use(tabs.tab("🏢 Projects"));
                     e.printStackTrace();
                 }
@@ -129,6 +135,7 @@ public class JavelitDashboard {
                 try {
                     contributionsTab.render(tabs.tab("📊 Contributions"));
                 } catch (Exception e) {
+                    checkBreakAndReload(e);
                     Jt.error("Error loading contributions: " + e.getMessage()).use(tabs.tab("📊 Contributions"));
                     e.printStackTrace();
                 }
@@ -136,14 +143,27 @@ public class JavelitDashboard {
                 try {
                     statsTab.render(tabs.tab("📈 Stats"));
                 } catch (Exception e) {
+                    checkBreakAndReload(e);
                     Jt.error("Error loading stats: " + e.getMessage()).use(tabs.tab("📈 Stats"));
                     e.printStackTrace();
                 }
 
             } catch (Exception e) {
+                checkBreakAndReload(e);
                 Jt.error("Critical Dashboard Error: " + e.getMessage()).use();
                 e.printStackTrace();
             }
         }, port).build().start();
+    }
+
+    private void checkBreakAndReload(Throwable t) {
+        if (t == null) return;
+        if (t.getClass().getName().contains("BreakAndReloadAppException")) {
+            if (t instanceof RuntimeException runtimeException) {
+                throw runtimeException;
+            }
+            throw new RuntimeException(t);
+        }
+        checkBreakAndReload(t.getCause());
     }
 }
