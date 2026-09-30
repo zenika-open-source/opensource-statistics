@@ -1,3 +1,8 @@
+# [v1.11.2](https://github.com/zenika-open-source/opensource-statistics/compare/v1.11.1...v1.11.2) (2026-09-30)
+
+## 🐛 Bug Fixes
+- [`45ca8f7`](https://github.com/zenika-open-source/opensource-statistics/commit/45ca8f7)  ⬆️ Bump quarkus.platform.version from 3.38.2 to 3.39.4 (#93) (Issues: [`#93`](https://github.com/zenika-open-source/opensource-statistics/issues/93))
+
 # [v1.11.1](https://github.com/zenika-open-source/opensource-statistics/compare/v1.11.0...v1.11.1) (2026-09-22)
 
 ## 🐛 Bug Fixes
