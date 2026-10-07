@@ -28,3 +28,6 @@ bin/
 
 # GCP
 .gcloud-conf.json
+
+# Quinoa
+.quinoa
