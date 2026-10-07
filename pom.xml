@@ -15,9 +15,8 @@
     <quarkus.platform.version>3.39.4</quarkus.platform.version>
     <surefire-plugin.version>3.6.0</surefire-plugin.version>
     <quarkus.google-cloud-services.version>2.24.0</quarkus.google-cloud-services.version>
-    <javelit-version>0.89.0</javelit-version>
   </properties>
-  
+
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -44,7 +43,7 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
-  
+
   <dependencies>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -62,7 +61,7 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-resteasy-client-jackson</artifactId>
   </dependency>
-    
+
     <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-arc</artifactId>
@@ -80,10 +79,15 @@
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-smallrye-graphql-client</artifactId>
     </dependency>
-    
+
     <dependency>
       <groupId>io.quarkiverse.googlecloudservices</groupId>
       <artifactId>quarkus-google-cloud-firestore</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.quarkiverse.quinoa</groupId>
+      <artifactId>quarkus-quinoa</artifactId>
+      <version>2.9.2</version>
     </dependency>
     <dependency>
       <groupId>io.quarkus</groupId>
@@ -101,15 +105,10 @@
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>io.javelit</groupId>
-      <artifactId>javelit</artifactId>
-      <version>${javelit-version}</version>
-    </dependency>
-    <dependency>
       <groupId>io.quarkus</groupId>
       <artifactId>quarkus-cache</artifactId>
     </dependency>
-    
+
   </dependencies>
   <build>
     <plugins>
