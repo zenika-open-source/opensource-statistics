@@ -11,7 +11,7 @@
 The objective of this project is to highlight an organization's members for their open source contributions. 
 
 To do this, data is scanned from both **GitHub** and **GitLab** and saved in a database (e.g., GCP Firestore).
-Data is used to find and list projects maintained or forked by organization members, as well as their open source contributions.
+Data is used to find and list projects maintained or forked by organization members, as well as their open source contributions (including contributed projects and dedicated Pull Requests / Merge Requests).
 
 The tracked organization is configurable in the application settings.
 
@@ -25,12 +25,13 @@ Using:
 
 ## 🌐 API 
 
-Some resources are available but only the first is in progress : 
-- `/github/` to get information about organization members and organization from GitHub
-- `/gitlab/` to get information about organization members and organization from GitLab
-- `/members/` to get information from database 🚧 not implemented
-- `/contributions/` to get information about contributions from database 🚧 not implemented
-- `/workflow/` to get data and save them on database
+Available REST resources (`/v1/`): 
+- `/v1/github/` to get information about organization members and organization from GitHub
+- `/v1/gitlab/` to get information about organization members and organization from GitLab
+- `/v1/members/` to get members information from database
+- `/v1/projects/` to get projects information from database
+- `/v1/contributions/` to get information about contributions, contributed projects, dedicated PRs/MRs, and external contributions from database (`/v1/contributions/details`, `/v1/contributions/external`, `/v1/contributions/member/{memberId}`)
+- `/v1/workflow/` to get data and save them on database
 
 ## 🎨 UI 
 
@@ -59,6 +60,12 @@ The application automatically synchronizes data from GitHub and GitLab using sch
   export GOOGLE_APPLICATION_CREDENTIALS=$(pwd)/.gcloud-conf.json
   ```
 - Run the application with `quarkus dev` if you have the Quarkus CLI installed on your environment, or `mvn quarkus:dev` command.
+- **Or start directly with the startup script**:
+  A startup script [`start.sh`](./start.sh) is provided to automatically export variables from `.env`, set `GOOGLE_APPLICATION_CREDENTIALS` if `.gcloud-conf.json` is present, and launch Quarkus dev mode:
+  ```bash
+  ./start.sh
+  ```
+  *(To only export variables into your current shell session without launching Quarkus: `source ./start.sh`)*
 - You can use Quarkus dev service for Firestore enabling this variable `quarkus.google.cloud.firestore.devservice.enabled` in application.properties file.
 
 ## ☕ Build

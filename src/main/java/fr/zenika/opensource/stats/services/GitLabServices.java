@@ -1,13 +1,16 @@
 package fr.zenika.opensource.stats.services;
 
 import io.quarkus.logging.Log;
+import fr.zenika.opensource.stats.beans.ContributionDetail;
 import fr.zenika.opensource.stats.beans.CustomStatsContributionsUserByMonth;
 import fr.zenika.opensource.stats.beans.gitlab.GitLabEvent;
 import fr.zenika.opensource.stats.beans.gitlab.GitLabMember;
+import fr.zenika.opensource.stats.beans.gitlab.GitLabMergeRequest;
 import fr.zenika.opensource.stats.beans.gitlab.GitLabProject;
 import fr.zenika.opensource.stats.config.GitLabClient;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
@@ -20,11 +23,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class GitLabServices {
+
+    private static final int NB_MRS_PER_PAGE = 100;
 
     @Inject
     @RestClient
@@ -122,21 +128,23 @@ public class GitLabServices {
             try {
                 // Use scope=all to see MRs from all users, not just the token owner
                 // Use updated_after/before for better compatibility with older GitLab versions
-                // per_page=1 is enough since we only need the X-Total header
                 Response response = gitLabClient.getMergeRequests(getAuthHeader(), actualId, "merged", updatedAfter, updatedBefore,
-                        "all", 1);
+                        "all", NB_MRS_PER_PAGE);
                 String totalStr = response.getHeaderString("X-Total");
-                int total = 0;
-                if (totalStr != null && !totalStr.isEmpty()) {
-                    total = Integer.parseInt(totalStr);
-                }
+                List<ContributionDetail> details = extractGitLabContributionDetails(response);
+
+                int total = Optional.ofNullable(totalStr)
+                        .filter(s -> !s.isEmpty())
+                        .map(Integer::parseInt)
+                        .orElse(details.size());
 
                 result.add(new CustomStatsContributionsUserByMonth(
                         month.getValue(),
                         month.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
-                        total));
+                        total,
+                        details));
                 Log.info("Fetching GitLab merged MRs for " + username + " (ID: " + actualId + ") in " + month + " "
-                        + year + " | " + totalStr);
+                        + year + " | " + total);
 
             } catch (Exception e) {
                 Log.error("Error fetching GitLab MRs for " + username + " in " + month, e);
@@ -148,4 +156,24 @@ public class GitLabServices {
         }
         return result;
     }
+
+    List<ContributionDetail> extractGitLabContributionDetails(Response response) {
+        if (response == null || !response.hasEntity()) {
+            return List.of();
+        }
+        try {
+            List<GitLabMergeRequest> mrs = response.readEntity(new GenericType<List<GitLabMergeRequest>>() {
+            });
+            return Optional.ofNullable(mrs)
+                    .orElse(List.of())
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .map(GitLabMergeRequest::toContributionDetail)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            Log.warn("Could not deserialize GitLab merge requests details", e);
+            return List.of();
+        }
+    }
 }
+

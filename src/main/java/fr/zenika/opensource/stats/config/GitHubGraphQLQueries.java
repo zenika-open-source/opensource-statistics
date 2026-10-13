@@ -9,8 +9,22 @@ public class GitHubGraphQLQueries {
             from: $from
             to: $to
           ) {
-            pullRequestContributions(first: 1) {
+            pullRequestContributions(first: 100) {
               totalCount
+              nodes {
+                pullRequest {
+                  title
+                  url
+                  state
+                  createdAt
+                  repository {
+                    name
+                    nameWithOwner
+                    url
+                    isPrivate
+                  }
+                }
+              }
             }
           }
         }
@@ -18,3 +32,4 @@ public class GitHubGraphQLQueries {
       """;
 
 }
+

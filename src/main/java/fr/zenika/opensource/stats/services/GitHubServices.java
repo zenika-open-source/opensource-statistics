@@ -3,12 +3,17 @@ package fr.zenika.opensource.stats.services;
 import io.smallrye.graphql.client.Response;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
 import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClientBuilder;
+import fr.zenika.opensource.stats.beans.ContributionDetail;
 import fr.zenika.opensource.stats.beans.CustomStatsContributionsUserByMonth;
 import fr.zenika.opensource.stats.beans.CustomStatsUser;
 import fr.zenika.opensource.stats.beans.github.GitHubMember;
 import fr.zenika.opensource.stats.beans.github.GitHubOrganization;
 import fr.zenika.opensource.stats.beans.github.GitHubProject;
+import fr.zenika.opensource.stats.beans.github.graphql.ContributionsCollectionNumber;
+import fr.zenika.opensource.stats.beans.github.graphql.PullRequestContributionNode;
 import fr.zenika.opensource.stats.beans.github.graphql.PullRequestContributions;
+import fr.zenika.opensource.stats.beans.github.graphql.PullRequestNode;
+import fr.zenika.opensource.stats.beans.github.graphql.PullRequestRepository;
 import fr.zenika.opensource.stats.beans.github.graphql.User;
 import fr.zenika.opensource.stats.beans.github.graphql.UserStatsNumberContributions;
 import fr.zenika.opensource.stats.config.GitHubClient;
@@ -29,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
@@ -175,7 +181,6 @@ public class GitHubServices {
             final int year) {
 
         Response response = null;
-        PullRequestContributions prContributions = null;
         var contributionsTab = new ArrayList<CustomStatsContributionsUserByMonth>();
 
         try {
@@ -201,16 +206,22 @@ public class GitHubServices {
 
                 response = dynamicGraphQLClient.executeSync(GitHubGraphQLQueries.qGetNumberOfContributionsForAPeriod,
                         variables);
-                var userStats = response.getObject(UserStatsNumberContributions.class, "user");
+                var userStats = Optional.ofNullable(response)
+                        .map(r -> r.getObject(UserStatsNumberContributions.class, "user"))
+                        .orElse(null);
 
-                if (userStats != null) {
-                    prContributions = userStats.getContributionsCollection().getPullRequestContributions();
-
-                    contributionsTab.add(
-                            new CustomStatsContributionsUserByMonth(month.getValue(),
-                                    month.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
-                                    prContributions.getTotalCount()));
-                }
+                Optional.ofNullable(userStats)
+                        .map(UserStatsNumberContributions::getContributionsCollection)
+                        .map(ContributionsCollectionNumber::getPullRequestContributions)
+                        .ifPresent(prContributions -> {
+                            List<ContributionDetail> details = extractGitHubContributionDetails(prContributions);
+                            contributionsTab.add(
+                                    new CustomStatsContributionsUserByMonth(
+                                            month.getValue(),
+                                            month.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
+                                            prContributions.getTotalCount(),
+                                            details));
+                        });
             }
 
         } catch (ExecutionException | InterruptedException e) {
@@ -218,6 +229,36 @@ public class GitHubServices {
         }
 
         return contributionsTab;
+    }
+
+    List<ContributionDetail> extractGitHubContributionDetails(PullRequestContributions prContributions) {
+        return Optional.ofNullable(prContributions)
+                .map(PullRequestContributions::getNodes)
+                .orElse(List.of())
+                .stream()
+                .filter(Objects::nonNull)
+                .map(PullRequestContributionNode::getPullRequest)
+                .filter(Objects::nonNull)
+                .filter(pr -> Optional.ofNullable(pr.getRepository())
+                        .map(repo -> !repo.isPrivate())
+                        .orElse(true))
+                .map(this::mapPullRequestNodeToDetail)
+                .collect(Collectors.toList());
+    }
+
+    private ContributionDetail mapPullRequestNodeToDetail(PullRequestNode pr) {
+        Optional<PullRequestRepository> repoOpt = Optional.ofNullable(pr.getRepository());
+        String projectName = repoOpt.map(PullRequestRepository::getName).orElse("");
+        String projectFullName = repoOpt.map(PullRequestRepository::getNameWithOwner).orElse(projectName);
+        String projectUrl = repoOpt.map(PullRequestRepository::getUrl).orElse("");
+        return new ContributionDetail(
+                projectName,
+                projectFullName,
+                projectUrl,
+                Optional.ofNullable(pr.getTitle()).orElse(""),
+                Optional.ofNullable(pr.getUrl()).orElse(""),
+                Optional.ofNullable(pr.getState()).orElse(""),
+                Optional.ofNullable(pr.getCreatedAt()).orElse(""));
     }
 
     /**
