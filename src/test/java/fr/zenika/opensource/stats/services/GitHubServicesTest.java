@@ -164,4 +164,54 @@ class GitHubServicesTest {
         assertEquals(1, result.size());
         verify(gitHubClient, times(1)).getOrganizationProjects(any(), eq(org), eq(100), eq(1));
     }
+
+    @Test
+    void test_extractGitHubContributionDetails_FiltersPrivateAndMapsPublic() {
+        fr.zenika.opensource.stats.beans.github.graphql.PullRequestRepository publicRepo = new fr.zenika.opensource.stats.beans.github.graphql.PullRequestRepository();
+        publicRepo.setName("opensource-statistics");
+        publicRepo.setNameWithOwner("zenika-open-source/opensource-statistics");
+        publicRepo.setUrl("https://github.com/zenika-open-source/opensource-statistics");
+        publicRepo.setPrivate(false);
+
+        fr.zenika.opensource.stats.beans.github.graphql.PullRequestNode publicPr = new fr.zenika.opensource.stats.beans.github.graphql.PullRequestNode();
+        publicPr.setTitle("feat: track PRs");
+        publicPr.setUrl("https://github.com/zenika-open-source/opensource-statistics/pull/10");
+        publicPr.setState("MERGED");
+        publicPr.setCreatedAt("2026-01-15T10:00:00Z");
+        publicPr.setRepository(publicRepo);
+
+        fr.zenika.opensource.stats.beans.github.graphql.PullRequestContributionNode node1 = new fr.zenika.opensource.stats.beans.github.graphql.PullRequestContributionNode();
+        node1.setPullRequest(publicPr);
+
+        fr.zenika.opensource.stats.beans.github.graphql.PullRequestRepository privateRepo = new fr.zenika.opensource.stats.beans.github.graphql.PullRequestRepository();
+        privateRepo.setName("secret");
+        privateRepo.setNameWithOwner("org/secret");
+        privateRepo.setUrl("https://github.com/org/secret");
+        privateRepo.setPrivate(true);
+
+        fr.zenika.opensource.stats.beans.github.graphql.PullRequestNode privatePr = new fr.zenika.opensource.stats.beans.github.graphql.PullRequestNode();
+        privatePr.setTitle("chore: secret");
+        privatePr.setUrl("https://github.com/org/secret/pull/1");
+        privatePr.setState("MERGED");
+        privatePr.setRepository(privateRepo);
+
+        fr.zenika.opensource.stats.beans.github.graphql.PullRequestContributionNode node2 = new fr.zenika.opensource.stats.beans.github.graphql.PullRequestContributionNode();
+        node2.setPullRequest(privatePr);
+
+        fr.zenika.opensource.stats.beans.github.graphql.PullRequestContributions prContributions = new fr.zenika.opensource.stats.beans.github.graphql.PullRequestContributions();
+        prContributions.setTotalCount(2);
+        prContributions.setNodes(Arrays.asList(node1, node2));
+
+        var details = gitHubServices.extractGitHubContributionDetails(prContributions);
+
+        assertNotNull(details);
+        assertEquals(1, details.size());
+        assertEquals("opensource-statistics", details.get(0).getProjectName());
+        assertEquals("zenika-open-source/opensource-statistics", details.get(0).getProjectFullName());
+        assertEquals("https://github.com/zenika-open-source/opensource-statistics", details.get(0).getProjectUrl());
+        assertEquals("feat: track PRs", details.get(0).getPrTitle());
+        assertEquals("https://github.com/zenika-open-source/opensource-statistics/pull/10", details.get(0).getPrUrl());
+        assertEquals("MERGED", details.get(0).getPrState());
+    }
 }
+

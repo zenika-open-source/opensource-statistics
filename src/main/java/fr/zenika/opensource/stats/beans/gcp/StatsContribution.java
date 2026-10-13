@@ -1,5 +1,10 @@
 package fr.zenika.opensource.stats.beans.gcp;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import fr.zenika.opensource.stats.beans.ContributionDetail;
+
 public class StatsContribution {
 
     public String year;
@@ -17,6 +22,8 @@ public class StatsContribution {
     public int numberOfContributionsOnGitLab;
 
     public String source;
+
+    public List<ContributionDetail> contributionsDetails = new ArrayList<>();
 
     public String getSource() {
         return source;
@@ -81,4 +88,13 @@ public class StatsContribution {
     public void setNumberOfContributionsOnGitLab(int numberOfContributionsOnGitLab) {
         this.numberOfContributionsOnGitLab = numberOfContributionsOnGitLab;
     }
+
+    public List<ContributionDetail> getContributionsDetails() {
+        return contributionsDetails;
+    }
+
+    public void setContributionsDetails(List<ContributionDetail> contributionsDetails) {
+        this.contributionsDetails = contributionsDetails;
+    }
 }
+

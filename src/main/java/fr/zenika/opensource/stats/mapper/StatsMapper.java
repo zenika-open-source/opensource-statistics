@@ -2,6 +2,7 @@ package fr.zenika.opensource.stats.mapper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import fr.zenika.opensource.stats.beans.CustomStatsContributionsUserByMonth;
 import fr.zenika.opensource.stats.beans.Member;
@@ -17,11 +18,11 @@ public class StatsMapper {
             sc.setYear(String.valueOf(year));
             sc.setIdMember(member.getId());
             sc.setSource("GitHub");
-            if (member.getGitHubAccount() != null) {
-                sc.setGithubHandle(member.getGitHubAccount().getLogin());
-            }
+            Optional.ofNullable(member.getGitHubAccount())
+                    .ifPresent(account -> sc.setGithubHandle(account.getLogin()));
             sc.setMonth(stat.getMonthLabel());
             sc.setNumberOfContributionsOnGitHub(stat.getContributions());
+            sc.setContributionsDetails(Optional.ofNullable(stat.getContributionsDetails()).orElse(List.of()));
             statsContributions.add(sc);
         }
         return statsContributions;
@@ -35,11 +36,11 @@ public class StatsMapper {
             sc.setYear(String.valueOf(year));
             sc.setIdMember(member.getId());
             sc.setSource("GitLab");
-            if (member.getGitlabAccount() != null) {
-                sc.setGitlabHandle(member.getGitlabAccount().getUsername());
-            }
+            Optional.ofNullable(member.getGitlabAccount())
+                    .ifPresent(account -> sc.setGitlabHandle(account.getUsername()));
             sc.setMonth(stat.getMonthLabel());
             sc.setNumberOfContributionsOnGitLab(stat.getContributions());
+            sc.setContributionsDetails(Optional.ofNullable(stat.getContributionsDetails()).orElse(List.of()));
             statsContributions.add(sc);
         }
         return statsContributions;
@@ -64,6 +65,7 @@ public class StatsMapper {
             sc.setNumberOfContributionsOnGitHub(stat.getContributions());
             sc.setGithubHandle(githubMember);
             sc.setSource("GitHub");
+            sc.setContributionsDetails(Optional.ofNullable(stat.getContributionsDetails()).orElse(List.of()));
             statsContributions.add(sc);
         });
         return statsContributions;
@@ -77,6 +79,9 @@ public class StatsMapper {
         statsContribution.setNumberOfContributionsOnGitHub(customStatsContributionsUserByMonth.getContributions());
         statsContribution.setGithubHandle(githubMember);
         statsContribution.setSource("GitHub");
+        statsContribution.setContributionsDetails(
+                Optional.ofNullable(customStatsContributionsUserByMonth.getContributionsDetails()).orElse(List.of()));
         return statsContribution;
     }
 }
+
