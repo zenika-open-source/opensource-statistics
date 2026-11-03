@@ -34,7 +34,8 @@ public interface GitLabClient {
     @Path("/users/{id}/projects")
     List<GitLabProject> getProjectsForAnUser(
             @HeaderParam("Authorization") String authHeader,
-            @PathParam("id") String id);
+            @PathParam("id") String id,
+            @QueryParam("visibility") String visibility);
 
     @GET
     @Path("/users/{id}/events")
@@ -49,7 +50,6 @@ public interface GitLabClient {
     @GET
     @Path("/merge_requests")
     Response getMergeRequests(
-            @HeaderParam("Authorization") String authHeader,
             @QueryParam("author_id") String authorId,
             @QueryParam("state") String state,
             @QueryParam("updated_after") String updatedAfter,
