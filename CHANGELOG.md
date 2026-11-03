@@ -1,3 +1,8 @@
+# [v1.12.2](https://github.com/zenika-open-source/opensource-statistics/compare/v1.12.1...v1.12.2) (2026-11-03)
+
+## 🐛 Bug Fixes
+- [`fd4865c`](https://github.com/zenika-open-source/opensource-statistics/commit/fd4865c)  Use authenticated GitLab GraphQL API to fetch public monthly MRs (#106) (Issues: [`#106`](https://github.com/zenika-open-source/opensource-statistics/issues/106))
+
 # [v1.12.1](https://github.com/zenika-open-source/opensource-statistics/compare/v1.12.0...v1.12.1) (2026-11-03)
 
 ## 🐛 Bug Fixes
