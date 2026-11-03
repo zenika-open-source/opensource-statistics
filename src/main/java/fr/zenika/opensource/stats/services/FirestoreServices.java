@@ -173,6 +173,7 @@ public class FirestoreServices {
         try {
             return querySnapshot.get().getDocuments().stream()
                     .map(ProjectMapper::mapFirestoreProjectToProject)
+                    .filter(Project::isPublic)
                     .collect(Collectors.toList());
         } catch (InterruptedException | ExecutionException exception) {
             throw new DatabaseException(exception);

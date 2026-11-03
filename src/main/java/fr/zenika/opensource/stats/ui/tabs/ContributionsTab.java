@@ -70,7 +70,6 @@ public class ContributionsTab {
                         if (Jt.button("🔄 Sync Contributions").use(controlRow.col(1))) {
                                 try {
                                         int year = yearValue;
-                                        int currentYear = Year.now().getValue();
 
                                         List<Member> zMembers = firestoreServices.getAllMembers();
                                         int ghSyncedCount = 0;
@@ -80,31 +79,21 @@ public class ContributionsTab {
                                                 // GitHub Sync
                                                 if (member.getGitHubAccount() != null
                                                                 && member.getGitHubAccount().getLogin() != null) {
-                                                        // For past years (older than previous year), skip if stats
-                                                        // already exist
-                                                        boolean shouldSkip = (year < currentYear - 1)
-                                                                        && firestoreServices.hasStatsForMemberAndYear(
-                                                                                        member.getId(), year,
-                                                                                        "GitHub");
-                                                        if (shouldSkip) {
-                                                                // Already exists, skip
-                                                        } else {
-                                                                List<CustomStatsContributionsUserByMonth> ghStats = gitHubServices
-                                                                                .getContributionsForTheCurrentYear(
-                                                                                                member.getGitHubAccount()
-                                                                                                                .getLogin(),
-                                                                                                year);
+                                                        List<CustomStatsContributionsUserByMonth> ghStats = gitHubServices
+                                                                        .getContributionsForTheCurrentYear(
+                                                                                        member.getGitHubAccount()
+                                                                                                        .getLogin(),
+                                                                                        year);
 
-                                                                if (!ghStats.isEmpty()) {
-                                                                        List<StatsContribution> statsList = StatsMapper
-                                                                                        .mapGitHubStatisticsToStatsContributions(
-                                                                                                        member,
-                                                                                                        year, ghStats);
-                                                                        for (StatsContribution stat : statsList) {
-                                                                                firestoreServices.saveStats(stat);
-                                                                        }
-                                                                        ghSyncedCount++;
+                                                        if (!ghStats.isEmpty()) {
+                                                                List<StatsContribution> statsList = StatsMapper
+                                                                                .mapGitHubStatisticsToStatsContributions(
+                                                                                                member,
+                                                                                                year, ghStats);
+                                                                for (StatsContribution stat : statsList) {
+                                                                        firestoreServices.saveStats(stat);
                                                                 }
+                                                                ghSyncedCount++;
                                                         }
                                                 }
 
@@ -112,40 +101,30 @@ public class ContributionsTab {
                                                 if (member.getGitlabAccount() != null
                                                                 && member.getGitlabAccount()
                                                                                 .getUsername() != null) {
-                                                        // For past years (older than previous year), skip if stats
-                                                        // already exist
-                                                        boolean shouldSkip = (year < currentYear - 1)
-                                                                        && firestoreServices.hasStatsForMemberAndYear(
-                                                                                        member.getId(), year,
-                                                                                        "GitLab");
-                                                        if (shouldSkip) {
-                                                                // Already exists, skip
+                                                        String glHandle = member.getGitlabAccount()
+                                                                        .getUsername();
+                                                        String glId = member.getGitlabAccount().getId();
+
+                                                        List<CustomStatsContributionsUserByMonth> glStats;
+                                                        if (glId != null && !glId.isEmpty()) {
+                                                                glStats = gitLabServices
+                                                                                .getContributionsByUserId(glId,
+                                                                                                glHandle, year);
                                                         } else {
-                                                                String glHandle = member.getGitlabAccount()
-                                                                                .getUsername();
-                                                                String glId = member.getGitlabAccount().getId();
+                                                                glStats = gitLabServices
+                                                                                .getContributionsForTheCurrentYear(
+                                                                                                glHandle, year);
+                                                        }
 
-                                                                List<CustomStatsContributionsUserByMonth> glStats;
-                                                                if (glId != null && !glId.isEmpty()) {
-                                                                        glStats = gitLabServices
-                                                                                        .getContributionsByUserId(glId,
-                                                                                                        glHandle, year);
-                                                                } else {
-                                                                        glStats = gitLabServices
-                                                                                        .getContributionsForTheCurrentYear(
-                                                                                                        glHandle, year);
+                                                        if (!glStats.isEmpty()) {
+                                                                List<StatsContribution> statsList = StatsMapper
+                                                                                .mapGitLabStatisticsToStatsContributions(
+                                                                                                member,
+                                                                                                year, glStats);
+                                                                for (StatsContribution stat : statsList) {
+                                                                        firestoreServices.saveStats(stat);
                                                                 }
-
-                                                                if (!glStats.isEmpty()) {
-                                                                        List<StatsContribution> statsList = StatsMapper
-                                                                                        .mapGitLabStatisticsToStatsContributions(
-                                                                                                        member,
-                                                                                                        year, glStats);
-                                                                        for (StatsContribution stat : statsList) {
-                                                                                firestoreServices.saveStats(stat);
-                                                                        }
-                                                                        glSyncedCount++;
-                                                                }
+                                                                glSyncedCount++;
                                                         }
                                                 }
                                         }

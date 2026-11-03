@@ -213,5 +213,42 @@ class GitHubServicesTest {
         assertEquals("https://github.com/zenika-open-source/opensource-statistics/pull/10", details.get(0).getPrUrl());
         assertEquals("MERGED", details.get(0).getPrState());
     }
+
+    @Test
+    void test_graphqlResponseDeserialization_isPrivate() {
+        String json = """
+                {
+                  "data": {
+                    "user": {
+                      "contributionsCollection": {
+                        "pullRequestContributions": {
+                          "totalCount": 1,
+                          "nodes": [
+                            {
+                              "pullRequest": {
+                                "title": "test",
+                                "url": "https://github.com/arbre-gen/arbregen/pull/1",
+                                "state": "MERGED",
+                                "createdAt": "2026-01-01T00:00:00Z",
+                                "repository": {
+                                  "name": "arbregen",
+                                  "nameWithOwner": "arbre-gen/arbregen",
+                                  "url": "https://github.com/arbre-gen/arbregen",
+                                  "isPrivate": true
+                                }
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+                """;
+        io.smallrye.graphql.client.Response response = io.smallrye.graphql.client.impl.ResponseReader.readFrom(json, null);
+        var userStats = response.getObject(fr.zenika.opensource.stats.beans.github.graphql.UserStatsNumberContributions.class, "user");
+        var repo = userStats.getContributionsCollection().getPullRequestContributions().getNodes().get(0).getPullRequest().getRepository();
+        org.junit.jupiter.api.Assertions.assertTrue(repo.isPrivate(), "repo.isPrivate() should be true after GraphQL deserialization!");
+    }
 }
 
