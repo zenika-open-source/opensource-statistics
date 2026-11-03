@@ -1,3 +1,8 @@
+# [v1.12.1](https://github.com/zenika-open-source/opensource-statistics/compare/v1.12.0...v1.12.1) (2026-11-03)
+
+## 🐛 Bug Fixes
+- [`fd5628c`](https://github.com/zenika-open-source/opensource-statistics/commit/fd5628c)  fix: only fetch public projects and merge requests (#105) (Issues: [`#105`](https://github.com/zenika-open-source/opensource-statistics/issues/105))
+
 # [v1.12.0](https://github.com/zenika-open-source/opensource-statistics/compare/v1.11.2...v1.12.0) (2026-10-13)
 
 ## ✨ New Features
