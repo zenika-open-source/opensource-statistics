@@ -62,13 +62,13 @@ public class GitLabServices {
      * Get personal projects for a user.
      *
      * @param username The GitLab username.
-     * @return A list of personal projects (not forks).
+     * @return A list of public personal projects (not forks).
      */
     public List<GitLabProject> getPersonalProjectsForAnUser(String username) {
         return getUserInformation(username)
-                .map(user -> gitLabClient.getProjectsForAnUser(getAuthHeader(), user.getId()))
+                .map(user -> gitLabClient.getProjectsForAnUser(getAuthHeader(), user.getId(), "public"))
                 .map(projects -> projects.stream()
-                        .filter(project -> !project.isFork())
+                        .filter(project -> !project.isFork() && project.isPublic())
                         .collect(Collectors.toList()))
                 .orElse(List.of());
     }
@@ -126,9 +126,10 @@ public class GitLabServices {
             String updatedBefore = endOfMonth.atTime(23, 59, 59).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "Z";
 
             try {
-                // Use scope=all to see MRs from all users, not just the token owner
+                // To fetch only public contributions, do not send Authorization header (unauthenticated search)
+                // Use scope=all to see MRs across all public projects
                 // Use updated_after/before for better compatibility with older GitLab versions
-                Response response = gitLabClient.getMergeRequests(getAuthHeader(), actualId, "merged", updatedAfter, updatedBefore,
+                Response response = gitLabClient.getMergeRequests(actualId, "merged", updatedAfter, updatedBefore,
                         "all", NB_MRS_PER_PAGE);
                 String totalStr = response.getHeaderString("X-Total");
                 List<ContributionDetail> details = extractGitLabContributionDetails(response);

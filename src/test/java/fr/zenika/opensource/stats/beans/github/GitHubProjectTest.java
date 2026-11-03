@@ -7,7 +7,9 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class GitHubProjectTest {
 
@@ -30,5 +32,25 @@ class GitHubProjectTest {
         GitHubProject result = objectMapper.readValue(json, GitHubProject.class);
 
         assertNull(result.getLastActivityAt());
+    }
+
+    @Test
+    void deserialize_PrivateProject_ShouldNotBePublic() throws IOException {
+        String json = "{\"name\":\"private-repo\",\"private\":true,\"visibility\":\"private\"}";
+
+        GitHubProject result = objectMapper.readValue(json, GitHubProject.class);
+
+        assertEquals("private-repo", result.getName());
+        assertFalse(result.isPublic());
+    }
+
+    @Test
+    void deserialize_PublicProject_ShouldBePublic() throws IOException {
+        String json = "{\"name\":\"public-repo\",\"private\":false,\"visibility\":\"public\"}";
+
+        GitHubProject result = objectMapper.readValue(json, GitHubProject.class);
+
+        assertEquals("public-repo", result.getName());
+        assertTrue(result.isPublic());
     }
 }

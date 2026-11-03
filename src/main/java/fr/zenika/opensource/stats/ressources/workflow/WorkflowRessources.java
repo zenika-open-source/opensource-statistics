@@ -122,15 +122,27 @@ public class WorkflowRessources {
     public Response savePersonalProjects() throws DatabaseException {
 
         firestoreServices.deleteAllGitHubProjects();
+        firestoreServices.deleteAllGitLabProjects();
 
         List<Member> members = firestoreServices.getAllMembers();
 
         for (Member member : members) {
-            List<GitHubProject> gitHubProjects = gitHubServices
-                    .getPersonalProjectForAnUser(member.getGitHubAccount().getLogin());
+            if (member.getGitHubAccount() != null && member.getGitHubAccount().getLogin() != null) {
+                List<GitHubProject> gitHubProjects = gitHubServices
+                        .getPersonalProjectForAnUser(member.getGitHubAccount().getLogin());
 
-            for (GitHubProject project : gitHubProjects) {
-                firestoreServices.createProject(project);
+                for (GitHubProject project : gitHubProjects) {
+                    firestoreServices.createProject(project);
+                }
+            }
+
+            if (member.getGitlabAccount() != null && member.getGitlabAccount().getUsername() != null) {
+                List<fr.zenika.opensource.stats.beans.gitlab.GitLabProject> gitLabProjects = gitLabServices
+                        .getPersonalProjectsForAnUser(member.getGitlabAccount().getUsername());
+
+                for (fr.zenika.opensource.stats.beans.gitlab.GitLabProject project : gitLabProjects) {
+                    firestoreServices.createProject(project);
+                }
             }
         }
         return Response.ok().build();

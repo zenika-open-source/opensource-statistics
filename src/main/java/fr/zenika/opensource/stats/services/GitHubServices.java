@@ -123,7 +123,7 @@ public class GitHubServices {
 
         var repos = fetchAll((perPage, page) -> gitHubClient.getReposForAnUser(getAuthHeader(), login, perPage, page));
         return repos.stream()
-                .filter(repo -> !repo.isFork() && !repo.isArchived())
+                .filter(repo -> !repo.isFork() && !repo.isArchived() && repo.isPublic())
                 .collect(Collectors.toList());
     }
 
@@ -299,7 +299,7 @@ public class GitHubServices {
     public List<GitHubProject> getOrganizationProjects(String organizationName) {
         var repos = fetchAll((perPage, page) -> gitHubClient.getOrganizationProjects(getAuthHeader(), organizationName, perPage, page));
         return repos.stream()
-                .filter(repo -> !repo.isFork() && !repo.isArchived())
+                .filter(repo -> !repo.isFork() && !repo.isArchived() && repo.isPublic())
                 .collect(Collectors.toList());
     }
 

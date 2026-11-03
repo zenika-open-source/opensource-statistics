@@ -9,6 +9,8 @@ public class Project {
     private String full_name;
     private String html_url;
     private String visibility;
+    @com.fasterxml.jackson.annotation.JsonProperty("private")
+    private Boolean isPrivate;
     private boolean fork;
     private boolean archived;
     private Long watchers_count;
@@ -55,6 +57,24 @@ public class Project {
 
     public void setVisibility(String visibility) {
         this.visibility = visibility;
+    }
+
+    public Boolean getIsPrivate() {
+        return isPrivate;
+    }
+
+    public void setIsPrivate(Boolean isPrivate) {
+        this.isPrivate = isPrivate;
+    }
+
+    public boolean isPublic() {
+        if (Boolean.TRUE.equals(this.isPrivate)) {
+            return false;
+        }
+        if ("private".equalsIgnoreCase(this.visibility) || "internal".equalsIgnoreCase(this.visibility)) {
+            return false;
+        }
+        return true;
     }
 
     public boolean isFork() {
