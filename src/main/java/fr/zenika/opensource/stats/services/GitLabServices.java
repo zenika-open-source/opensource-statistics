@@ -1,13 +1,20 @@
 package fr.zenika.opensource.stats.services;
 
 import io.quarkus.logging.Log;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClient;
+import io.smallrye.graphql.client.dynamic.api.DynamicGraphQLClientBuilder;
 import fr.zenika.opensource.stats.beans.ContributionDetail;
 import fr.zenika.opensource.stats.beans.CustomStatsContributionsUserByMonth;
-import fr.zenika.opensource.stats.beans.gitlab.GitLabEvent;
 import fr.zenika.opensource.stats.beans.gitlab.GitLabMember;
 import fr.zenika.opensource.stats.beans.gitlab.GitLabMergeRequest;
 import fr.zenika.opensource.stats.beans.gitlab.GitLabProject;
+import fr.zenika.opensource.stats.beans.gitlab.graphql.GitLabGraphQLUser;
+import fr.zenika.opensource.stats.beans.gitlab.graphql.GitLabMergeRequestNode;
+import fr.zenika.opensource.stats.beans.gitlab.graphql.GitLabMergeRequestProject;
+import fr.zenika.opensource.stats.beans.gitlab.graphql.GitLabMergeRequestsCount;
 import fr.zenika.opensource.stats.config.GitLabClient;
+import fr.zenika.opensource.stats.config.GitLabGraphQLQueries;
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.core.GenericType;
@@ -20,9 +27,9 @@ import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -30,15 +37,26 @@ import java.util.stream.Collectors;
 @ApplicationScoped
 public class GitLabServices {
 
-    private static final int NB_MRS_PER_PAGE = 100;
-
     @Inject
     @RestClient
     GitLabClient gitLabClient;
 
+    @ConfigProperty(name = "quarkus.smallrye-graphql-client.gitlab-api.url", defaultValue = "https://gitlab.com/api/graphql")
+    String graphQLUrl;
+
     @Inject
     @ConfigProperty(name = "gitlab.token")
     Optional<String> gitlabToken;
+
+    DynamicGraphQLClient dynamicGraphQLClient;
+
+    @PostConstruct
+    public void init() {
+        dynamicGraphQLClient = DynamicGraphQLClientBuilder.newBuilder()
+                .url(graphQLUrl)
+                .header("Authorization", getAuthHeader())
+                .build();
+    }
 
     private String getAuthHeader() {
         return "Bearer " + gitlabToken.orElse("");
@@ -81,38 +99,26 @@ public class GitLabServices {
      * @return A list of monthly contribution stats.
      */
     public List<CustomStatsContributionsUserByMonth> getContributionsForTheCurrentYear(String username, int year) {
-        return getUserInformation(username)
-                .map(user -> getContributionsByUserId(user.getId(), username, year))
-                .orElse(List.of());
+        if (username == null || username.isBlank()) {
+            return List.of();
+        }
+        return getContributionsByUserId(null, username, year);
     }
 
     /**
-     * Get contributions for a specific GitLab user ID.
+     * Get contributions for a specific GitLab user.
      *
-     * @param userId   The numeric GitLab user ID.
-     * @param username The username (for logging).
+     * @param userId   The numeric GitLab user ID (optional when using GraphQL by username).
+     * @param username The GitLab username.
      * @param year     The year.
      * @return A list of monthly contribution stats.
      */
     public List<CustomStatsContributionsUserByMonth> getContributionsByUserId(String userId, String username,
             int year) {
-        List<CustomStatsContributionsUserByMonth> result = new ArrayList<>();
-
-        // If userId is not numeric, it might be a username from old data. Try to
-        // resolve it.
-        String actualId = userId;
-        if (userId != null && !userId.matches("\\d+")) {
-            Log.warn("GitLab ID '" + userId + "' for " + username
-                    + " is not numeric. Attempting to resolve ID from username.");
-            Optional<GitLabMember> user = getUserInformation(username);
-            if (user.isPresent()) {
-                actualId = user.get().getId();
-                Log.info("Resolved GitLab username '" + username + "' to ID '" + actualId + "'");
-            } else {
-                Log.error("Failed to resolve GitLab ID for username '" + username + "'. Aborting contribution fetch.");
-                return List.of();
-            }
+        if (username == null || username.isBlank()) {
+            return List.of();
         }
+        List<CustomStatsContributionsUserByMonth> result = new ArrayList<>();
 
         for (Month month : Month.values()) {
             if (year == LocalDate.now().getYear() && month.getValue() > LocalDate.now().getMonthValue()) {
@@ -126,25 +132,32 @@ public class GitLabServices {
             String updatedBefore = endOfMonth.atTime(23, 59, 59).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + "Z";
 
             try {
-                // To fetch only public contributions, do not send Authorization header (unauthenticated search)
-                // Use scope=all to see MRs across all public projects
-                // Use updated_after/before for better compatibility with older GitLab versions
-                Response response = gitLabClient.getMergeRequests(actualId, "merged", updatedAfter, updatedBefore,
-                        "all", NB_MRS_PER_PAGE);
-                String totalStr = response.getHeaderString("X-Total");
-                List<ContributionDetail> details = extractGitLabContributionDetails(response);
+                var variables = new HashMap<String, Object>();
+                variables.put("username", username);
+                variables.put("updatedAfter", updatedAfter);
+                variables.put("updatedBefore", updatedBefore);
 
-                int total = Optional.ofNullable(totalStr)
-                        .filter(s -> !s.isEmpty())
-                        .map(Integer::parseInt)
-                        .orElse(details.size());
+                io.smallrye.graphql.client.Response gqlResponse = dynamicGraphQLClient.executeSync(
+                        GitLabGraphQLQueries.qGetMergedMergeRequestsForAPeriod,
+                        variables);
+
+                GitLabGraphQLUser userStats = Optional.ofNullable(gqlResponse)
+                        .map(r -> r.getObject(GitLabGraphQLUser.class, "user"))
+                        .orElse(null);
+
+                GitLabMergeRequestsCount mrContributions = Optional.ofNullable(userStats)
+                        .map(GitLabGraphQLUser::getAuthoredMergeRequests)
+                        .orElse(null);
+
+                List<ContributionDetail> details = extractGitLabGraphQLContributionDetails(mrContributions);
+                int total = details.size();
 
                 result.add(new CustomStatsContributionsUserByMonth(
                         month.getValue(),
                         month.getDisplayName(TextStyle.FULL, Locale.ENGLISH),
                         total,
                         details));
-                Log.info("Fetching GitLab merged MRs for " + username + " (ID: " + actualId + ") in " + month + " "
+                Log.info("Fetching GitLab merged MRs for " + username + " in " + month + " "
                         + year + " | " + total);
 
             } catch (Exception e) {
@@ -156,6 +169,34 @@ public class GitLabServices {
             }
         }
         return result;
+    }
+
+    List<ContributionDetail> extractGitLabGraphQLContributionDetails(GitLabMergeRequestsCount mrContributions) {
+        return Optional.ofNullable(mrContributions)
+                .map(GitLabMergeRequestsCount::getNodes)
+                .orElse(List.of())
+                .stream()
+                .filter(Objects::nonNull)
+                .filter(mr -> Optional.ofNullable(mr.getProject())
+                        .map(GitLabMergeRequestProject::isPublic)
+                        .orElse(true))
+                .map(this::mapMergeRequestNodeToDetail)
+                .collect(Collectors.toList());
+    }
+
+    private ContributionDetail mapMergeRequestNodeToDetail(GitLabMergeRequestNode mr) {
+        Optional<GitLabMergeRequestProject> projOpt = Optional.ofNullable(mr.getProject());
+        String projectName = projOpt.map(GitLabMergeRequestProject::getName).orElse("");
+        String projectFullName = projOpt.map(GitLabMergeRequestProject::getFullPath).orElse(projectName);
+        String projectUrl = projOpt.map(GitLabMergeRequestProject::getWebUrl).orElse("");
+        return new ContributionDetail(
+                projectName,
+                projectFullName,
+                projectUrl,
+                Optional.ofNullable(mr.getTitle()).orElse(""),
+                Optional.ofNullable(mr.getWebUrl()).orElse(""),
+                Optional.ofNullable(mr.getState()).orElse(""),
+                Optional.ofNullable(mr.getCreatedAt()).orElse(""));
     }
 
     List<ContributionDetail> extractGitLabContributionDetails(Response response) {
